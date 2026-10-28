@@ -1,0 +1,79 @@
+name: WATHAQ - CI and deploy to GitHub Pages
+
+# The repository keeps the project as one source zip (WATHAQ_SOURCE_v*.zip), like VEXA-AI.
+# This workflow unpacks the newest zip, checks it, builds the site and publishes it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Unpack the newest source zip
+        run: |
+          ZIP=$(ls -1 WATHAQ_SOURCE_*.zip 2>/dev/null | sort -V | tail -1)
+          if [ -z "$ZIP" ]; then echo "No WATHAQ_SOURCE_*.zip found at the repository root."; exit 1; fi
+          echo "Using $ZIP"
+          mkdir -p build
+          unzip -q -o "$ZIP" -d build
+          APP=$(find build -path '*/app/build.mjs' | head -1)
+          if [ -z "$APP" ]; then echo "app/build.mjs was not found inside the zip."; exit 1; fi
+          echo "PROJECT_DIR=$(dirname "$(dirname "$APP")")" >> "$GITHUB_ENV"
+
+      - name: Design tokens (WCAG contrast checks must pass)
+        run: cd "$PROJECT_DIR" && node packages/design-tokens/build.mjs
+
+      - name: Syntax checks
+        run: |
+          cd "$PROJECT_DIR"
+          node --check app/src/app.mjs
+          node --check app/sw.js
+          node --check app/build.mjs
+
+      - name: Smoke tests (stubbed DOM and Supabase, no network)
+        run: cd "$PROJECT_DIR" && node app/test/smoke.mjs
+
+      - name: Build site into public/
+        run: cd "$PROJECT_DIR" && node app/build.mjs
+
+      - name: Fail if a secret key reached the site
+        run: |
+          cd "$PROJECT_DIR"
+          if grep -RInE "service_role|sb_secret_" public app/config.js; then
+            echo "A secret key was found in the site files."; exit 1
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.PROJECT_DIR }}/public
+
+  deploy:
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
