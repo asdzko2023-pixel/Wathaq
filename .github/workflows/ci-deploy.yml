@@ -43,12 +43,15 @@ jobs:
       - name: Syntax checks
         run: |
           cd "$PROJECT_DIR"
-          node --check app/src/app.mjs
-          node --check app/sw.js
-          node --check app/build.mjs
+          for f in app/src/app.mjs app/sw.js app/build.mjs app/staff/staff.mjs app/merchant/merchant.mjs app/merchant/boot.mjs; do node --check "$f"; done
 
-      - name: Smoke tests (stubbed DOM and Supabase, no network)
-        run: cd "$PROJECT_DIR" && node app/test/smoke.mjs
+      - name: Tests (stubbed DOM and Supabase, no network)
+        run: |
+          cd "$PROJECT_DIR"
+          node app/test/smoke.mjs
+          node app/staff/test/smoke.mjs
+          node app/merchant/test/smoke.mjs
+          node app/merchant/test/boot.smoke.mjs
 
       - name: Build site into public/
         run: cd "$PROJECT_DIR" && node app/build.mjs
