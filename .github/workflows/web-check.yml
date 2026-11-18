@@ -18,5 +18,7 @@ jobs:
           node-version: 22
       - name: Check JavaScript syntax
         run: node --check web/app.js
-      - name: Check required web assets
-        run: test -s web/index.html && test -s web/styles.css && test -s web/config.js && test -s web/manifest.webmanifest && test -s web/icon.svg && test -s web/sw.js
+      - name: Build deployable WATHAQ Core bundle
+        run: node app/build.mjs
+      - name: Check generated bundle
+        run: node --check public/app.js && test -s public/index.html && test -s public/config.js && grep -q 'ncfromrlnlotrwkgjenk.supabase.co' public/config.js
