@@ -995,5 +995,11 @@ create index if not exists merchant_invites_created_by_idx on public.merchant_in
 create index if not exists merchant_invites_accepted_by_idx on public.merchant_invites(accepted_by);
 
 
--- Internal helper and trigger functions are never callable through client roles.
+-- Internal helper and trigger functions are not exposed through the Data API.
+-- Authenticated execution is retained only for helpers used by RLS policies/RPCs.
 revoke all on all functions in schema private from public, anon, authenticated;
+grant execute on function private.can_confirm_redeem(uuid) to authenticated;
+grant execute on function private.can_issue_earn(uuid) to authenticated;
+grant execute on function private.can_manage_merchant(uuid) to authenticated;
+grant execute on function private.is_merchant_member(uuid) to authenticated;
+grant execute on function private.is_platform_admin() to authenticated;
