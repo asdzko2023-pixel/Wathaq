@@ -15,6 +15,7 @@ const assets = [
   'config.js',
   'manifest.webmanifest',
   'icon.svg',
+  'wathaq-logo.svg',
   'sw.js'
 ];
 
