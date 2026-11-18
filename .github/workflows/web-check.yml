@@ -24,5 +24,11 @@ jobs:
         run: node --check web/app.js
       - name: Build deployable WATHAQ Core bundle
         run: node app/build.mjs
-      - name: Check generated bundle
-        run: node --check public/app.js && test -s public/index.html && test -s public/config.js && grep -q 'ncfromrlnlotrwkgjenk.supabase.co' public/config.js
+      - name: Check generated bundle and bootstrap
+        run: node --check public/app.js && test -s public/index.html && test -s public/config.js && test -s supabase/bootstrap/wathaq-core.sql && grep -q 'ncfromrlnlotrwkgjenk.supabase.co' public/config.js && ! grep -q 'service_role' public/config.js
+      - name: Upload WATHAQ Core build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wathaq-core-public
+          path: public/
+          if-no-files-found: error
