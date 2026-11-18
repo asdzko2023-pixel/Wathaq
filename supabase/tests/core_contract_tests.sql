@@ -40,10 +40,29 @@ begin
     select 1 from pg_proc p
     join pg_namespace n on n.oid=p.pronamespace
     where n.nspname='private'
-      and (has_function_privilege('anon',p.oid,'EXECUTE')
-        or has_function_privilege('authenticated',p.oid,'EXECUTE'))
+      and has_function_privilege('anon',p.oid,'EXECUTE')
   ) then
-    raise exception 'FAIL: private helper/trigger function is executable by a client role';
+    raise exception 'FAIL: private helper/trigger function is executable by anon';
+  end if;
+
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='private'
+      and p.proname not in ('can_confirm_redeem','can_issue_earn','can_manage_merchant','is_merchant_member','is_platform_admin')
+      and has_function_privilege('authenticated',p.oid,'EXECUTE')
+  ) then
+    raise exception 'FAIL: trigger-only private function is executable by authenticated';
+  end if;
+
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='private'
+      and p.proname in ('can_confirm_redeem','can_issue_earn','can_manage_merchant','is_merchant_member','is_platform_admin')
+      and not has_function_privilege('authenticated',p.oid,'EXECUTE')
+  ) then
+    raise exception 'FAIL: authenticated RLS helper function lost its required execution grant';
   end if;
 
   -- All public RPC entry points must be explicitly authenticated and hardened.
