@@ -59,10 +59,7 @@ update wathaq_test_state set earn_code=(public.create_customer_checkin_code(prog
 update wathaq_test_state set unauthorized_earn_error=(
  public.confirm_earn_code(earn_code,100)->>'error'
 );
-select case when
- (select char_length(earn_code)=16 and unauthorized_earn_error is not null from wathaq_test_state)
-then 'PASS: customer cannot confirm an earn token and token entropy is 64 bits'
-else (1/0)::text end;
+
 
 -- Authorized staff confirms the purchase; replay must be rejected.
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
@@ -100,7 +97,8 @@ update wathaq_test_state set stamps_replay_error=(public.confirm_redeem_code(sta
 
 reset role;
 select case when
- (select points_balance=50 and lifetime_points=100 from public.loyalty_accounts where id=(select account_id from wathaq_test_state))
+ (select char_length(earn_code)=16 and unauthorized_earn_error is not null from wathaq_test_state)
+ and  (select points_balance=50 and lifetime_points=100 from public.loyalty_accounts where id=(select account_id from wathaq_test_state))
  and (select count(*)=2 from public.loyalty_ledger where account_id=(select account_id from wathaq_test_state))
  and (select stamps_balance=0 and lifetime_stamps=1 from public.loyalty_accounts where id=(select stamps_account_id from wathaq_test_state))
  and (select count(*)=2 from public.loyalty_ledger where account_id=(select stamps_account_id from wathaq_test_state))
@@ -108,6 +106,6 @@ select case when
  and not has_table_privilege('authenticated','public.loyalty_accounts','UPDATE')
  and not has_table_privilege('authenticated','public.loyalty_ledger','INSERT')
 then 'PASS: points, stamps, earn/redeem, replay protection, immutable ledger and client privilege boundaries'
-else (1/0)::text end;
+else 'FAIL: integration contract mismatch' end;
 
 rollback;
