@@ -1,10 +1,11 @@
-const { createClient } = window.supabase;
+const createClient = window.supabase?.createClient;
 const cfg = window.WATHAQ_CONFIG || {};
-const sb = cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
+const sb = createClient && cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const $ = (s,r=document)=>r.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],ledger:[],merchants:[],staffMembers:[],canManageMerchant:false,isAdmin:false,otpSent:false};
 const app=$('#app'),dialog=$('#authDialog'),toast=$('#toast');let stopScanner=null;
+if(!sb){app.innerHTML='<section class="panel empty"><b>واجهة وِثاق محفوظة على جهازك</b>تعذر تحميل مكتبة الاتصال. تحقق من الإنترنت ثم أعد فتح التطبيق.</section>';throw new Error('Supabase client library unavailable')}
 const money=n=>new Intl.NumberFormat('ar-YE',{maximumFractionDigits:0}).format(Number(n||0));
 function fileExt(file){return ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif'})[file?.type]||null}
 function publicImage(bucket,path){return path?sb.storage.from(bucket).getPublicUrl(path).data.publicUrl:''}
