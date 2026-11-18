@@ -4,8 +4,9 @@ begin;
 
 create temporary table wathaq_test_state (
  merchant_id uuid, program_id uuid, account_id uuid, reward_id uuid,
- invite_code text, earn_code text, redeem_code text,
- unauthorized_earn_error text, earn_replay_error text, redeem_replay_error text
+ stamps_program_id uuid, stamps_account_id uuid, stamps_reward_id uuid,
+ invite_code text, earn_code text, redeem_code text, stamps_earn_code text, stamps_redeem_code text,
+ unauthorized_earn_error text, earn_replay_error text, redeem_replay_error text, stamps_replay_error text
 ) on commit drop;
 grant select,insert,update on wathaq_test_state to authenticated;
 
@@ -76,20 +77,41 @@ select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333'
 select public.confirm_redeem_code(redeem_code) from wathaq_test_state;
 update wathaq_test_state set redeem_replay_error=(public.confirm_redeem_code(redeem_code)->>'error');
 
+-- Repeat the full lifecycle for a stamps program with a minimum-purchase rule.
 reset role;
-do $$
-declare v_balance bigint; v_lifetime bigint; v_entries integer; v_earn_replay text; v_redeem_replay text;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+insert into public.loyalty_programs(id,merchant_id,name,kind,state,currency_code,stamp_goal,rules)
+values('dddddddd-dddd-4ddd-8ddd-dddddddddddd','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','WATHAQ Test Stamps','stamps','active','YER',5,'{"minimum_purchase":20}');
+insert into public.rewards(id,merchant_id,program_id,title,stamps_cost,is_active)
+values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','dddddddd-dddd-4ddd-8ddd-dddddddddddd','Test Stamp Reward',1,true);
+update wathaq_test_state set stamps_program_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd',stamps_reward_id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+update wathaq_test_state set stamps_account_id=public.join_loyalty_program(stamps_program_id);
+update wathaq_test_state set stamps_earn_code=(public.create_customer_checkin_code(stamps_program_id)->>'code');
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+select public.confirm_earn_code(stamps_earn_code,25) from wathaq_test_state;
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
+update wathaq_test_state set stamps_redeem_code=(public.create_redeem_code(stamps_account_id,stamps_reward_id)->>'code');
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+select public.confirm_redeem_code(stamps_redeem_code) from wathaq_test_state;
+update wathaq_test_state set stamps_replay_error=(public.confirm_redeem_code(stamps_redeem_code)->>'error');
+
+reset role;
+do $
+declare v_balance bigint; v_lifetime bigint; v_entries integer; v_stamps integer; v_stamp_lifetime integer; v_stamp_entries integer;
+ v_earn_replay text; v_redeem_replay text; v_stamps_replay text;
 begin
- select points_balance,lifetime_points into v_balance,v_lifetime
- from public.loyalty_accounts where id=(select account_id from wathaq_test_state);
+ select points_balance,lifetime_points into v_balance,v_lifetime from public.loyalty_accounts where id=(select account_id from wathaq_test_state);
  select count(*) into v_entries from public.loyalty_ledger where account_id=(select account_id from wathaq_test_state);
- select earn_replay_error,redeem_replay_error into v_earn_replay,v_redeem_replay from wathaq_test_state;
- if v_balance<>50 or v_lifetime<>100 or v_entries<>2 then
-  raise exception 'FAIL: expected balance 50, lifetime earned 100 and two ledger rows; got %, %, %',v_balance,v_lifetime,v_entries;
- end if;
- if v_earn_replay<>'code_used' or v_redeem_replay<>'code_used' then
-  raise exception 'FAIL: one-time token replay was not rejected';
- end if;
+ select stamps_balance,lifetime_stamps into v_stamps,v_stamp_lifetime from public.loyalty_accounts where id=(select stamps_account_id from wathaq_test_state);
+ select count(*) into v_stamp_entries from public.loyalty_ledger where account_id=(select stamps_account_id from wathaq_test_state);
+ select earn_replay_error,redeem_replay_error,stamps_replay_error into v_earn_replay,v_redeem_replay,v_stamps_replay from wathaq_test_state;
+ if v_balance<>50 or v_lifetime<>100 or v_entries<>2 then raise exception 'FAIL: points lifecycle mismatch: %, %, %',v_balance,v_lifetime,v_entries; end if;
+ if v_stamps<>0 or v_stamp_lifetime<>1 or v_stamp_entries<>2 then raise exception 'FAIL: stamps lifecycle mismatch: %, %, %',v_stamps,v_stamp_lifetime,v_stamp_entries; end if;
+ if v_earn_replay<>'code_used' or v_redeem_replay<>'code_used' or v_stamps_replay<>'code_used' then raise exception 'FAIL: one-time token replay was not rejected'; end if;
  if has_table_privilege('authenticated','public.loyalty_accounts','UPDATE')
     or has_table_privilege('authenticated','public.loyalty_ledger','INSERT') then
   raise exception 'FAIL: client role has direct balance or ledger write privileges';
