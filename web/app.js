@@ -52,7 +52,8 @@ function renderPlatform(){if(!state.isAdmin){app.innerHTML='<div class="empty"><
 async function refresh(){
  if(!sb){app.innerHTML='<div class="empty">إعداد الاتصال غير مكتمل.</div>';return}
  const {data:{session}}=await sb.auth.getSession();state.user=session?.user||null;
- if(!state.user){render();return}
+ if(!state.user){state.isAdmin=false;render();return}
+ const {data:admin,error:adminError}=await sb.from('platform_admins').select('user_id').eq('user_id',state.user.id).maybeSingle();if(adminError)throw adminError;state.isAdmin=!!admin;
  try{if(state.view==='customer')await customerData();if(state.view==='merchant')await merchantData();if(state.view==='platform')await platformData();render()}catch(e){console.error(e);app.innerHTML='<div class="empty"><b>تعذر تحميل البيانات</b>'+esc(e.message||'خطأ غير معروف')+'<br><button class="btn btn-soft" data-refresh>إعادة المحاولة</button></div>'}
 }
 async function action(fn){const x=await fn();if(x?.error)throw x.error;return x?.data??x}
