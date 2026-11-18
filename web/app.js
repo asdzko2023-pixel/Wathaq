@@ -38,7 +38,7 @@ function renderCustomer(){
 }
 async function merchantData(){
  const {data,error}=await sb.from('merchants').select('id,name,slug,status,category,city,created_at,loyalty_programs(id,name,kind,state,version),loyalty_accounts(id,points_balance,stamps_balance)').order('created_at',{ascending:false});
- if(error)throw error;state.merchants=data||[];state.merchant=state.merchants[0]||null;state.staffMembers=[];state.canManageMerchant=false;if(state.merchant){const staff=await sb.rpc('list_merchant_members',{p_merchant_id:state.merchant.id});if(staff.error)throw staff.error;state.canManageMerchant=!!staff.data?.ok;if(state.canManageMerchant)state.staffMembers=staff.data.members||[];}
+ if(error)throw error;state.merchants=data||[];state.merchant=state.merchants[0]||null;state.staffMembers=[];state.canManageMerchant=false;if(state.merchant){const staff=await sb.rpc('list_merchant_members',{p_merchant_id:state.merchant.id});if(staff.error)throw staff.error;state.canManageMerchant=!!staff.data?.ok;if(state.canManageMerchant){state.staffMembers=staff.data.members||[];const ledger=await sb.from('loyalty_ledger').select('kind,points_delta,stamps_delta,created_at').eq('merchant_id',state.merchant.id).order('created_at',{ascending:false}).limit(200);if(ledger.error)throw ledger.error;state.merchantLedger=ledger.data||[]}}
 }
 function merchantActivityMarkup(){
  const days=[];
