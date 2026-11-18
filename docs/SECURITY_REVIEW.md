@@ -6,7 +6,7 @@ Scope: database roles, RLS, security-definer RPCs, token handling, and current a
 
 ## Verified controls
 
-- All 12 public tables have Row Level Security enabled.
+- All 13 public tables have Row Level Security enabled.
 - The authenticated role has no direct UPDATE privilege on loyalty balances, no INSERT/UPDATE privilege on the ledger, and no direct SELECT/INSERT access to one-time tokens or merchant invitations.
 - `loyalty_tokens` and `merchant_invites` intentionally have no client RLS policies. With their direct table privileges revoked, the default-deny behavior is intentional.
 - Every function in the private schema has anonymous EXECUTE revoked. Authenticated EXECUTE is granted only to:
