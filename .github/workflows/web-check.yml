@@ -4,10 +4,14 @@ on:
     branches: [build/wathaq-premium-foundation]
     paths:
       - 'web/**'
+      - 'app/**'
+      - 'supabase/bootstrap/**'
       - '.github/workflows/web-check.yml'
   pull_request:
     paths:
       - 'web/**'
+      - 'app/**'
+      - 'supabase/bootstrap/**'
 jobs:
   validate:
     runs-on: ubuntu-latest
