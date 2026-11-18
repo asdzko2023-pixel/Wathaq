@@ -4,3 +4,49 @@
 .progress-track{height:8px;border-radius:99px;background:#ffffff12;overflow:hidden;margin:16px 0 8px}.progress-track span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#b9882f,#f0d58a);box-shadow:0 0 16px #d9a93e55;transition:width .5s ease}.store-logo{width:44px;height:44px;border-radius:14px;object-fit:cover;border:1px solid #ffffff22}
 
 .activity-panel{padding:22px}.activity-legend{display:flex;gap:18px;justify-content:flex-end;color:var(--muted);font-size:11px}.activity-legend span{display:flex;align-items:center;gap:7px}.activity-legend i{display:inline-block;width:8px;height:8px;border-radius:50%}.legend-earn{background:#d8ae55}.legend-redeem{background:#6e9dba}.activity-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;margin-top:20px}.activity-day{text-align:center;display:grid;gap:8px;justify-items:center}.activity-columns{height:112px;display:flex;align-items:flex-end;gap:5px}.activity-columns span,.activity-columns i{display:block;width:10px;min-height:4px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#f0d58a,#b9882f)}.activity-columns i{background:linear-gradient(180deg,#9bc0d5,#426e8b)}.activity-day small{font-size:10px;color:var(--muted)}.activity-day b{font-size:11px}
+
+/* WATHAQ premium customer identity */
+:root{--ink:#25102f;--ink2:#351044;--ink3:#4b1760;--sand:#fff9fc;--sand2:#f7eaf2;--gold:#e7b64f;--gold2:#ffe09a;--goldText:#57306b;--muted:#8c7690;--line:rgba(91,35,99,.11);--white:#fff}
+body{background:radial-gradient(ellipse at 50% -10%,#5c276b 0,transparent 43%),linear-gradient(180deg,#fff8fc 0%,#f8eaf2 100%);color:#321044}
+.topbar{background:rgba(44,15,55,.94);border-bottom:1px solid #f4d28a55}
+.brand{color:#fff}.brand-mark{border-color:#e7b64f66;color:#ffe09a;background:linear-gradient(145deg,#6e3479,#351044)}
+.role-switch{background:#ffffff12;border-color:#ffffff20}.role-switch button{color:#f7eaf5}.role-switch button.active{background:linear-gradient(135deg,#ffe4a1,#d99a32);color:#351044}
+.connection{color:#f2dfee}.btn-outline{color:#fff;border-color:#e7b64f77}
+.shell{max-width:760px;padding:24px 20px 120px}
+.wathaq-home{display:grid;gap:24px;padding-bottom:18px}
+.wathaq-welcome{margin:-24px -20px 0;padding:22px 22px 28px;background:radial-gradient(ellipse at 10% 0%,#713c7d 0,transparent 48%),linear-gradient(135deg,#32103f,#1e0929);border-radius:0 0 34px 34px;box-shadow:0 18px 44px #35104435;color:#fff}
+.welcome-brand{display:flex;align-items:center;gap:14px;min-height:84px}
+.welcome-brand img{width:132px;height:58px;object-fit:contain;filter:drop-shadow(0 3px 8px #0004)}
+.welcome-user{margin-inline-start:auto;display:grid;gap:3px;text-align:right}
+.welcome-user small{color:#e6d2e9;font-size:12px}.welcome-user strong{font-size:16px;color:#fff}
+.welcome-avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:2px solid #f1c76e;background:linear-gradient(145deg,#fff0c8,#d99a32);color:#4b1b58;font-weight:800}
+.loyalty-card{position:relative;overflow:hidden;border:1px solid #f8d88d66;border-radius:26px;padding:22px;background:radial-gradient(ellipse at 0 100%,#63316e 0,transparent 42%),linear-gradient(125deg,#4a1b59,#230d31 75%,#3b124c);color:#fff;box-shadow:0 15px 32px #30103d40}
+.loyalty-card:after{content:"";position:absolute;inset:auto -15% -65% 15%;height:150px;border:2px solid #dca94e88;border-radius:50%;transform:rotate(-9deg);pointer-events:none}
+.featured-balance{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;margin-top:18px;min-height:172px;align-items:center}
+.featured-level{border-inline-end:1px solid #ffffff35;padding-inline-end:18px;display:grid;gap:9px}
+.featured-level span,.featured-points>span{font-size:13px;color:#e8d7eb}
+.featured-level strong{font:700 25px 'Reem Kufi';color:#ffe09a}
+.featured-level small,.featured-points small{font-size:11px;color:#e4cfe8;line-height:1.7}
+.featured-points{display:grid;gap:6px}.featured-points strong{font:700 40px Inter,sans-serif;color:#fff;letter-spacing:-1px}
+.quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.quick-tile{min-height:112px;border:1px solid #fff;border-radius:23px;background:linear-gradient(145deg,#fff,#f1dfed);box-shadow:0 9px 22px #55215a16;color:#421454;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:12px 6px}
+.quick-tile span{font-size:31px;line-height:1;color:#531d6b}.quick-tile b{font-size:12px}
+.promo-banner{display:flex;align-items:center;justify-content:space-between;overflow:hidden;min-height:148px;border-radius:26px;padding:22px 25px;background:linear-gradient(115deg,#2c0d3c,#511c63 60%,#2a1037);color:#fff;box-shadow:0 14px 30px #3912442b}
+.promo-banner h2{font:700 25px 'Reem Kufi';margin:10px 0 3px}.promo-banner p{font-size:13px;color:#e8d7eb;margin:0}.promo-gem{font-size:66px;color:#f5ce78;text-shadow:0 0 25px #f5ce7899}
+.wathaq-home .section-head{margin:0 0 13px;align-items:center}.wathaq-home .section-head h2{color:#351044;font:700 21px 'Reem Kufi'}.wathaq-home .section-head p{color:#927a96;font-size:11px}
+.wathaq-home .field{margin:0 0 12px}.wathaq-home .field input{background:#fff;border:1px solid #ead9e8;color:#351044;box-shadow:0 5px 16px #55215a0a}.wathaq-home .field input::placeholder{color:#a58ca8}
+.soft-list,.loyalty-list,.activity-list{display:grid;gap:10px}
+.soft-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:20px;background:#fff;border:1px solid #f1e4ef;box-shadow:0 7px 18px #52205b0c;color:#351044}
+.soft-card .store-icon{background:#f4e8f4;color:#59216d}.soft-card-copy{flex:1;min-width:0}.soft-card-copy strong{display:block;font-size:14px}.soft-card-copy small,.soft-card-copy p{font-size:11px;color:#927b98}.soft-card-copy p{margin:5px 0 0}
+.reward-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.reward-card{overflow:hidden;border-radius:20px;background:#fff;box-shadow:0 8px 20px #55215a12;color:#351044}.reward-card>img,.reward-placeholder{width:100%;height:116px;object-fit:cover}.reward-placeholder{display:grid;place-items:center;background:linear-gradient(135deg,#5d2671,#2a1038);color:#f5cf7b;font-size:46px}.reward-card>div:last-child{padding:13px}.reward-card h3{font-size:14px;margin:8px 0}.reward-card p{font-size:11px;color:#927b98;min-height:30px}.reward-card strong{display:block;color:#59216d;margin:8px 0;font-size:13px}.reward-card .btn{padding:9px 12px;font-size:11px}
+.loyalty-card-top{display:flex;justify-content:space-between;align-items:center}.loyalty-chip{font-size:11px;border:1px solid #f4d18a77;border-radius:30px;padding:6px 11px;color:#ffe09a}.loyalty-crown{font-size:25px;color:#f5cf7b}
+.loyalty-card-main{display:flex;align-items:center;justify-content:space-between;margin-top:16px}.loyalty-card-main>div:first-child{display:grid;gap:7px}.loyalty-card-main small{font-size:11px;color:#e6d5e9}.loyalty-card-main strong{font:700 27px Inter,'IBM Plex Sans Arabic';color:#fff}.loyalty-star{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#fff0b8,#d89b36);color:#7a4b15;font-size:25px;box-shadow:0 4px 16px #e7b64f55}
+.loyalty-card .progress-track{background:#ffffff25}.loyalty-card .progress-track span{background:linear-gradient(90deg,#d99b37,#ffe6a4)}.loyalty-next{color:#f2dfb2;font-size:11px}
+.loyalty-card-actions{position:relative;z-index:1;margin-top:15px}.loyalty-card-actions .btn{padding:9px 14px;font-size:11px}
+.activity-row{display:flex;align-items:center;gap:12px;padding:13px;border-radius:19px;background:#fff;border:1px solid #f1e4ef;box-shadow:0 7px 18px #52205b0c;color:#351044}.activity-symbol{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,#f4e1ff,#7b21a1);color:#fff;font-size:21px;box-shadow:0 5px 12px #6e269044}.activity-row>div{flex:1}.activity-row strong{display:block;font-size:13px}.activity-row small,.activity-row time{font-size:10px;color:#947d99}
+.customer-bottom-nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);display:flex;justify-content:space-around;align-items:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));background:#fff9ffed;border:1px solid #ead8eb;border-bottom:0;border-radius:25px 25px 0 0;box-shadow:0 -8px 30px #51205b20;backdrop-filter:blur(18px)}
+.customer-bottom-nav a{display:grid;justify-items:center;gap:3px;text-decoration:none;color:#56216b;font-size:22px;font-weight:700}.customer-bottom-nav a.active{color:#d59a32}.customer-bottom-nav small{font-size:10px}
+.wathaq-home .empty{color:#907a95;border-color:#dfcce0}.wathaq-home .empty b{color:#421454}
+@media(max-width:520px){.shell{padding:18px 14px 115px}.wathaq-welcome{margin:-18px -14px 0;padding:18px 16px 24px}.welcome-brand img{width:108px}.welcome-user strong{font-size:14px}.featured-balance{padding:17px;gap:12px;min-height:155px}.featured-points strong{font-size:32px}.featured-level strong{font-size:21px}.quick-grid{gap:8px}.quick-tile{min-height:98px;border-radius:19px}.quick-tile span{font-size:27px}.quick-tile b{font-size:11px}.promo-banner{min-height:130px;padding:17px}.promo-banner h2{font-size:21px}.reward-grid{gap:9px}.reward-card>img,.reward-placeholder{height:95px}.soft-card{padding:11px;gap:8px}.soft-card .btn{padding:8px 10px}.loyalty-card{padding:18px}}
+@media(min-width:521px){.wathaq-home{gap:28px}.wathaq-welcome{border-radius:0 0 38px 38px}}
