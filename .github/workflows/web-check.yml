@@ -6,12 +6,14 @@ on:
       - 'web/**'
       - 'app/**'
       - 'supabase/bootstrap/**'
+      - 'supabase/tests/**'
       - '.github/workflows/web-check.yml'
   pull_request:
     paths:
       - 'web/**'
       - 'app/**'
       - 'supabase/bootstrap/**'
+      - 'supabase/tests/**'
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -25,7 +27,7 @@ jobs:
       - name: Build deployable WATHAQ Core bundle
         run: node app/build.mjs
       - name: Check generated bundle and bootstrap
-        run: node --check public/app.js && test -s public/index.html && test -s public/config.js && test -s supabase/bootstrap/wathaq-core.sql && grep -q 'ncfromrlnlotrwkgjenk.supabase.co' public/config.js && ! grep -q 'service_role' public/config.js
+        run: node --check public/app.js && test -s public/index.html && test -s public/config.js && test -s supabase/bootstrap/wathaq-core.sql && test -s supabase/tests/core_contract_tests.sql && test -s supabase/tests/loyalty_transaction_integration.sql && grep -q 'ncfromrlnlotrwkgjenk.supabase.co' public/config.js && ! grep -q 'service_role' public/config.js
       - name: Upload WATHAQ Core build artifact
         uses: actions/upload-artifact@v4
         with:
