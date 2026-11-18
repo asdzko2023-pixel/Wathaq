@@ -19,4 +19,4 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check web/app.js
       - name: Check required web assets
-        run: test -s web/index.html && test -s web/styles.css && test -s web/config.js
+        run: test -s web/index.html && test -s web/styles.css && test -s web/config.js && test -s web/manifest.webmanifest && test -s web/icon.svg && test -s web/sw.js
