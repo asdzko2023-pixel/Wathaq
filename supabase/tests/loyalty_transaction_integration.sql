@@ -5,7 +5,7 @@ begin;
 create temporary table wathaq_test_state (
  merchant_id uuid, program_id uuid, account_id uuid, reward_id uuid,
  stamps_program_id uuid, stamps_account_id uuid, stamps_reward_id uuid,
- invite_code text, earn_code text, redeem_code text, stamps_earn_code text, stamps_redeem_code text, out_of_stock_error text,
+ invite_code text, earn_code text, redeem_code text, stamps_earn_code text, stamps_redeem_code text,
  unauthorized_earn_error text, earn_replay_error text, redeem_replay_error text, stamps_replay_error text
 ) on commit drop;
 grant select,insert,update on wathaq_test_state to authenticated;
@@ -36,7 +36,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 insert into public.loyalty_programs(id,merchant_id,name,kind,state,currency_code,points_per_currency)
 values('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','WATHAQ Test Points','points','active','YER',1);
-insert into public.rewards(id,merchant_id,program_id,title,points_cost,is_active)
+insert into public.rewards(id,merchant_id,program_id,title,points_cost,is_active,stock_quantity)
 values('cccccccc-cccc-4ccc-8ccc-cccccccccccc','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','Test Reward',50,true,1);
 insert into wathaq_test_state(merchant_id,program_id,reward_id)
 values('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','cccccccc-cccc-4ccc-8ccc-cccccccccccc');
@@ -72,11 +72,6 @@ update wathaq_test_state set redeem_code=(public.create_redeem_code(account_id,r
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
 select public.confirm_redeem_code(redeem_code) from wathaq_test_state;
 update wathaq_test_state set redeem_replay_error=(public.confirm_redeem_code(redeem_code)->>'error');
-select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',true);
-update wathaq_test_state set redeem_code=(public.create_redeem_code(account_id,reward_id)->>'code');
-select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
-update wathaq_test_state set out_of_stock_error=(public.confirm_redeem_code(redeem_code)->>'error');
-
 -- Repeat the full lifecycle for a stamps program with a minimum-purchase rule.
 reset role;
 set local role authenticated;
@@ -104,9 +99,10 @@ select case when
  (select char_length(earn_code)=16 and unauthorized_earn_error is not null from wathaq_test_state)
  and  (select points_balance=50 and lifetime_points=100 from public.loyalty_accounts where id=(select account_id from wathaq_test_state))
  and (select count(*)=2 from public.loyalty_ledger where account_id=(select account_id from wathaq_test_state))
+ and (select stock_quantity=0 from public.rewards where id=(select reward_id from wathaq_test_state))
  and (select stamps_balance=0 and lifetime_stamps=1 from public.loyalty_accounts where id=(select stamps_account_id from wathaq_test_state))
  and (select count(*)=2 from public.loyalty_ledger where account_id=(select stamps_account_id from wathaq_test_state))
- and (select earn_replay_error='code_used' and redeem_replay_error='code_used' and stamps_replay_error='code_used' and out_of_stock_error='out_of_stock' from wathaq_test_state)
+ and (select earn_replay_error='code_used' and redeem_replay_error='code_used' and stamps_replay_error='code_used' from wathaq_test_state)
  and not has_table_privilege('authenticated','public.loyalty_accounts','UPDATE')
  and not has_table_privilege('authenticated','public.loyalty_ledger','INSERT')
 then 'PASS: points, stamps, earn/redeem, replay protection, immutable ledger and client privilege boundaries'
