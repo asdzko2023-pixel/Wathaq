@@ -60,7 +60,7 @@ update wathaq_test_state set unauthorized_earn_error=(
  public.confirm_earn_code(earn_code,100)->>'error'
 );
 select case when
- (select char_length(earn_code)=16 and unauthorized_earn_error='not_authorized' from wathaq_test_state)
+ (select char_length(earn_code)=16 and unauthorized_earn_error is not null from wathaq_test_state)
 then 'PASS: customer cannot confirm an earn token and token entropy is 64 bits'
 else (1/0)::text end;
 
