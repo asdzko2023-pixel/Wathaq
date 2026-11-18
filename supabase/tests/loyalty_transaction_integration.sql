@@ -6,7 +6,8 @@ create temporary table wathaq_test_state (
  merchant_id uuid, program_id uuid, account_id uuid, reward_id uuid,
  stamps_program_id uuid, stamps_account_id uuid, stamps_reward_id uuid,
  invite_code text, earn_code text, redeem_code text, stamps_earn_code text, stamps_redeem_code text,
- unauthorized_earn_error text, earn_replay_error text, redeem_replay_error text, stamps_replay_error text
+ unauthorized_earn_error text, earn_replay_error text, redeem_replay_error text, stamps_replay_error text,
+ member_list_result jsonb, owner_member_update_ok boolean, staff_member_update_error text
 ) on commit drop;
 grant select,insert,update on wathaq_test_state to authenticated;
 
@@ -49,6 +50,24 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
 select public.accept_merchant_invite(invite_code) from wathaq_test_state;
+
+-- Owner can list and update invited staff; staff cannot manage the team.
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+update wathaq_test_state
+set member_list_result=public.list_merchant_members(merchant_id)
+from wathaq_test_state as s;
+update wathaq_test_state
+set owner_member_update_ok=(public.set_merchant_member(
+ merchant_id,'33333333-3333-4333-8333-333333333333',array['issue_earn','confirm_redeem'],true)->>'ok')::boolean;
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+update wathaq_test_state
+set staff_member_update_error=public.set_merchant_member(
+ merchant_id,'33333333-3333-4333-8333-333333333333',array['issue_earn'],true)->>'error';
+
 
 -- Customer joins, receives a one-time QR payload; customer cannot confirm it.
 reset role;
@@ -103,6 +122,8 @@ select case when
  and (select stamps_balance=0 and lifetime_stamps=1 from public.loyalty_accounts where id=(select stamps_account_id from wathaq_test_state))
  and (select count(*)=2 from public.loyalty_ledger where account_id=(select stamps_account_id from wathaq_test_state))
  and (select earn_replay_error='code_used' and redeem_replay_error='code_used' and stamps_replay_error='code_used' from wathaq_test_state)
+ and (select (member_list_result->>'ok')::boolean and member_list_result->'members' @> jsonb_build_array(jsonb_build_object('user_id','33333333-3333-4333-8333-333333333333')) from wathaq_test_state)
+ and (select owner_member_update_ok and staff_member_update_error='not_authorized' from wathaq_test_state)
  and not has_table_privilege('authenticated','public.loyalty_accounts','UPDATE')
  and not has_table_privilege('authenticated','public.loyalty_ledger','INSERT')
 then 'PASS: points, stamps, earn/redeem, replay protection, immutable ledger and client privilege boundaries'
