@@ -20,15 +20,17 @@
 - Program rule changes increment the version; every ledger row records the version used.
 
 ## Current security advisor notes
-- SECURITY DEFINER RPC warnings are intentional for the five exposed business operations. Each checks auth.uid(), uses an empty search_path, verifies ownership or merchant permission, and performs the critical transaction server-side.
+- SECURITY DEFINER RPC warnings are intentional for the nine exposed business and staff-management RPCs. Each checks auth.uid(), uses an empty search_path, verifies ownership or merchant permission, and performs the critical transaction server-side.
 - The no-policy RLS notice on loyalty_tokens is intentional: the table is not directly accessible by client roles.
 - Re-run Supabase security and performance advisors after every schema change. Review all warnings; do not silence them without a documented reason.
 
 ## Known implementation gaps
 - Platform admin bootstrap and UI.
 - Staff invitation and permission-management RPCs and UI.
-- Merchant approval workflow and program publishing controls.
-- Integration tests using isolated test identities.
+- Merchant approval is available in the Super Admin UI; first-admin bootstrap is documented in docs/PLATFORM_BOOTSTRAP.md.
+- Program publishing and pause controls are available to merchant managers.
+- Staff invitation, phone-bound acceptance, member listing and activation controls are implemented.
+- Integration tests using isolated test identities are available in supabase/tests/loyalty_transaction_integration.sql and roll back all fixtures.
 - Abuse/rate limiting and operational alerting.
-- End-to-end concurrency, load and penetration tests.
+- End-to-end concurrency, load and independent penetration tests.
 - Data retention, export and account deletion workflows.
