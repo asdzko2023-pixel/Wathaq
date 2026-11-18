@@ -1,4 +1,4 @@
-create extension if not exists pgcrypto with schema extensions; create schema if not exists private; revoke all on schema private from public,anon; grant usage on schema private to authenticated;
+create extension if not exists pgcrypto with schema extensions; create schema if not exists private; revoke all on schema private from public,anon; grant usage on schema private to authenticated;\nalter default privileges for role postgres in schema public revoke all on tables from anon,authenticated;\nalter default privileges for role postgres in schema public revoke all on sequences from anon,authenticated;\nalter default privileges for role postgres in schema public revoke execute on functions from public,anon,authenticated;\nalter default privileges for role postgres in schema private revoke all on tables from public,anon,authenticated;\nalter default privileges for role postgres in schema private revoke execute on functions from public,anon,authenticated;
 
 create type public.account_role as enum ('customer', 'merchant_owner', 'merchant_admin', 'merchant_staff', 'platform_admin');
 
@@ -823,7 +823,7 @@ create policy wathaq_merchant_branding_update on storage.objects as permissive f
 
 create policy wathaq_public_branding_read on storage.objects as permissive for SELECT to anon, authenticated using ((bucket_id = ANY (ARRAY['merchant-branding'::text, 'reward-media'::text])));
 
-grant SELECT on table public.loyalty_programs to anon;
+revoke all on all tables in schema public from anon,authenticated;\nrevoke all on all sequences in schema public from anon,authenticated;\ngrant SELECT on table public.loyalty_programs to anon;
 
 grant SELECT on table public.merchants to anon;
 
