@@ -23,7 +23,7 @@ Keep PR #1 in draft and do not merge until all production prerequisites are comp
 
 
 ## Security review (2026-11-19)
-- All 12 public tables have RLS enabled. The two sensitive tables `loyalty_tokens` and `merchant_invites` intentionally have no client policies and no direct client table grants; access is only through authenticated, permission-checked RPCs.
+- All 13 public tables have RLS enabled. The two sensitive tables `loyalty_tokens` and `merchant_invites` intentionally have no client policies and no direct client table grants; access is only through authenticated, permission-checked RPCs.
 - Private-schema helper functions are not exposed through the Data API. Anonymous execution is revoked for every private function. Authenticated execution is granted only to the five helpers required by RLS and the protected RPC call paths; trigger-only helpers remain non-executable by client roles.
 - Nine public RPC entry points remain callable by authenticated users because the app needs them. Each was inspected for `auth.uid()` checks and an empty pinned `search_path`; anonymous execution is revoked. See `docs/SECURITY_REVIEW.md`.
 - Supabase Advisor still reports 9 authenticated SECURITY DEFINER RPCs (intentional and manually reviewed), 2 RLS-enabled/no-policy INFO findings (deny-by-default sensitive tables), and 24 unused indexes (new database has no production workload yet). Health advisors returned no findings.
