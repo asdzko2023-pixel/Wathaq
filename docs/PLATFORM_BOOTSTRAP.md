@@ -3,7 +3,7 @@
 The platform console intentionally stays hidden until a real authenticated user is explicitly inserted into public.platform_admins. Do not grant platform-admin status from user metadata or from the browser.
 
 1. Create the first administrator's account through WATHAQ-CORE Auth and verify the email/phone.
-2. In the Supabase SQL Editor for project ncfromrlnlotrwkgjenk, run the statement below after replacing the placeholder with that administrator's exact verified email:
+2. In the Supabase SQL Editor for project ncfromrlnlotrwkgjenk, run the statement below after replacing the placeholder with that administrator's exact verified phone:
 
 ```sql
 insert into public.platform_admins(user_id)
