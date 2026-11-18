@@ -23,7 +23,7 @@ Scope: database roles, RLS, security-definer RPCs, token handling, and current a
 
 1. `supabase/tests/core_contract_tests.sql` — PASS. Checks RLS coverage, direct table privilege boundaries, private helper grants, and the nine authenticated-only RPCs.
 2. `supabase/tests/loyalty_transaction_integration.sql` — PASS. Exercises points and stamps enrolment, earn, redemption, staff authorization, replay rejection, stock decrement, and immutable ledger behavior. Fixtures are rolled back.
-3. GitHub Actions run [44408384051](https://github.com/asdzko2023-pixel/Wathaq/actions/runs/44408384051) — PASS. JavaScript syntax, deployable bundle build, source/public parity, bootstrap/test presence, and artifact upload.
+3. GitHub Actions PR runs [44409084238](https://github.com/asdzko2023-pixel/Wathaq/actions/runs/44409084238) and [44409084376](https://github.com/asdzko2023-pixel/Wathaq/actions/runs/44409084376) — PASS. Current-source build, public-bundle parity, archive safety, design-token contrast, syntax, and legacy smoke checks. The latest commit after deployment-workflow hardening is under recheck.
 
 ## Advisor findings and interpretation
 
