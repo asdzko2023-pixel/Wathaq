@@ -13,3 +13,5 @@ Additional surfaces now included:
 - Platform administrators can approve/reject merchant applications after their account is explicitly bootstrapped in platform_admins (see docs/PLATFORM_BOOTSTRAP.md).
 - Merchant logos and reward images use dedicated public-read Storage buckets with manager-only upload/update/delete policies and a 5 MB image limit.
 - Phone OTP remains dependent on configuring an SMS provider in Supabase Auth; this has not been configured because provider credentials are not available in the project.
+
+The CI workflow builds this interface into public/ and publishes the static bundle as the wathaq-core-public artifact on successful checks.
