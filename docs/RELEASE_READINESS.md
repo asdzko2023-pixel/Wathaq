@@ -8,7 +8,7 @@
 - Merchant branding and reward image storage with restricted write policies.
 - Consolidated bootstrap SQL, rollback-safe integration test, core security contract test, and GitHub Actions build artifact.
 - Live database verification: core security contract test passed; points/stamps earn-and-redeem integration test passed with replay rejection and rollback-safe fixtures.
-- Latest CI run `44408384051` passed JavaScript syntax, public bundle generation/parity, bootstrap/test presence checks, and artifact upload.
+- Latest CI runs `44409084238` and `44409084376` passed the PR checks for current-source build, public bundle parity, legacy archive safety, design-token contrast, syntax, and the reference smoke suite. The latest head is being rechecked after deployment-workflow hardening.
 
 ## Required before production
 1. Configure an SMS provider and verify OTP delivery, resend limits, abuse protection and recovery flows using real devices.
@@ -19,7 +19,7 @@
 6. Deploy the verified public bundle to the chosen hosting target and complete Android device QA.
 
 ## Release policy
-Keep `build/wathaq-premium-foundation` isolated from `main` until all production prerequisites are complete. The WATHAQ v0.5/v0.6 archives remain reference-only; do not apply their legacy migrations to WATHAQ-CORE.
+Keep PR #1 in draft and do not merge until all production prerequisites are complete. GitHub Pages deployment is now manual-only: it requires a workflow_dispatch on `main` with `deploy_production=true`. The WATHAQ v0.5/v0.6 archives remain reference-only; do not apply their legacy migrations to WATHAQ-CORE.
 
 
 ## Security review (2026-11-19)
