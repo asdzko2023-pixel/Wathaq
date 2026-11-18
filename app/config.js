@@ -1,7 +1,7 @@
-// Supabase connection for the DEV project. The publishable key is designed to be public (RLS protects the data).
-// Never put a secret key here.
+// WATHAQ-CORE publishable client configuration. RLS protects all user data.
+// Never put a Supabase secret or service-role key in this file.
 window.WATHAQ_CONFIG = {
-  url: 'https://rnohdqevwkoggplldmiv.supabase.co',
-  key: 'sb_publishable_0NL5kOvG_Hq5Hk2s4rYnIw_gXWv2qFU',
-  env: 'dev'
+  url: 'https://ncfromrlnlotrwkgjenk.supabase.co',
+  key: 'sb_publishable_UilUnaZVJD8RQdN7lsIAHA_qBDrKjvg',
+  env: 'core-dev'
 };
