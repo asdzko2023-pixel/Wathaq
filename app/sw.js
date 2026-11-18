@@ -1,14 +1,1 @@
-// WATHAQ service worker: caches the app shell for weak connections. Never touches Supabase API calls.
-const V = 'wathaq-v0.4.0';
-const SHELL = ['./', './index.html', './config.js', './manifest.webmanifest', './assets/mark.png', './assets/logo.png', './icons/icon-192.png'];
-self.addEventListener('install', (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
-self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((k) => Promise.all(k.filter((x) => x !== V).map((x) => caches.delete(x)))).then(() => self.clients.claim())); });
-self.addEventListener('fetch', (e) => {
-  const r = e.request; if (r.method !== 'GET') return;
-  const u = new URL(r.url), same = u.origin === self.location.origin, cdn = /(^|\.)jsdelivr\.net$|^fonts\.(googleapis|gstatic)\.com$/.test(u.hostname);
-  if (!same && !cdn) return; // Supabase and anything else goes straight to the network
-  e.respondWith(caches.match(r).then((hit) => {
-    const net = fetch(r).then((res) => { if (res.ok) { const cp = res.clone(); caches.open(V).then((c) => c.put(r, cp)); } return res; }).catch(() => hit || (r.mode === 'navigate' ? caches.match('./index.html') : undefined));
-    return hit || net;
-  }));
-});
+const CACHE='wathaq-static-v1';const ASSETS=['./','./index.html','./styles.css','./app.js','./config.js','./manifest.webmanifest','./icon.svg'];self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));self.skipWaiting()});self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))));self.clients.claim()});self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin)return;event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy))}return response}).catch(()=>caches.match('./index.html'))))});
