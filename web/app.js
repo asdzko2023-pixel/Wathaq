@@ -13,7 +13,7 @@ function icon(type){const p={star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L
 function top(t,s){return '<div class="section-head"><div><h2>'+t+'</h2><p>'+s+'</p></div></div>'}
 function hero(e,t,d,a=''){return '<section class="hero"><div class="hero-content"><div class="eyebrow">'+e+'</div><h1>'+t+'</h1><p>'+d+'</p><div class="hero-actions">'+a+'</div></div><div class="hero-art">'+icon('thread')+'</div></section>'}
 function render(){
- $('#authButton').hidden=!!state.user;$('#profileButton').hidden=!state.user;
+ $('#authButton').hidden=!!state.user;$('#profileButton').hidden=!state.user;$('#platformTab').hidden=!state.user||!state.isAdmin;
  if(state.user)$('#profileButton').textContent=(state.user.phone||state.user.email||'و').slice(-1).toUpperCase();
  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
  if(state.view==='customer')renderCustomer();else if(state.view==='merchant')renderMerchant();else if(state.view==='platform')renderPlatform();else renderStaff();
