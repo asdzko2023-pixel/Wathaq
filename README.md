@@ -1,27 +1,41 @@
 # وِثاق | WATHAQ
+
 منصة ولاء متعددة المتاجر، تجمع برامج النقاط والأختام والمكافآت في تجربة عربية راقية.
 
-## اتجاه البناء الجديد
-يعاد تأسيس المنتج على قاعدة مستقلة باسم **WATHAQ-CORE**. ملفات WATHAQ_SOURCE_v0.5.zip وWATHAQ_SOURCE_v0.6.zip مراجع لفهم السلوك والهوية فقط؛ لا يتم ربط النظام الجديد بقاعدة NOVEXA أو بقاعدة WATHAQ القديمة.
+## اتجاه البناء
+يعاد تأسيس المنتج على قاعدة مستقلة باسم **WATHAQ-CORE**. ملفات v0.5 وv0.6 مراجع لفهم السلوك والهوية فقط؛ لا يرتبط النظام الجديد بقاعدة NOVEXA أو بقاعدة WATHAQ القديمة.
 
-## المستودع
-- web/: واجهة ويب عربية للعميل والتاجر والموظف والإدارة المركزية، مع تسجيل OTP ودعوات الموظفين.
-- WATHAQ_SOURCE_v0.6.zip: الأرشيف المرجعي المحفوظ دون تعديل.
-- supabase/bootstrap/wathaq-core.sql: نسخة مجمعة من مخطط قاعدة البيانات والسياسات والوظائف والتخزين لبداية مشروع Supabase جديد.
-- .github/workflows/expand-source.yml: محاولة أتمتة توسيع المصدر المرجعي على فرع التطوير.
+## واجهات المنتج
+- `web/`: واجهة عربية موحدة للعميل والتاجر والموظف وSuper Admin.
+- `public/`: النسخة المنشورة الجاهزة للاستضافة، وتطابق مخرجات البناء.
+- `app/build.mjs`: يبني `public/` مباشرة من `web/`.
+- `web/` تدعم PWA، QR للعميل، ومسح QR بالكاميرا للموظف، والبحث عن البرامج والمفضلة، وصور المتاجر والمكافآت، ومخطط نشاط التاجر لآخر سبعة أيام.
 
 ## قاعدة البيانات الجديدة
-- Project: WATHAQ-CORE
-- Project ref: ncfromrlnlotrwkgjenk
-- Region: eu-central-1 (Frankfurt)
-- الجداول الأساسية: profiles, merchants, merchant_members, loyalty_programs, rewards, loyalty_accounts, loyalty_ledger, loyalty_tokens, favorites, audit_events, platform_admins, platform_settings.
-- كل جداول public مفعّل عليها RLS.
-- الأرصدة ودفتر الحركات لا يملك العميل أو التاجر صلاحية تعديلها مباشرة.
-- عمليات الاكتساب والاستبدال تنفذ عبر RPCs خادمية مع قفل السجلات ومفاتيح idempotency ورموز مؤقتة مجزّأة.
-- تخزين صور المتاجر والمكافآت عبر Storage buckets مستقلة بسياسات رفع مرتبطة بعضوية التاجر.
+- Project: **WATHAQ-CORE**
+- Project ref: `ncfromrlnlotrwkgjenk`
+- Region: `eu-central-1` (Frankfurt)
+- الجداول تشمل: `profiles`, `merchants`, `merchant_members`, `merchant_invites`, `loyalty_programs`, `rewards`, `loyalty_accounts`, `loyalty_ledger`, `loyalty_tokens`, `favorites`, `audit_events`, `platform_admins`, `platform_settings`.
+- جميع جداول `public` محمية بـ RLS.
+- الأرصدة ودفتر الحركات والرموز ودعوات الموظفين لا تقبل الكتابة المباشرة من العميل.
+- الاكتساب والاستبدال يتمان عبر RPCs خادمية محمية، مع قفل السجلات ورموز أحادية الاستخدام.
+- تخزين صور المتاجر والمكافآت في Storage buckets مستقلة بسياسات رفع مرتبطة بعضوية التاجر.
+- سجل قاعدة البيانات يحتوي على 13 هجرة مطبقة. ملف `supabase/bootstrap/wathaq-core.sql` يجمع المخطط الحالي لتهيئة مشروع جديد.
 
-## واجهة التطوير
-افتح web/index.html عبر خادم static محلي. إعداد Supabase موجود في web/config.js ويحتوي على publishable key فقط.
+## البناء والاختبارات
+```bash
+node app/build.mjs
+```
+يجب أن تتطابق ملفات `public/` مع `web/`. يتحقق GitHub Actions من بناء الحزمة، وفحص JavaScript، وتطابق المخرجات، ويرفع artifact باسم `wathaq-core-public`.
 
-## حالة التطوير
-هذه مرحلة تأسيس أولى وليست إصدار إنتاج. ما زال مطلوباً استكمال إعداد مزود SMS لتسجيل الهاتف، تهيئة أول Super Admin، إدارة نشر البرامج والخطط، اختبارات تكامل مصادقة حقيقية، اختبارات تزامن وحمل، وتدقيق أمني مستقل. لا تُستخدم بيانات أو أرصدة تجريبية على أنها حقيقية.
+- `supabase/tests/core_contract_tests.sql`: فحوصات RLS والصلاحيات.
+- `supabase/tests/loyalty_transaction_integration.sql`: اختبار متكامل لدورة النقاط والأختام ودعوات الموظفين والاعتماد ومنع إعادة الاستخدام والمخزون. ينفذ داخل معاملة وينتهي بـ `ROLLBACK`.
+- `reference/v0.6/` يحتفظ بملفات المصدر القديمة والهجرات والاختبارات التي لم تعد ضمن مسار البناء النشط.
+
+## ما يمنع الإطلاق الإنتاجي حالياً
+1. إعداد مزود SMS وتأكيد تدفق OTP بأرقام حقيقية.
+2. إنشاء أول Super Admin وفق `docs/PLATFORM_BOOTSTRAP.md`.
+3. اختبارات مصادقة حقيقية، تزامن وحمل واختبار اختراق مستقل.
+4. مراجعة تجربة الاستخدام على أجهزة Android فعلية، ثم نشر النسخة بعد إكمال الإعدادات.
+
+لا تستخدم مفاتيح service-role في الواجهة، ولا تعتبر بيانات الاختبار أرصدة حقيقية.
