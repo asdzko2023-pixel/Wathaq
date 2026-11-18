@@ -3,7 +3,7 @@ const cfg = window.WATHAQ_CONFIG || {};
 const sb = cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const $ = (s,r=document)=>r.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],ledger:[],otpSent:false};
+const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],ledger:[],merchants:[],isAdmin:false,otpSent:false};
 const app=$('#app'),dialog=$('#authDialog'),toast=$('#toast');
 const money=n=>new Intl.NumberFormat('ar-YE',{maximumFractionDigits:0}).format(Number(n||0));
 function notify(s){toast.textContent=s;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2600)}
@@ -14,7 +14,7 @@ function render(){
  $('#authButton').hidden=!!state.user;$('#profileButton').hidden=!state.user;
  if(state.user)$('#profileButton').textContent=(state.user.phone||state.user.email||'و').slice(-1).toUpperCase();
  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
- if(state.view==='customer')renderCustomer();else if(state.view==='merchant')renderMerchant();else renderStaff();
+ if(state.view==='customer')renderCustomer();else if(state.view==='merchant')renderMerchant();else if(state.view==='platform')renderPlatform();else renderStaff();
 }
 async function customerData(){
  const [a,p,r,t]=await Promise.all([
@@ -43,15 +43,15 @@ function renderStaff(){
  if(!state.user){app.innerHTML=hero('بوابة الموظف','عمليات سريعة. دقة لا تقبل الخطأ.','أدخل رمز العميل، تحقق من صلاحيته، ونفّذ الاكتساب أو الاستبدال من خلال إجراءات خادمية آمنة.','<button class="btn btn-gold" data-login>دخول الموظف</button>');return}
  app.innerHTML='<div class="eyebrow">مساحة الموظف · العمليات الموثوقة</div>'+hero('نقطة خدمة الولاء','كل عملية موثقة. كل رصيد محمي.','لا تُعدّل الأرصدة يدوياً. استخدم الرموز المؤقتة لتأكيد عمليات الاكتساب والاستبدال.','<span class="tag gold">تحقق خادمي</span>')+top('تأكيد اكتساب النقاط أو الأختام','امسح رمز العميل وأدخل قيمة الفاتورة. الخادم يحسب الاستحقاق.')+'<div class="panel"><form id="earnConfirm"><div class="form-grid"><div class="field"><label>رمز العميل</label><input name="code" required minlength="16" maxlength="16" placeholder="16 حرفاً/رقماً" autocomplete="off"></div><div class="field"><label>قيمة المشتريات</label><input name="amount" type="number" min=".01" step=".01" required placeholder="0.00"></div></div><button class="btn btn-gold">تأكيد عملية الاكتساب</button></form></div>'+top('تأكيد استبدال مكافأة','تحقق من رمز الاستبدال وسلّم المكافأة بعد نجاح العملية.')+'<div class="panel"><form id="redeemConfirm"><div class="field"><label>رمز الاستبدال</label><input name="code" required minlength="16" maxlength="16" placeholder="16 حرفاً/رقماً" autocomplete="off"></div><button class="btn btn-outline">تأكيد الاستبدال</button></form></div>';
 }
-async function refresh(){
+async function platformData(){\n const {data:admin,error}=await sb.from('platform_admins').select('user_id').eq('user_id',state.user.id).maybeSingle();if(error)throw error;state.isAdmin=!!admin;$('#platformTab').hidden=!state.isAdmin;if(!state.isAdmin)return;const {data,error:me}=await sb.from('merchants').select('id,name,city,category,status,created_at,owner_user_id').eq('status','pending').order('created_at',{ascending:true});if(me)throw me;state.merchants=data||[];\n}\nfunction renderPlatform(){if(!state.isAdmin){app.innerHTML='<div class="empty"><b>هذه المساحة للمشرفين فقط</b>لا يمتلك هذا الحساب صلاحية إدارة المنصة.</div>';return}app.innerHTML='<div class="eyebrow">إدارة المنصة · صلاحيات Super Admin</div>'+hero('مركز التحكم المركزي','إدارة موثوقة لكل شريك.','راجع طلبات المتاجر، تحكم بحالة التفعيل، واحتفظ بأثر تدقيقي لكل قرار.','<span class="tag gold">صلاحية إدارية</span>')+top('طلبات التفعيل','المتاجر الجديدة بانتظار المراجعة.')+'<div class="stat-grid"><div class="stat"><span>طلبات معلقة</span><strong>'+state.merchants.length+'</strong></div><div class="stat"><span>نظام الصلاحيات</span><strong>RBAC</strong></div><div class="stat"><span>دفتر التدقيق</span><strong>مفعّل</strong></div><div class="stat"><span>مصدر الحقيقة</span><strong>CORE</strong></div></div>'+top('مراجعة المتاجر','اعتماد المتجر يفتح المجال لنشر برامج الولاء.')+'<div class="grid">'+(state.merchants.length?state.merchants.map(m=>'<article class="panel"><span class="tag gold">بانتظار المراجعة</span><h3 style="margin-top:12px">'+esc(m.name)+'</h3><p class="muted">'+esc(m.category||'—')+' · '+esc(m.city||'—')+'</p><div class="actions"><button class="btn btn-gold" data-merchant-status="active" data-merchant-id="'+m.id+'">اعتماد المتجر</button><button class="btn btn-soft" data-merchant-status="rejected" data-merchant-id="'+m.id+'">رفض الطلب</button></div></article>').join(''):'<div class="empty"><b>لا توجد طلبات معلقة</b>ستظهر الطلبات الجديدة هنا.</div>')+'</div>'}\nasync function refresh(){
  if(!sb){app.innerHTML='<div class="empty">إعداد الاتصال غير مكتمل.</div>';return}
  const {data:{session}}=await sb.auth.getSession();state.user=session?.user||null;
  if(!state.user){render();return}
- try{if(state.view==='customer')await customerData();if(state.view==='merchant')await merchantData();render()}catch(e){console.error(e);app.innerHTML='<div class="empty"><b>تعذر تحميل البيانات</b>'+esc(e.message||'خطأ غير معروف')+'<br><button class="btn btn-soft" data-refresh>إعادة المحاولة</button></div>'}
+ try{if(state.view==='customer')await customerData();if(state.view==='merchant')await merchantData();if(state.view==='platform')await platformData();render()}catch(e){console.error(e);app.innerHTML='<div class="empty"><b>تعذر تحميل البيانات</b>'+esc(e.message||'خطأ غير معروف')+'<br><button class="btn btn-soft" data-refresh>إعادة المحاولة</button></div>'}
 }
 async function action(fn){const x=await fn();if(x?.error)throw x.error;return x?.data??x}
 document.addEventListener('click',async e=>{
- const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;await refresh();return}
+ const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;await refresh();return}\n const statusBtn=e.target.closest('[data-merchant-status]');if(statusBtn){try{const {error}=await sb.from('merchants').update({status:statusBtn.dataset.merchantStatus}).eq('id',statusBtn.dataset.merchantId);if(error)throw error;notify(statusBtn.dataset.merchantStatus==='active'?'تم اعتماد المتجر':'تم رفض الطلب');await refresh()}catch(err){notify(err.message)}return}
  if(e.target.closest('[data-login]')||e.target.id==='authButton'){dialog.showModal();return}
  if(e.target.closest('[data-close]')){dialog.close();return}
  if(e.target.closest('[data-refresh]')){await refresh();return}
