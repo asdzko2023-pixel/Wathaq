@@ -59,11 +59,11 @@ update wathaq_test_state set earn_code=(public.create_customer_checkin_code(prog
 update wathaq_test_state set unauthorized_earn_error=(
  public.confirm_earn_code(earn_code,100)->>'error'
 );
-do $$
+do $test$$
 begin
  if (select char_length(earn_code) from wathaq_test_state)<>16 then raise exception 'FAIL: earn token must be 16 hex characters'; end if;
  if (select unauthorized_earn_error from wathaq_test_state)<>'not_authorized' then raise exception 'FAIL: customer was able to confirm earn token'; end if;
-end $$;
+end $test$;
 
 -- Authorized staff confirms the purchase; replay must be rejected.
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
