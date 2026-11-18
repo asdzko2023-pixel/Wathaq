@@ -8,7 +8,7 @@
 - Merchant branding and reward image storage with restricted write policies.
 - Consolidated bootstrap SQL, rollback-safe integration test, core security contract test, and GitHub Actions build artifact.
 - Live database verification: core security contract test passed; points/stamps earn-and-redeem integration test passed with replay rejection and rollback-safe fixtures.
-- Latest CI runs `44409084238` and `44409084376` passed the PR checks for current-source build, public bundle parity, legacy archive safety, design-token contrast, syntax, and the reference smoke suite. The latest head is being rechecked after deployment-workflow hardening.
+- Latest CI runs `44409084238` and `44409084376` passed the PR checks for current-source build, public bundle parity, legacy archive safety, design-token contrast, syntax, and the reference smoke suite. These checks passed on code/workflow commit `d8d47ae3c25167cceb409a46df5868bbfe16104a`; the subsequent branch commits only updated release documentation.
 
 ## Required before production
 1. Configure an SMS provider and verify OTP delivery, resend limits, abuse protection and recovery flows using real devices.
