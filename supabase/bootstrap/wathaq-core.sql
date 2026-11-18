@@ -962,21 +962,13 @@ revoke all on function public.list_merchant_members(p_merchant_id uuid) from pub
 
 revoke all on function public.set_merchant_member(p_merchant_id uuid, p_user_id uuid, p_permissions text[], p_active boolean) from public, anon, authenticated;
 
-grant execute on function private.bootstrap_merchant_owner() to authenticated;
 
-grant execute on function private.bump_program_version() to authenticated;
 
-grant execute on function private.can_confirm_redeem(p_merchant_id uuid) to authenticated;
 
-grant execute on function private.can_issue_earn(p_merchant_id uuid) to authenticated;
 
-grant execute on function private.can_manage_merchant(p_merchant_id uuid) to authenticated;
 
-grant execute on function private.guard_merchant_status() to authenticated;
 
-grant execute on function private.is_merchant_member(p_merchant_id uuid) to authenticated;
 
-grant execute on function private.is_platform_admin() to authenticated;
 
 grant execute on function public.accept_merchant_invite(p_code text) to authenticated;
 
@@ -1001,3 +993,7 @@ insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) v
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values ('reward-media','reward-media',true,5242880,array['image/jpeg','image/png','image/webp','image/avif']) on conflict(id) do update set public=excluded.public,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 create index if not exists merchant_invites_created_by_idx on public.merchant_invites(created_by);
 create index if not exists merchant_invites_accepted_by_idx on public.merchant_invites(accepted_by);
+
+
+-- Internal helper and trigger functions are never callable through client roles.
+revoke all on all functions in schema private from public, anon, authenticated;
