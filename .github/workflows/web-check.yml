@@ -1,0 +1,22 @@
+name: WATHAQ Web Checks
+on:
+  push:
+    branches: [build/wathaq-premium-foundation]
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-check.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: node --check web/app.js
+      - name: Check required web assets
+        run: test -s web/index.html && test -s web/styles.css && test -s web/config.js
