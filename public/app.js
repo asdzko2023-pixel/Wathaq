@@ -70,9 +70,7 @@ async function refresh(){
 async function action(fn){const x=await fn();if(x?.error)throw x.error;return x?.data??x}
 document.addEventListener('input',e=>{if(e.target.id==='programSearch'){const q=e.target.value.trim().toLowerCase();document.querySelectorAll('[data-program-card]').forEach(card=>{card.hidden=!card.dataset.search.includes(q)})}});
 document.addEventListener('click',async e=>{
- const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;await $('#scanDialog').addEventListener('close',()=>{if(stopScanner)stopScanner()});
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA worker unavailable',err));
-refresh();return}
+ const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;refresh();return}
  const statusBtn=e.target.closest('[data-merchant-status]');if(statusBtn){try{const {error}=await sb.from('merchants').update({status:statusBtn.dataset.merchantStatus}).eq('id',statusBtn.dataset.merchantId);if(error)throw error;notify(statusBtn.dataset.merchantStatus==='active'?'تم اعتماد المتجر':'تم رفض الطلب');await refresh()}catch(err){notify(err.message)}return}
  if(e.target.closest('[data-login]')||e.target.id==='authButton'){dialog.showModal();return}
  if(e.target.closest('[data-close]')){dialog.close();return}
@@ -130,4 +128,6 @@ $('#profileButton').addEventListener('click',async()=>{if(sb)await sb.auth.signO
 if(sb)sb.auth.onAuthStateChange((_event,session)=>{state.user=session?.user||null;refresh()});
 window.addEventListener('online',()=>$('#connection').innerHTML='<i></i> متصل');
 window.addEventListener('offline',()=>$('#connection').innerHTML='<i style="background:#d9a93e"></i> دون اتصال');
+$('#scanDialog').addEventListener('close',()=>{if(stopScanner)stopScanner()});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA worker unavailable',err));
 refresh();
