@@ -60,7 +60,8 @@ async function refresh(){
 }
 async function action(fn){const x=await fn();if(x?.error)throw x.error;return x?.data??x}
 document.addEventListener('click',async e=>{
- const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;await if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA worker unavailable',err));
+ const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;await $('#scanDialog').addEventListener('close',()=>{if(stopScanner)stopScanner()});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA worker unavailable',err));
 refresh();return}
  const statusBtn=e.target.closest('[data-merchant-status]');if(statusBtn){try{const {error}=await sb.from('merchants').update({status:statusBtn.dataset.merchantStatus}).eq('id',statusBtn.dataset.merchantId);if(error)throw error;notify(statusBtn.dataset.merchantStatus==='active'?'تم اعتماد المتجر':'تم رفض الطلب');await refresh()}catch(err){notify(err.message)}return}
  if(e.target.closest('[data-login]')||e.target.id==='authButton'){dialog.showModal();return}
