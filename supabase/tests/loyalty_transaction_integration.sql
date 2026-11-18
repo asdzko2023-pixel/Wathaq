@@ -100,23 +100,15 @@ select public.confirm_redeem_code(stamps_redeem_code) from wathaq_test_state;
 update wathaq_test_state set stamps_replay_error=(public.confirm_redeem_code(stamps_redeem_code)->>'error');
 
 reset role;
-do $
-declare v_balance bigint; v_lifetime bigint; v_entries integer; v_stamps integer; v_stamp_lifetime integer; v_stamp_entries integer;
- v_earn_replay text; v_redeem_replay text; v_stamps_replay text;
-begin
- select points_balance,lifetime_points into v_balance,v_lifetime from public.loyalty_accounts where id=(select account_id from wathaq_test_state);
- select count(*) into v_entries from public.loyalty_ledger where account_id=(select account_id from wathaq_test_state);
- select stamps_balance,lifetime_stamps into v_stamps,v_stamp_lifetime from public.loyalty_accounts where id=(select stamps_account_id from wathaq_test_state);
- select count(*) into v_stamp_entries from public.loyalty_ledger where account_id=(select stamps_account_id from wathaq_test_state);
- select earn_replay_error,redeem_replay_error,stamps_replay_error into v_earn_replay,v_redeem_replay,v_stamps_replay from wathaq_test_state;
- if v_balance<>50 or v_lifetime<>100 or v_entries<>2 then raise exception 'FAIL: points lifecycle mismatch: %, %, %',v_balance,v_lifetime,v_entries; end if;
- if v_stamps<>0 or v_stamp_lifetime<>1 or v_stamp_entries<>2 then raise exception 'FAIL: stamps lifecycle mismatch: %, %, %',v_stamps,v_stamp_lifetime,v_stamp_entries; end if;
- if v_earn_replay<>'code_used' or v_redeem_replay<>'code_used' or v_stamps_replay<>'code_used' then raise exception 'FAIL: one-time token replay was not rejected'; end if;
- if has_table_privilege('authenticated','public.loyalty_accounts','UPDATE')
-    or has_table_privilege('authenticated','public.loyalty_ledger','INSERT') then
-  raise exception 'FAIL: client role has direct balance or ledger write privileges';
- end if;
- raise notice 'PASS: merchant approval, staff invite, customer join, earn, redeem, replay protection, immutable ledger and client privilege boundaries';
-end $$;
+select case when
+ (select points_balance=50 and lifetime_points=100 from public.loyalty_accounts where id=(select account_id from wathaq_test_state))
+ and (select count(*)=2 from public.loyalty_ledger where account_id=(select account_id from wathaq_test_state))
+ and (select stamps_balance=0 and lifetime_stamps=1 from public.loyalty_accounts where id=(select stamps_account_id from wathaq_test_state))
+ and (select count(*)=2 from public.loyalty_ledger where account_id=(select stamps_account_id from wathaq_test_state))
+ and (select earn_replay_error='code_used' and redeem_replay_error='code_used' and stamps_replay_error='code_used' from wathaq_test_state)
+ and not has_table_privilege('authenticated','public.loyalty_accounts','UPDATE')
+ and not has_table_privilege('authenticated','public.loyalty_ledger','INSERT')
+then 'PASS: points, stamps, earn/redeem, replay protection, immutable ledger and client privilege boundaries'
+else (1/0)::text end;
 
 rollback;
