@@ -992,3 +992,5 @@ grant execute on function public.set_merchant_member(p_merchant_id uuid, p_user_
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values ('merchant-branding','merchant-branding',true,5242880,array['image/jpeg','image/png','image/webp','image/avif']) on conflict(id) do update set public=excluded.public,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values ('reward-media','reward-media',true,5242880,array['image/jpeg','image/png','image/webp','image/avif']) on conflict(id) do update set public=excluded.public,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+create index if not exists merchant_invites_created_by_idx on public.merchant_invites(created_by);
+create index if not exists merchant_invites_accepted_by_idx on public.merchant_invites(accepted_by);
