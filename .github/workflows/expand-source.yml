@@ -1,0 +1,31 @@
+name: Expand WATHAQ source archive
+on:
+  push:
+    branches: [build/wathaq-premium-foundation]
+    paths:
+      - '.github/workflows/expand-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: build/wathaq-premium-foundation
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Expand v0.6 reference source
+        run: |
+          test -f WATHAQ_SOURCE_v0.6.zip
+          mkdir -p /tmp/wathaq-source
+          unzip -q WATHAQ_SOURCE_v0.6.zip -d /tmp/wathaq-source
+          test -d /tmp/wathaq-source/wathaq
+          cp -a /tmp/wathaq-source/wathaq/. .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Bootstrap WATHAQ source tree from v0.6 reference"
+            git push
+          fi
