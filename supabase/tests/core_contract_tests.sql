@@ -34,5 +34,33 @@ begin
     and p.prosecdef and coalesce(array_to_string(p.proconfig,','),'') like '%search_path=""%';
   if v_count<>5 then raise exception 'FAIL: expected 5 hardened SECURITY DEFINER RPCs, found %',v_count; end if;
 
+
+  -- Internal SECURITY DEFINER helpers must never be callable by API roles.
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='private'
+      and (has_function_privilege('anon',p.oid,'EXECUTE')
+        or has_function_privilege('authenticated',p.oid,'EXECUTE'))
+  ) then
+    raise exception 'FAIL: private helper/trigger function is executable by a client role';
+  end if;
+
+  -- All public RPC entry points must be explicitly authenticated and hardened.
+  select count(*) into v_count
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+  where n.nspname='public'
+    and p.proname = any(array[
+      'accept_merchant_invite','confirm_earn_code','confirm_redeem_code',
+      'create_customer_checkin_code','create_merchant_invite','create_redeem_code',
+      'join_loyalty_program','list_merchant_members','set_merchant_member'
+    ])
+    and p.prosecdef
+    and coalesce(array_to_string(p.proconfig,','),'') like '%search_path=""%'
+    and pg_get_functiondef(p.oid) like '%auth.uid()%'
+    and has_function_privilege('authenticated',p.oid,'EXECUTE')
+    and not has_function_privilege('anon',p.oid,'EXECUTE');
+  if v_count<>9 then raise exception 'FAIL: expected 9 authenticated-only hardened RPCs, found %',v_count; end if;
+
   raise notice 'PASS: public RLS, protected balances, private tokens, and hardened RPC grants';
 end $$;
