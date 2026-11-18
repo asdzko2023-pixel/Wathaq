@@ -56,8 +56,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
 update wathaq_test_state
-set member_list_result=public.list_merchant_members(merchant_id)
-from wathaq_test_state as s;
+set member_list_result=public.list_merchant_members(merchant_id);
 update wathaq_test_state
 set owner_member_update_ok=(public.set_merchant_member(
  merchant_id,'33333333-3333-4333-8333-333333333333',array['issue_earn','confirm_redeem'],true)->>'ok')::boolean;
