@@ -73,7 +73,12 @@ document.addEventListener('submit',async e=>{
    await action(()=>sb.from('merchants').insert({owner_user_id:state.user.id,name,slug,category:f.get('category'),city:f.get('city'),description:f.get('description')}));
    notify('تم إنشاء ملف المتجر وهو بانتظار المراجعة');await refresh();return;
   }
-  if(form.id==='rewardCreate'){\n   const pid=f.get('program_id'),program=state.merchant.loyalty_programs.find(p=>p.id===pid),cost=Number(f.get('cost'));\n   await action(()=>sb.from('rewards').insert({merchant_id:state.merchant.id,program_id:pid,title:f.get('title'),description:f.get('description'),points_cost:program?.kind==='points'?cost:null,stamps_cost:program?.kind==='stamps'?cost:null,is_active:true}));\n   notify('تم حفظ المكافأة');await refresh();return;\n  }\n  if(form.id==='programCreate'){
+  if(form.id==='rewardCreate'){
+   const pid=f.get('program_id'),program=state.merchant.loyalty_programs.find(p=>p.id===pid),cost=Number(f.get('cost'));
+   await action(()=>sb.from('rewards').insert({merchant_id:state.merchant.id,program_id:pid,title:f.get('title'),description:f.get('description'),points_cost:program?.kind==='points'?cost:null,stamps_cost:program?.kind==='stamps'?cost:null,is_active:true}));
+   notify('تم حفظ المكافأة');await refresh();return;
+  }
+  if(form.id==='programCreate'){
    await action(()=>sb.from('loyalty_programs').insert({merchant_id:state.merchant.id,name:f.get('name'),kind:f.get('kind'),points_per_currency:Number(f.get('rate')),stamp_goal:Number(f.get('goal')),state:'draft'}));
    notify('تم إنشاء البرنامج كمسودة');await refresh();return;
   }
