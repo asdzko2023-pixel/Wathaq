@@ -1,6 +1,12 @@
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+
 const createClient = window.supabase?.createClient;
 const cfg = window.WATHAQ_CONFIG || {};
-const sb = createClient && cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
+const isNative = Capacitor.isNativePlatform();
+const NATIVE_AUTH_CALLBACK = 'com.wathaq.app://auth/callback';
+const sb = createClient && cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,flowType:'pkce',detectSessionInUrl:!isNative}}) : null;
 const $ = (s,r=document)=>r.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],favorites:[],ledger:[],merchants:[],staffMembers:[],merchantLedger:[],canManageMerchant:false,isAdmin:false};
@@ -122,13 +128,49 @@ $('#googleSignIn').addEventListener('click',async()=>{
  const btn=$('#googleSignIn'),error=$('#authError');
  btn.disabled=true;error.textContent='';
  try{
-  const redirectTo=window.location.href.split('#')[0];
-  const {error:oauthError}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+  const redirectTo=isNative?NATIVE_AUTH_CALLBACK:window.location.href.split('#')[0];
+  const {data,error:oauthError}=await sb.auth.signInWithOAuth({
+   provider:'google',
+   options:{redirectTo,skipBrowserRedirect:isNative}
+  });
   if(oauthError)throw oauthError;
+  if(isNative){
+   if(!data?.url)throw new Error('لم يُرجع مزود تسجيل الدخول رابط المصادقة');
+   await Browser.open({url:data.url});
+  }
  }catch(err){error.textContent=err.message||'تعذر بدء التسجيل عبر Google';btn.disabled=false}
 });
 $('#profileButton').addEventListener('click',async()=>{if(sb)await sb.auth.signOut();state.user=null;state.accounts=[];state.merchant=null;render();notify('تم تسجيل الخروج')});
 if(sb)sb.auth.onAuthStateChange((_event,session)=>{state.user=session?.user||null;refresh()});
+
+async function handleNativeAuthUrl(rawUrl){
+ if(!isNative||!rawUrl)return;
+ let callback;
+ try{callback=new URL(rawUrl)}catch{return}
+ if(callback.protocol!=='com.wathaq.app:'||callback.hostname!=='auth'||callback.pathname!=='/callback')return;
+ const oauthError=callback.searchParams.get('error_description')||callback.searchParams.get('error');
+ if(oauthError){$('#authError').textContent=oauthError;$('#googleSignIn').disabled=false;return}
+ const code=callback.searchParams.get('code');
+ if(!code){$('#authError').textContent='لم يصل رمز التحقق من Google. حاول تسجيل الدخول مجدداً.';$('#googleSignIn').disabled=false;return}
+ const {error}=await sb.auth.exchangeCodeForSession(code);
+ if(error)throw error;
+ await Browser.close().catch(()=>{});
+ if(dialog.open)dialog.close();
+ notify('تم تسجيل الدخول بنجاح');
+ await refresh();
+}
+if(isNative){
+ App.addListener('appUrlOpen',event=>{
+  handleNativeAuthUrl(event.url).catch(err=>{
+   console.error('Native OAuth callback failed',err);
+   $('#authError').textContent=err.message||'تعذر إكمال تسجيل الدخول';
+   $('#googleSignIn').disabled=false;
+  });
+ });
+ App.getLaunchUrl().then(result=>{
+  if(result?.url)return handleNativeAuthUrl(result.url);
+ }).catch(err=>console.warn('Unable to read native launch URL',err));
+}
 window.addEventListener('online',()=>$('#connection').innerHTML='<i></i> متصل');
 window.addEventListener('offline',()=>$('#connection').innerHTML='<i style="background:#d9a93e"></i> دون اتصال');
 $('#scanDialog').addEventListener('close',()=>{if(stopScanner)stopScanner()});

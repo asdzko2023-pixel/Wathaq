@@ -6,6 +6,8 @@ on:
     paths:
       - 'web/**'
       - 'app/**'
+      - 'scripts/**'
+      - 'scripts/**'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'public/**'
@@ -61,6 +63,9 @@ jobs:
 
       - name: Generate native Android project
         run: npx cap add android
+
+      - name: Register WATHAQ native OAuth deep link
+        run: node scripts/configure-android.mjs
 
       - name: Sync Capacitor plugins and web assets
         run: npx cap sync android
