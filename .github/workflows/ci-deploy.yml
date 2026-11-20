@@ -6,6 +6,9 @@ on:
     paths:
       - 'web/**'
       - 'app/**'
+      - 'package.json'
+      - 'capacitor.config.ts'
+      - 'docs/ANDROID_BUILD.md'
       - 'public/**'
       - 'supabase/bootstrap/**'
       - 'supabase/tests/**'
@@ -44,6 +47,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Validate Capacitor Android configuration
+        run: |
+          npm install --ignore-scripts
+          npx cap config
       - name: Check WATHAQ Core source
         run: node --check web/app.js
       - name: Build current WATHAQ Core web app
