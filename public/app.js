@@ -3,7 +3,7 @@ const cfg = window.WATHAQ_CONFIG || {};
 const sb = createClient && cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const $ = (s,r=document)=>r.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],favorites:[],ledger:[],merchants:[],staffMembers:[],merchantLedger:[],canManageMerchant:false,isAdmin:false,otpSent:false};
+const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],favorites:[],ledger:[],merchants:[],staffMembers:[],merchantLedger:[],canManageMerchant:false,isAdmin:false};
 const app=$('#app'),dialog=$('#authDialog'),toast=$('#toast');let stopScanner=null;
 if(!sb){app.innerHTML='<section class="panel empty"><b>واجهة وِثاق محفوظة على جهازك</b>تعذر تحميل مكتبة الاتصال. تحقق من الإنترنت ثم أعد فتح التطبيق.</section>';throw new Error('Supabase client library unavailable')}
 const money=n=>new Intl.NumberFormat('ar-YE',{maximumFractionDigits:0}).format(Number(n||0));
@@ -83,12 +83,8 @@ document.addEventListener('click',async e=>{
  const earn=e.target.closest('[data-earn]');if(earn){try{const r=await action(()=>sb.rpc('create_customer_checkin_code',{p_program_id:earn.dataset.earn}));if(!r.ok)throw new Error(r.error);displayCode(r.code,'رمز اكتساب مؤقت',r.expires_in);notify('تم إصدار رمز مؤقت')}catch(err){notify(err.message)}}
 });
 document.addEventListener('submit',async e=>{
- const form=e.target;if(!form.matches('#authForm,#merchantCreate,#programCreate,#rewardCreate,#staffInvite,#inviteAccept,#earnConfirm,#redeemConfirm'))return;e.preventDefault();
+ const form=e.target;if(!form.matches('#merchantCreate,#programCreate,#rewardCreate,#staffInvite,#inviteAccept,#earnConfirm,#redeemConfirm'))return;e.preventDefault();
  try{
-  if(form.id==='authForm'){
-   $('#authError').textContent='';const phone=$('#phone').value.trim(),otp=$('#otp').value.trim(),btn=$('#authSubmit');btn.disabled=true;
-   try{if(!state.otpSent){const {error}=await sb.auth.signInWithOtp({phone});if(error)throw error;state.otpSent=true;$('#otpWrap').hidden=false;btn.textContent='تحقق من الرمز';notify('أرسلنا رمز التحقق إلى هاتفك')}else{const {error}=await sb.auth.verifyOtp({phone,token:otp,type:'sms'});if(error)throw error;dialog.close();state.otpSent=false;await refresh();notify('تم تسجيل الدخول بنجاح')}}catch(err){$('#authError').textContent=err.message||'تعذر تسجيل الدخول'}finally{btn.disabled=false}return;
-  }
   if(!state.user)throw new Error('سجّل الدخول أولاً');
   const f=new FormData(form);
   if(form.id==='merchantCreate'){
