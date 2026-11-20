@@ -17,6 +17,10 @@ on:
     paths:
       - 'web/**'
       - 'app/**'
+      - 'package.json'
+      - 'capacitor.config.ts'
+      - 'docs/ANDROID_BUILD.md'
+      - 'app/**'
       - 'public/**'
       - 'supabase/bootstrap/**'
       - 'supabase/tests/**'
