@@ -21,7 +21,7 @@ on:
       - 'package.json'
       - 'capacitor.config.ts'
       - 'docs/ANDROID_BUILD.md'
-      - 'app/**'
+      - 'scripts/**'
       - 'public/**'
       - 'supabase/bootstrap/**'
       - 'supabase/tests/**'
