@@ -122,6 +122,15 @@ document.addEventListener('submit',async e=>{
  }catch(err){notify(err.message||'حدث خطأ غير متوقع')}
 });
 $('#authButton').addEventListener('click',()=>dialog.showModal());
+$('#googleSignIn').addEventListener('click',async()=>{
+ const btn=$('#googleSignIn'),error=$('#authError');
+ btn.disabled=true;error.textContent='';
+ try{
+  const redirectTo=window.location.href.split('#')[0];
+  const {error:oauthError}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+  if(oauthError)throw oauthError;
+ }catch(err){error.textContent=err.message||'تعذر بدء التسجيل عبر Google';btn.disabled=false}
+});
 $('#profileButton').addEventListener('click',async()=>{if(sb)await sb.auth.signOut();state.user=null;state.accounts=[];state.merchant=null;render();notify('تم تسجيل الخروج')});
 if(sb)sb.auth.onAuthStateChange((_event,session)=>{state.user=session?.user||null;refresh()});
 window.addEventListener('online',()=>$('#connection').innerHTML='<i></i> متصل');
