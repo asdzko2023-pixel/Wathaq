@@ -7,7 +7,6 @@ on:
       - 'web/**'
       - 'app/**'
       - 'scripts/**'
-      - 'scripts/**'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'public/**'
@@ -17,6 +16,7 @@ on:
     paths:
       - 'web/**'
       - 'app/**'
+      - 'scripts/**'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'public/**'
