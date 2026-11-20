@@ -4,8 +4,9 @@ This folder contains the current Arabic RTL PWA source for the customer, merchan
 
 - `index.html`: application shell and dialogs.
 - `styles.css`: Midnight + Gold design system.
-- `app.js`: UI rendering, Supabase auth/data calls, loyalty workflows, QR generation and camera scanning.
+- `app.js`: UI rendering, Supabase Google OAuth, data calls, loyalty workflows, QR generation and camera scanning.
 - `config.js`: public Supabase URL and publishable key only.
+- Google OAuth is initiated through Supabase Auth; provider credentials are configured in Supabase Dashboard, never in this repository. See `docs/GOOGLE_AUTH_SETUP.md`.
 - `manifest.webmanifest`, `icon.svg`, `sw.js`: installability and static-shell caching.
 
 Build the deployable bundle with:
