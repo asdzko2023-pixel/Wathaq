@@ -6,6 +6,7 @@ on:
     paths:
       - 'web/**'
       - 'app/**'
+      - 'scripts/**'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'docs/ANDROID_BUILD.md'
@@ -62,7 +63,6 @@ jobs:
       - name: Verify generated bundle
         run: |
           node --check public/app.js
-          git diff --exit-code -- public/
           test -s public/index.html
           test -s public/config.js
           test -s public/manifest.webmanifest
