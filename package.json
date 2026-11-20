@@ -1,0 +1,21 @@
+{
+  "name": "wathaq-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WATHAQ loyalty platform Android wrapper and web app",
+  "scripts": {
+    "web:build": "node app/build.mjs",
+    "android:add": "cap add android",
+    "android:sync": "npm run web:build && cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/browser": "^7.0.1",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
