@@ -11,9 +11,9 @@
 - Latest CI runs [44409545584](https://github.com/asdzko2023-pixel/Wathaq/actions/runs/44409545584) and [44409545501](https://github.com/asdzko2023-pixel/Wathaq/actions/runs/44409545501) passed on the current test head: current-source build, public bundle parity, bootstrap/test checks, and reference smoke checks.
 
 ## Required before production
-1. Configure an SMS provider and verify OTP delivery, resend limits, abuse protection and recovery flows using real devices.
+1. Configure Google OAuth Client ID/Secret and exact Supabase Site URL/Redirect URLs; test real Google sign-in and verified email handling.
 2. Create the first platform administrator using docs/PLATFORM_BOOTSTRAP.md.
-3. Run end-to-end authentication tests with real verified phone identities and verify all RLS behavior under actual JWTs.
+3. Run end-to-end authentication tests with real Google accounts and verify all RLS behavior under actual JWTs. Migrate staff invitations from phone-bound matching to verified email matching before enabling Google-only staff onboarding.
 4. Run multi-session concurrency tests, load tests, backup/restore drill and independent penetration review.
 5. Confirm privacy policy, terms, merchant onboarding and operational support processes.
 6. Deploy the verified public bundle to the chosen hosting target and complete Android device QA.
