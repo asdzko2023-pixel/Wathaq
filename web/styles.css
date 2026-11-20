@@ -50,3 +50,14 @@ body{background:radial-gradient(ellipse at 50% -10%,#5c276b 0,transparent 43%),l
 .wathaq-home .empty{color:#907a95;border-color:#dfcce0}.wathaq-home .empty b{color:#421454}
 @media(max-width:520px){.shell{padding:18px 14px 115px}.wathaq-welcome{margin:-18px -14px 0;padding:18px 16px 24px}.welcome-brand img{width:108px}.welcome-user strong{font-size:14px}.featured-balance{padding:17px;gap:12px;min-height:155px}.featured-points strong{font-size:32px}.featured-level strong{font-size:21px}.quick-grid{gap:8px}.quick-tile{min-height:98px;border-radius:19px}.quick-tile span{font-size:27px}.quick-tile b{font-size:11px}.promo-banner{min-height:130px;padding:17px}.promo-banner h2{font-size:21px}.reward-grid{gap:9px}.reward-card>img,.reward-placeholder{height:95px}.soft-card{padding:11px;gap:8px}.soft-card .btn{padding:8px 10px}.loyalty-card{padding:18px}}
 @media(min-width:521px){.wathaq-home{gap:28px}.wathaq-welcome{border-radius:0 0 38px 38px}}
+
+/* Google-first authentication */
+.google-auth-panel{position:relative;display:grid;justify-items:center;gap:13px;text-align:center;padding:12px 4px}
+.auth-brand-logo{width:150px;height:65px;object-fit:contain;margin:2px auto 4px}
+.google-auth-panel h2{margin:0;color:#351044;font:700 25px 'Reem Kufi'}
+.google-auth-panel>p.muted{margin:0 0 8px;max-width:330px;line-height:1.9}
+.google-signin-btn{width:100%;min-height:54px;display:flex;align-items:center;justify-content:center;gap:13px;border:1px solid #ded8e3;border-radius:14px;background:#fff;color:#30243a;font:600 15px 'IBM Plex Sans Arabic';box-shadow:0 5px 16px #25102f12;cursor:pointer;transition:transform .18s,box-shadow .18s}
+.google-signin-btn:hover{transform:translateY(-1px);box-shadow:0 9px 22px #25102f20}
+.google-signin-btn:disabled{opacity:.65;cursor:wait}
+.google-signin-btn svg{width:22px;height:22px;flex:none}
+.google-auth-panel .error{min-height:18px;font-size:12px}
