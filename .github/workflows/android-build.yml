@@ -9,6 +9,7 @@ on:
       - 'package.json'
       - 'capacitor.config.ts'
       - 'public/**'
+      - 'docs/ANDROID_BUILD.md'
       - '.github/workflows/android-build.yml'
   pull_request:
     paths:
