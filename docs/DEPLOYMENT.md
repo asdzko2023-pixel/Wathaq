@@ -38,3 +38,7 @@ node --check public/app.js
 5. مراجعة أمنية مستقلة وسياسة الخصوصية والشروط.
 6. اختبار Android فعلي. النسخة الحالية PWA وليست APK أصليًا.
 7. بعد اجتياز ما سبق فقط: تشغيل Pages يدويًا من `main` مع `deploy_production=true`.
+
+
+## تسجيل الدخول عبر Google
+راجع `docs/GOOGLE_AUTH_SETUP.md` لإعداد OAuth Client وتفعيل Google provider في WATHAQ-CORE. التطبيق يبدأ OAuth عبر Supabase Auth ويعود إلى عنوان الصفحة الحالي؛ يجب إدراج عنوان الاستضافة في Redirect URLs. لا توجد حاجة لمزود SMS لمسار تسجيل Google.
