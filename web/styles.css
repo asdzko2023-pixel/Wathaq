@@ -61,3 +61,16 @@ body{background:radial-gradient(ellipse at 50% -10%,#5c276b 0,transparent 43%),l
 .google-signin-btn:disabled{opacity:.65;cursor:wait}
 .google-signin-btn svg{width:22px;height:22px;flex:none}
 .google-auth-panel .error{min-height:18px;font-size:12px}
+
+
+/* WATHAQ auth dialog visual alignment */
+#authDialog{background:radial-gradient(ellipse at 12% 0%,#713c7d 0,transparent 48%),linear-gradient(145deg,#32103f,#1e0929 78%,#351044);color:#fff;border:1px solid rgba(248,216,141,.42);box-shadow:0 24px 70px rgba(22,5,31,.48)}
+#authDialog .google-auth-panel{padding:18px 4px 12px;gap:14px}
+#authDialog .auth-brand-logo{width:166px;height:68px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.28))}
+#authDialog .eyebrow{color:#f5d88e}
+#authDialog .google-auth-panel h2{color:#ffe09a}
+#authDialog .google-auth-panel>p.muted,#authDialog .google-auth-panel>small.muted{color:#e4cfe8}
+#authDialog .dialog-close{color:#f0d7ef}
+#authDialog .google-signin-btn{background:linear-gradient(180deg,#fff,#f5edf6);border-color:#ead8e8;color:#351044}
+#authDialog .google-auth-panel .error{color:#ffb4a9}
+@media(max-width:480px){#authDialog{width:calc(100% - 32px);padding:0 10px}#authDialog .google-auth-panel{padding:14px 2px 10px}#authDialog .auth-brand-logo{width:154px;height:62px}}
