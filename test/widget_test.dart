@@ -40,6 +40,6 @@ void main() {
     expect(find.text('رصيد نقاطك'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('لم تبدأ رحلتك بعد'), 280, scrollable: find.byType(Scrollable).first);
     expect(find.text('لم تبدأ رحلتك بعد'), findsOneWidget);
-    expect(find.byTooltip('امسح رمز المتجر'), findsOneWidget);
+    expect(find.byTooltip('اعرض رمزك للمتجر'), findsOneWidget);
   });
 }
