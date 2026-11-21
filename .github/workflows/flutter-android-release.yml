@@ -37,6 +37,8 @@ jobs:
         run: sh scripts/download_fonts.sh
       - name: Get packages
         run: flutter pub get
+      - name: Generate WATHAQ launcher icons
+        run: dart run flutter_launcher_icons
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Test
