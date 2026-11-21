@@ -87,7 +87,7 @@ class ActivityTile extends StatelessWidget {
         const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title, style: Theme.of(context).textTheme.titleMedium), Text(detail, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: t.textMuted)),
         ])), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text(points > 0 ? '+$points نقطة' : '—', style: TextStyle(color: points > 0 ? t.success : t.textMuted, fontWeight: FontWeight.w800)),
+          Text(points > 0 ? '+$points نقطة' : points < 0 ? '$points نقطة' : '—', style: TextStyle(color: points > 0 ? t.success : t.textMuted, fontWeight: FontWeight.w800)),
           Text(time, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: t.textMuted)),
         ]),
       ]),
