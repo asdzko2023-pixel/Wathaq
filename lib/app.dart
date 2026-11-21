@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/wathaq_theme.dart';
 import 'features/home/presentation/home_screen.dart';
@@ -24,6 +25,7 @@ class WathaqApp extends StatelessWidget {
       routerConfig: _router,
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
         child: child ?? const SizedBox.shrink(),
