@@ -10,6 +10,7 @@ on:
       - 'pubspec.yaml'
       - '.github/workflows/flutter-android.yml'
       - 'scripts/download_fonts.sh'
+      - 'scripts/configure_android.py'
 permissions:
   contents: read
 jobs:
@@ -27,6 +28,8 @@ jobs:
           cp -R /tmp/wathaq_scaffold/android ./android
           sed -i 's/applicationId = ".*"/applicationId = "com.wathaq.app"/' android/app/build.gradle.kts
           sed -i 's/namespace = ".*"/namespace = "com.wathaq.app"/' android/app/build.gradle.kts
+      - name: Register Supabase OAuth deep link
+        run: python3 scripts/configure_android.py
       - name: Install bundled Arabic font
         run: sh scripts/download_fonts.sh
       - name: Get packages
