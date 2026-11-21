@@ -9,7 +9,7 @@ const NATIVE_AUTH_CALLBACK = 'com.wathaq.app://auth/callback';
 const sb = createClient && cfg.url && cfg.key ? createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,flowType:'pkce',detectSessionInUrl:!isNative}}) : null;
 const $ = (s,r=document)=>r.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],favorites:[],ledger:[],merchants:[],staffMembers:[],merchantLedger:[],canManageMerchant:false,isAdmin:false};
+const state={view:'customer',user:null,merchant:null,accounts:[],programs:[],rewards:[],favorites:[],ledger:[],merchants:[],merchantLedger:[],canManageMerchant:false};
 const app=$('#app'),dialog=$('#authDialog'),toast=$('#toast');let stopScanner=null;
 if(!sb){app.innerHTML='<section class="panel empty"><b>واجهة وِثاق محفوظة على جهازك</b>تعذر تحميل مكتبة الاتصال. تحقق من الإنترنت ثم أعد فتح التطبيق.</section>';throw new Error('Supabase client library unavailable')}
 const money=n=>new Intl.NumberFormat('ar-YE',{maximumFractionDigits:0}).format(Number(n||0));
@@ -122,7 +122,8 @@ document.addEventListener('input',e=>{if(e.target.id==='programSearch'){const q=
 document.addEventListener('click',async e=>{
  const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;refresh();return}
  const statusBtn=e.target.closest('[data-merchant-status]');if(statusBtn){try{const {error}=await sb.from('merchants').update({status:statusBtn.dataset.merchantStatus}).eq('id',statusBtn.dataset.merchantId);if(error)throw error;notify(statusBtn.dataset.merchantStatus==='active'?'تم اعتماد المتجر':'تم رفض الطلب');await refresh()}catch(err){notify(err.message)}return}
- if(e.target.closest('[data-login]')||e.target.id==='authButton'){dialog.showModal();return}\n  if(e.target.closest('[data-notify]')){notify('الإشعارات ستكون متاحة قريباً');return}\n  if(e.target.closest('[data-profile]')){notify('إعدادات الحساب قيد التجهيز');return}
+ if(e.target.closest('[data-login]')||e.target.id==='authButton'){dialog.showModal();return}
+  if(e.target.closest('[data-notify]')){notify('الإشعارات ستكون متاحة قريباً');return}\n  if(e.target.closest('[data-profile]')){notify('إعدادات الحساب قيد التجهيز');return}
  if(e.target.closest('[data-close]')){dialog.close();return}
  if(e.target.closest('[data-scan-close]')){if(stopScanner)stopScanner();return}
  const scanBtn=e.target.closest('[data-scan-target]');if(scanBtn){startScanner(scanBtn.dataset.scanTarget);return}
@@ -135,7 +136,7 @@ document.addEventListener('click',async e=>{
  const earn=e.target.closest('[data-earn]');if(earn){try{const r=await action(()=>sb.rpc('create_customer_checkin_code',{p_program_id:earn.dataset.earn}));if(!r.ok)throw new Error(r.error);displayCode(r.code,'رمز اكتساب مؤقت',r.expires_in);notify('تم إصدار رمز مؤقت')}catch(err){notify(err.message)}}
 });
 document.addEventListener('submit',async e=>{
- const form=e.target;if(!form.matches('#merchantCreate,#programCreate,#rewardCreate,#staffInvite,#inviteAccept,#earnConfirm,#redeemConfirm'))return;e.preventDefault();
+ const form=e.target;if(!form.matches('#merchantCreate,#programCreate,#rewardCreate'))return;e.preventDefault();
  try{
   if(!state.user)throw new Error('سجّل الدخول أولاً');
   const f=new FormData(form);
