@@ -26,7 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       0 => dashboard.when(
         loading: () => const _HomeLoading(),
         error: (error, _) => _HomeError(
-          message: HomeScreen._friendlyError(error),
+          message: _friendlyError(error),
           onRetry: () => ref.invalidate(homeDashboardProvider),
         ),
         data: (data) => _HomeContent(
@@ -47,7 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'امسح رمز المتجر',
-        onPressed: () => HomeScreen._showScanInfo(context),
+        onPressed: () => _showScanInfo(context),
         backgroundColor: context.wt.primary,
         foregroundColor: Colors.white,
         child: const Icon(Icons.qr_code_scanner_rounded, size: 28),
