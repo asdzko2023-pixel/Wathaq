@@ -45,10 +45,9 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.SUPABASE_PUBLISHABLE_KEY }}
-        run: |
-          flutter build apk --debug \\
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \\
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+        run: >-
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then echo "::error::Missing GitHub Actions secrets SUPABASE_URL and SUPABASE_ANON_KEY (or SUPABASE_PUBLISHABLE_KEY)."; exit 1; fi
+          flutter build apk --debug --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
       - uses: actions/upload-artifact@v4
         with:
           name: WATHAQ-Flutter-Android-Debug
