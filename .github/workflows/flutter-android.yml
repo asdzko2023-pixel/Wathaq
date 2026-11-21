@@ -5,6 +5,7 @@ on:
     branches: [native/flutter-customer-foundation]
     paths:
       - 'lib/**'
+      - 'test/**'
       - 'assets/**'
       - 'pubspec.yaml'
       - '.github/workflows/flutter-android.yml'
@@ -20,8 +21,12 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Generate Android platform
-        run: flutter create . --platforms=android --project-name wathaq
+      - name: Generate Android platform without overwriting app sources
+        run: |
+          flutter create --platforms=android --project-name wathaq /tmp/wathaq_scaffold
+          cp -R /tmp/wathaq_scaffold/android ./android
+          sed -i 's/applicationId = ".*"/applicationId = "com.wathaq.app"/' android/app/build.gradle.kts
+          sed -i 's/namespace = ".*"/namespace = "com.wathaq.app"/' android/app/build.gradle.kts
       - name: Install bundled Arabic font
         run: sh scripts/download_fonts.sh
       - name: Get packages
