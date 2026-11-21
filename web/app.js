@@ -66,7 +66,7 @@ function renderCustomer(){
  const name=state.user?.user_metadata?.full_name||state.user?.user_metadata?.name||state.user?.email?.split('@')[0]||'ضيف وِثاق';
  const hour=new Date().getHours(),greeting=hour<12?'صباح الخير':hour<18?'مساء الخير':'مساء النور';
  const avatar=state.user?.user_metadata?.avatar_url||state.user?.user_metadata?.picture||'';
- const initials=esc((name.trim().split(/\\s+/).slice(-1)[0]||'و').slice(0,1));
+ const initials=esc((name.trim().split(/\s+/).slice(-1)[0]||'و').slice(0,1));
  const progressData=state.accounts.map(a=>{
   const kind=a.loyalty_programs?.kind,have=Number(kind==='stamps'?a.stamps_balance:a.points_balance)||0;
   const costs=state.rewards.filter(r=>r.program_id===a.program_id).map(r=>Number(kind==='stamps'?r.stamps_cost:r.points_cost)||0).filter(x=>x>0).sort((x,y)=>x-y);
