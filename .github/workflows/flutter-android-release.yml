@@ -1,0 +1,63 @@
+name: WATHAQ Android Release (3 APKs)
+on:
+  workflow_dispatch:
+  push:
+    branches: [native/flutter-customer-foundation]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/flutter-android-release.yml'
+      - 'scripts/download_fonts.sh'
+      - 'scripts/configure_android.py'
+permissions:
+  contents: read
+jobs:
+  android-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android platform
+        run: |
+          flutter create --platforms=android --org com.wathaq --project-name app /tmp/wathaq_scaffold
+          cp -R /tmp/wathaq_scaffold/android ./android
+          sed -i 's/applicationId = ".*"/applicationId = "com.wathaq.app"/' android/app/build.gradle.kts
+          sed -i 's/namespace = ".*"/namespace = "com.wathaq.app"/' android/app/build.gradle.kts
+          sed -i 's/android:label="app"/android:label="WATHAQ"/' android/app/src/main/AndroidManifest.xml
+          test -f android/app/src/main/kotlin/com/wathaq/app/MainActivity.kt
+          grep -q '^package com.wathaq.app' android/app/src/main/kotlin/com/wathaq/app/MainActivity.kt
+      - name: Register Supabase OAuth deep link
+        run: python3 scripts/configure_android.py
+      - name: Install bundled Arabic font
+        run: sh scripts/download_fonts.sh
+      - name: Get packages
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Test
+        run: flutter test
+      - name: Build three optimized release APKs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Missing GitHub Actions secrets SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (or SUPABASE_ANON_KEY)."
+            exit 1
+          fi
+          flutter build apk --release --split-per-abi --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+          mkdir -p release-apks
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-apks/WATHAQ-arm64-v8a-release.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release-apks/WATHAQ-armeabi-v7a-release.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk release-apks/WATHAQ-x86_64-release.apk
+          ls -lh release-apks
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WATHAQ-Android-Release-3-ABIs
+          path: release-apks/*.apk
+          retention-days: 14
