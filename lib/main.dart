@@ -5,6 +5,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config/app_config.dart';
 
+bool _isWathaqAuthCallback(Uri uri) {
+  if (uri.scheme != 'com.wathaq.app' ||
+      uri.host != 'auth' ||
+      uri.path != '/callback') {
+    return false;
+  }
+
+  final fragment = Uri.splitQueryString(uri.fragment);
+  return uri.queryParameters.containsKey('code') ||
+      uri.queryParameters.containsKey('error') ||
+      uri.queryParameters.containsKey('error_code') ||
+      uri.queryParameters.containsKey('error_description') ||
+      fragment.containsKey('access_token') ||
+      fragment.containsKey('error_description');
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -14,8 +30,9 @@ Future<void> main() async {
       await Supabase.initialize(
         url: AppConfig.supabaseUrl,
         publishableKey: AppConfig.supabaseAnonKey,
-        authOptions: const FlutterAuthClientOptions(
+        authOptions: FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
+          detectSessionInUriPredicate: _isWathaqAuthCallback,
         ),
       );
     } catch (error, stackTrace) {
