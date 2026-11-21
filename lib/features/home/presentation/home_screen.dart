@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/widgets/wathaq_components.dart';
 import '../../stores/presentation/stores_screen.dart';
 import '../../rewards/presentation/rewards_screen.dart';
+import '../../scan/presentation/checkin_code_sheet.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/home_repository.dart';
 import '../providers/home_providers.dart';
@@ -46,7 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onSelected: (index) => setState(() => _selectedTab = index),
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'امسح رمز المتجر',
+        tooltip: 'اعرض رمزك للمتجر',
         onPressed: () => _showScanInfo(context),
         backgroundColor: context.wt.primary,
         foregroundColor: Colors.white,
@@ -70,20 +71,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static void _showScanInfo(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => const Padding(
-        padding: EdgeInsets.fromLTRB(24, 8, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.qr_code_scanner_rounded, size: 48),
-            SizedBox(height: 12),
-            Text('مسح رمز المتجر', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-            SizedBox(height: 8),
-            Text('سيتم تفعيل الكاميرا والتحقق من الرمز عبر خادم وثاق في المرحلة التالية.', textAlign: TextAlign.center),
-          ],
-        ),
-      ),
+      builder: (_) => const CheckinCodeSheet(),
     );
   }
 }
