@@ -13,6 +13,10 @@ on:
       - 'scripts/configure_android.py'
 permissions:
   contents: read
+
+concurrency:
+  group: wathaq-flutter-debug-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   android-debug:
     runs-on: ubuntu-latest
