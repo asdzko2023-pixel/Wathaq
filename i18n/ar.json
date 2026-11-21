@@ -1,0 +1,11 @@
+{
+  "$comment": "Arabic is the primary language. All UI strings live here; add en.json later without code changes. Respectful vocabulary per spec 1.5.",
+  "brand": { "name": "وِثاق", "tagline": "مزاياك تبدأ من مشترياتك." },
+  "nav": { "wallet": "محفظتي", "discover": "استكشف", "scan": "امسح", "account": "حسابي" },
+  "wallet": { "title": "بطاقات الولاء", "progress": "تقدمك نحو المكافأة", "empty": "لم تنضم إلى أي برنامج بعد. استكشف المتاجر المشاركة." },
+  "history": { "title": "سجل مشترياتك المؤهلة", "empty": "لا توجد عمليات بعد." },
+  "tier": { "bronze": "برونزي", "silver": "فضي", "gold": "ذهبي" },
+  "status": { "offline": "أنت غير متصل. نعرض آخر بيانات محفوظة.", "syncing": "جارٍ المزامنة", "syncFailed": "تعذّرت المزامنة. سنعيد المحاولة." },
+  "errors": { "network": "تعذّر الاتصال بالخادم. تحقق من الإنترنت ثم حاول مجددًا.", "tokenExpired": "انتهت صلاحية الرمز. اطلب رمزًا جديدًا من الموظف.", "tokenUsed": "هذا الرمز استُخدم من قبل." },
+  "auth": { "phoneRequired": "وثّق رقم هاتفك لتجمع الأختام وتستبدل مكافآتك." }
+}
