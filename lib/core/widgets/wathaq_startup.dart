@@ -49,7 +49,7 @@ class _WathaqIntro extends StatelessWidget {
         duration: const Duration(milliseconds: 2200),
         curve: Curves.easeOutCubic,
         builder: (context, scale, child) => Opacity(
-          opacity: ((scale - .88) / .12).clamp(0.0, 1.0),
+          opacity: ((scale - .88) / .12).clamp(0.0, 1.0).toDouble(),
           child: Transform.scale(scale: scale, child: child),
         ),
         child: Image.asset(
