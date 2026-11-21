@@ -3,33 +3,51 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/widgets/wathaq_components.dart';
+import '../../stores/presentation/stores_screen.dart';
+import '../../rewards/presentation/rewards_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/home_repository.dart';
 import '../providers/home_providers.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _selectedTab = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final dashboard = ref.watch(homeDashboardProvider);
-    return Scaffold(
-      body: SafeArea(
-        child: dashboard.when(
-          loading: () => const _HomeLoading(),
-          error: (error, _) => _HomeError(
-            message: _friendlyError(error),
-            onRetry: () => ref.invalidate(homeDashboardProvider),
-          ),
-          data: (data) => _HomeContent(
-            data: data,
-            onRefresh: () async => ref.invalidate(homeDashboardProvider),
-          ),
+    final Widget page = switch (_selectedTab) {
+      0 => dashboard.when(
+        loading: () => const _HomeLoading(),
+        error: (error, _) => _HomeError(
+          message: HomeScreen._friendlyError(error),
+          onRetry: () => ref.invalidate(homeDashboardProvider),
+        ),
+        data: (data) => _HomeContent(
+          data: data,
+          onRefresh: () async => ref.invalidate(homeDashboardProvider),
         ),
       ),
-      bottomNavigationBar: const _CustomerNavigation(),
+      1 => const StoresScreen(),
+      2 => const RewardsScreen(),
+      _ => const _ProfileScreen(),
+    };
+
+    return Scaffold(
+      body: SafeArea(child: page),
+      bottomNavigationBar: _CustomerNavigation(
+        selectedIndex: _selectedTab,
+        onSelected: (index) => setState(() => _selectedTab = index),
+      ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'امسح رمز المتجر',
-        onPressed: () => _showScanInfo(context),
+        onPressed: () => HomeScreen._showScanInfo(context),
         backgroundColor: context.wt.primary,
         foregroundColor: Colors.white,
         child: const Icon(Icons.qr_code_scanner_rounded, size: 28),
@@ -347,7 +365,9 @@ class _HomeError extends StatelessWidget {
 }
 
 class _CustomerNavigation extends StatelessWidget {
-  const _CustomerNavigation();
+  const _CustomerNavigation({required this.selectedIndex, required this.onSelected});
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) => BottomAppBar(
@@ -355,22 +375,23 @@ class _CustomerNavigation extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: const [
-            _NavItem(icon: Icons.home_rounded, label: 'الرئيسية', selected: true),
-            _NavItem(icon: Icons.storefront_rounded, label: 'المتاجر'),
-            SizedBox(width: 52),
-            _NavItem(icon: Icons.card_giftcard_rounded, label: 'المكافآت'),
-            _NavItem(icon: Icons.person_outline_rounded, label: 'حسابي'),
+          children: [
+            _NavItem(icon: Icons.home_rounded, label: 'الرئيسية', selected: selectedIndex == 0, onTap: () => onSelected(0)),
+            _NavItem(icon: Icons.storefront_rounded, label: 'المتاجر', selected: selectedIndex == 1, onTap: () => onSelected(1)),
+            const SizedBox(width: 52),
+            _NavItem(icon: Icons.card_giftcard_rounded, label: 'المكافآت', selected: selectedIndex == 2, onTap: () => onSelected(2)),
+            _NavItem(icon: Icons.person_outline_rounded, label: 'حسابي', selected: selectedIndex == 3, onTap: () => onSelected(3)),
           ],
         ),
       );
 }
 
 class _NavItem extends StatelessWidget {
-  const _NavItem({required this.icon, required this.label, this.selected = false});
+  const _NavItem({required this.icon, required this.label, required this.onTap, this.selected = false});
   final IconData icon;
   final String label;
   final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +402,7 @@ class _NavItem extends StatelessWidget {
       label: label,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () {},
+        onTap: onTap,
         child: SizedBox(
           width: 62,
           height: 64,
@@ -394,6 +415,41 @@ class _NavItem extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileScreen extends StatelessWidget {
+  const _ProfileScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final email = user?.email ?? '';
+    return Scaffold(
+      appBar: AppBar(title: const Text('حسابي')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          CircleAvatar(radius: 38, backgroundColor: context.wt.primary.withValues(alpha: .10),
+            child: Icon(Icons.person_outline_rounded, size: 42, color: context.wt.primary)),
+          const SizedBox(height: 12),
+          Text(user?.userMetadata?['full_name'] as String? ?? 'مستخدم وثاق',
+            textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+          Text(email, textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.wt.textMuted)),
+          const SizedBox(height: 24),
+          ListTile(leading: const Icon(Icons.language_rounded), title: const Text('اللغة'), subtitle: const Text('العربية')),
+          ListTile(leading: const Icon(Icons.notifications_outlined), title: const Text('الإشعارات')),
+          ListTile(leading: const Icon(Icons.security_rounded), title: const Text('الأمان')),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () async => Supabase.instance.client.auth.signOut(),
+            icon: const Icon(Icons.logout_rounded),
+            label: const Text('تسجيل الخروج'),
+          ),
+        ],
       ),
     );
   }
