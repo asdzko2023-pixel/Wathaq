@@ -63,11 +63,8 @@ class StartupFailureScreen extends StatelessWidget {
                 const Text('تعذر تشغيل الاتصال', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
                 Text(message, textAlign: TextAlign.center),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () => main(),
-                  child: const Text('إعادة المحاولة'),
-                ),
+                const SizedBox(height: 12),
+                const Text('أغلق التطبيق وافتحه بعد التأكد من إعدادات الاتصال.', textAlign: TextAlign.center),
               ],
             ),
           ),
