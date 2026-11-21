@@ -32,9 +32,51 @@ class WathaqApp extends StatelessWidget {
       home: StreamBuilder<AuthState>(
         stream: client.auth.onAuthStateChange,
         initialData: AuthState(AuthChangeEvent.initialSession, client.auth.currentSession),
-        builder: (context, snapshot) => (snapshot.data?.session ?? client.auth.currentSession) == null
-            ? const SignInScreen()
-            : const HomeScreen(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            debugPrint('WATHAQ auth state stream error: ${snapshot.error}');
+            return Scaffold(
+              body: SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.lock_outline_rounded, size: 48),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'تعذر إكمال تسجيل الدخول',
+                          style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'وصلتنا نتيجة من خدمة المصادقة لكن تعذر إنشاء الجلسة. أعد المحاولة، وإذا تكررت المشكلة أرسل هذه الرسالة للدعم.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          snapshot.error.toString(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12, color: Colors.redAccent),
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          onPressed: () => client.auth.refreshSession(),
+                          child: const Text('إعادة المحاولة'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+          return (snapshot.data?.session ?? client.auth.currentSession) == null
+              ? const SignInScreen()
+              : const HomeScreen();
+        },
       ),
     );
   }
