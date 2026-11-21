@@ -265,7 +265,7 @@ class _ActivityEntryTile extends StatelessWidget {
     return ActivityTile(
       title: entry.title,
       detail: '${entry.subtitle} • ${DateFormat('dd/MM • HH:mm').format(entry.createdAt)}',
-      time: entry.pointsDelta > 0 ? '+${entry.pointsDelta} نقطة' : '${entry.pointsDelta} نقطة',
+      time: DateFormat('dd/MM • HH:mm').format(entry.createdAt),
       points: entry.pointsDelta,
       icon: entry.kind == 'redeem' ? Icons.redeem_rounded : Icons.stars_rounded,
     );
