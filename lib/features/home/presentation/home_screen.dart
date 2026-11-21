@@ -7,6 +7,7 @@ import '../../stores/presentation/stores_screen.dart';
 import '../../rewards/presentation/rewards_screen.dart';
 import '../../scan/presentation/checkin_code_sheet.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../onboarding/presentation/onboarding_screen.dart';
 import '../data/home_repository.dart';
 import '../providers/home_providers.dart';
 
@@ -441,6 +442,15 @@ class _ProfileScreen extends StatelessWidget {
           ListTile(leading: const Icon(Icons.language_rounded), title: const Text('اللغة'), subtitle: const Text('العربية')),
           ListTile(leading: const Icon(Icons.notifications_outlined), title: const Text('الإشعارات')),
           ListTile(leading: const Icon(Icons.security_rounded), title: const Text('الأمان')),
+          ListTile(
+            leading: const Icon(Icons.school_outlined),
+            title: const Text('إعادة شرح استخدام وثاق'),
+            subtitle: const Text('يمكنك مشاهدة التعليم المبدئي في أي وقت'),
+            trailing: const Icon(Icons.chevron_left_rounded),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => WathaqOnboardingScreen(onFinished: () => Navigator.of(context).pop()),
+            )),
+          ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () async => Supabase.instance.client.auth.signOut(),
