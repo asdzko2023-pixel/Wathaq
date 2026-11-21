@@ -20,10 +20,14 @@ class _SignInScreenState extends State<SignInScreen> {
       _error = null;
     });
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
+      final launched = await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: 'com.wathaq.app://auth/callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
+      if (!launched && mounted) {
+        setState(() => _error = 'تعذر فتح صفحة Google. حاول مرة أخرى.');
+      }
     } on AuthException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } catch (_) {
