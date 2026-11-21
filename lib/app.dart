@@ -63,8 +63,10 @@ class WathaqApp extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         FilledButton(
-                          onPressed: () => client.auth.refreshSession(),
-                          child: const Text('إعادة المحاولة'),
+                          onPressed: () => Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const SignInScreen()),
+                          ),
+                          child: const Text('العودة لتسجيل الدخول'),
                         ),
                       ],
                     ),
