@@ -54,7 +54,7 @@ function customerIcon(name){
  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
  arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
  star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>',
- crown:'<path d="m3 8 4 4 5-8 5 8 4-4-2 11H5Z"/><path d="M5 22h14"/>',
+ crown:'<path d="M3 8.2 7.2 12 12 4.1 16.8 12 21 8.2 19 19H5Z" fill="#eab64f" stroke="#ffe39a" stroke-width="1.2"/><path d="M5 21h14" stroke="#ffe39a" stroke-width="1.7"/><circle cx="3.2" cy="7.8" r="1.7" fill="#ffe39a"/><circle cx="12" cy="3.7" r="1.8" fill="#ffe39a"/><circle cx="20.8" cy="7.8" r="1.7" fill="#ffe39a"/><path d="m8 13 4-6 4 6" stroke="#fff0bf" stroke-width="1.1" fill="none"/>',
  check:'<path d="m5 12 4 4L19 6"/>'
  };
  return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(p[name]||p.star)+'</svg>';
