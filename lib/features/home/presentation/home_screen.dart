@@ -123,6 +123,14 @@ class _HomeContent extends StatelessWidget {
           const SizedBox(height: 14),
           Text('أهلاً ${firstName}', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: t.textMuted)),
           Text('رصيدك ومكافآتك في مكان واحد', style: Theme.of(context).textTheme.headlineMedium),
+          if (data.isOfflineCache) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: t.gold.withValues(alpha: .14), borderRadius: BorderRadius.circular(12)),
+              child: const Row(children: [Icon(Icons.cloud_off_rounded, size: 18), SizedBox(width: 8), Expanded(child: Text('تعرض بيانات محفوظة من آخر اتصال بالإنترنت.'))]),
+            ),
+          ],
           const SizedBox(height: 18),
           PointsCard(
             points: data.pointsBalance,
