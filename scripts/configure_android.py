@@ -8,13 +8,12 @@ if not manifest.exists():
 
 xml = manifest.read_text(encoding="utf-8")
 
-# Release builds need INTERNET in the main manifest. The generated Flutter
-# debug/profile manifests may include it only for non-release variants.
+# INTERNET must be declared in the main manifest for release builds.
 internet_permission = '<uses-permission android:name="android.permission.INTERNET" />'
 if "android.permission.INTERNET" not in xml:
     xml, count = re.subn(
-        r'(<manifest\\b[^>]*>)',
-        r'\\1\\n    ' + internet_permission,
+        r'(<manifest[^>]*>)',
+        r'\1\n    ' + internet_permission,
         xml,
         count=1,
     )
@@ -34,7 +33,7 @@ if 'android:scheme="com.wathaq.app"' not in xml:
                 <data android:scheme="com.wathaq.app" android:host="auth" android:path="/callback" />
             </intent-filter>
 """
-    pattern = r'(<activity\\b(?=[^>]*android:name="[^"]*MainActivity")[\\s\\S]*?)(\\s*</activity>)'
+    pattern = r'(<activity(?=[^>]*android:name="[^"]*MainActivity")[\s\S]*?)(\s*</activity>)'
     xml, count = re.subn(
         pattern,
         lambda match: match.group(1) + intent_filter + match.group(2),
