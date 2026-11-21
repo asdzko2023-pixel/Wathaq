@@ -54,7 +54,7 @@ class HomeRepository {
 
   Future<HomeDashboard> load() async {
     final user = _client.auth.currentUser;
-    if (user == null) throw const AuthException('يجب تسجيل الدخول أولاً.');
+    if (user == null) throw AuthException('يجب تسجيل الدخول أولاً.');
 
     final profile = await _client
         .from('profiles')
