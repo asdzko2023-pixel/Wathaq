@@ -2,7 +2,7 @@ name: WATHAQ Android Debug APK
 
 on:
   push:
-    branches: [build/wathaq-premium-foundation]
+    branches: [build/wathaq-premium-foundation, feature/wathaq-user-app-premium]
     paths:
       - 'web/**'
       - 'app/**'
