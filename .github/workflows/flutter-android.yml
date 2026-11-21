@@ -24,10 +24,13 @@ jobs:
           cache: true
       - name: Generate Android platform without overwriting app sources
         run: |
-          flutter create --platforms=android --project-name wathaq /tmp/wathaq_scaffold
+          flutter create --platforms=android --org com.wathaq --project-name app /tmp/wathaq_scaffold
           cp -R /tmp/wathaq_scaffold/android ./android
           sed -i 's/applicationId = ".*"/applicationId = "com.wathaq.app"/' android/app/build.gradle.kts
           sed -i 's/namespace = ".*"/namespace = "com.wathaq.app"/' android/app/build.gradle.kts
+          sed -i 's/android:label="app"/android:label="WATHAQ"/' android/app/src/main/AndroidManifest.xml
+          test -f android/app/src/main/kotlin/com/wathaq/app/MainActivity.kt
+          grep -q '^package com.wathaq.app' android/app/src/main/kotlin/com/wathaq/app/MainActivity.kt
       - name: Register Supabase OAuth deep link
         run: python3 scripts/configure_android.py
       - name: Install bundled Arabic font
@@ -39,7 +42,13 @@ jobs:
       - name: Test
         run: flutter test
       - name: Build debug APK
-        run: flutter build apk --debug
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          flutter build apk --debug \\
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \\
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
       - uses: actions/upload-artifact@v4
         with:
           name: WATHAQ-Flutter-Android-Debug
