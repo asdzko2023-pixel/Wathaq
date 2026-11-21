@@ -29,9 +29,9 @@ function render(){
 }
 async function customerData(){
  const [a,p,r,t,f]=await Promise.all([
-  sb.from('loyalty_accounts').select('id,points_balance,stamps_balance,joined_at,merchant_id,program_id,merchants(name,category,logo_path),loyalty_programs(name,kind,stamp_goal)').eq('customer_id',state.user.id).order('last_activity_at',{ascending:false}),
+  sb.from('loyalty_accounts').select('id,points_balance,stamps_balance,joined_at,merchant_id,program_id,merchants(name,category,logo_path),loyalty_programs!loyalty_accounts_merchant_id_program_id_fkey(name,kind,stamp_goal)').eq('customer_id',state.user.id).order('last_activity_at',{ascending:false}),
   sb.from('loyalty_programs').select('id,name,kind,description,stamp_goal,merchant_id,merchants(name,category,logo_path)').eq('state','active').limit(30),
-  sb.from('rewards').select('id,title,description,points_cost,stamps_cost,program_id,merchant_id,image_path,loyalty_programs(name,kind)').eq('is_active',true).limit(50),
+  sb.from('rewards').select('id,title,description,points_cost,stamps_cost,program_id,merchant_id,image_path,loyalty_programs!rewards_merchant_id_program_id_fkey(name,kind)').eq('is_active',true).limit(50),
   sb.from('loyalty_ledger').select('id,kind,points_delta,stamps_delta,created_at,reference,merchants(name)').eq('customer_id',state.user.id).order('created_at',{ascending:false}).limit(12),
   sb.from('favorites').select('merchant_id').eq('customer_id',state.user.id)
  ]);
