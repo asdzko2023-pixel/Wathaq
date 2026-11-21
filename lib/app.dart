@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/wathaq_theme.dart';
 import 'features/auth/presentation/sign_in_screen.dart';
+import 'core/widgets/wathaq_startup.dart';
+import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 
 class WathaqApp extends StatelessWidget {
@@ -29,7 +31,8 @@ class WathaqApp extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: child ?? const SizedBox.shrink(),
       ),
-      home: StreamBuilder<AuthState>(
+      home: WathaqStartupGate(
+        child: StreamBuilder<AuthState>(
         stream: client.auth.onAuthStateChange,
         initialData: AuthState(AuthChangeEvent.initialSession, client.auth.currentSession),
         builder: (context, snapshot) {
@@ -77,8 +80,12 @@ class WathaqApp extends StatelessWidget {
           }
           return (snapshot.data?.session ?? client.auth.currentSession) == null
               ? const SignInScreen()
-              : const HomeScreen();
+              : WathaqOnboardingGate(
+                  userId: client.auth.currentUser!.id,
+                  child: const HomeScreen(),
+                );
         },
+        ),
       ),
     );
   }
