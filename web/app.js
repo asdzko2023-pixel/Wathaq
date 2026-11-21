@@ -114,7 +114,6 @@ async function refresh(){
  if(!sb){app.innerHTML='<div class="empty">إعداد الاتصال غير مكتمل.</div>';return}
  const {data:{session}}=await sb.auth.getSession();state.user=session?.user||null;
  if(!state.user){render();return}
- const {data:admin,error:adminError}=await sb.from('platform_admins').select('user_id').eq('user_id',state.user.id).maybeSingle();if(adminError)throw adminError;state.isAdmin=!!admin;
  try{if(state.view==='customer')await customerData();if(state.view==='merchant')await merchantData();render()}catch(e){console.error(e);app.innerHTML='<div class="empty"><b>تعذر تحميل البيانات</b>'+esc(e.message||'خطأ غير معروف')+'<br><button class="btn btn-soft" data-refresh>إعادة المحاولة</button></div>'}
 }
 async function action(fn){const x=await fn();if(x?.error)throw x.error;return x?.data??x}
@@ -123,7 +122,8 @@ document.addEventListener('click',async e=>{
  const v=e.target.closest('[data-view]');if(v){state.view=v.dataset.view;refresh();return}
  const statusBtn=e.target.closest('[data-merchant-status]');if(statusBtn){try{const {error}=await sb.from('merchants').update({status:statusBtn.dataset.merchantStatus}).eq('id',statusBtn.dataset.merchantId);if(error)throw error;notify(statusBtn.dataset.merchantStatus==='active'?'تم اعتماد المتجر':'تم رفض الطلب');await refresh()}catch(err){notify(err.message)}return}
  if(e.target.closest('[data-login]')||e.target.id==='authButton'){dialog.showModal();return}
-  if(e.target.closest('[data-notify]')){notify('الإشعارات ستكون متاحة قريباً');return}\n  if(e.target.closest('[data-profile]')){notify('إعدادات الحساب قيد التجهيز');return}
+  if(e.target.closest('[data-notify]')){notify('الإشعارات ستكون متاحة قريباً');return}
+  if(e.target.closest('[data-profile]')){notify('إعدادات الحساب قيد التجهيز');return}
  if(e.target.closest('[data-close]')){dialog.close();return}
  if(e.target.closest('[data-scan-close]')){if(stopScanner)stopScanner();return}
  const scanBtn=e.target.closest('[data-scan-target]');if(scanBtn){startScanner(scanBtn.dataset.scanTarget);return}
@@ -152,23 +152,11 @@ document.addEventListener('submit',async e=>{
    const image=f.get('image');if(image?.size){const ext=fileExt(image);if(!ext)throw new Error('صيغة صورة المكافأة غير مدعومة');const path=state.merchant.id+'/rewards/'+created.id+'.'+ext;const up=await sb.storage.from('reward-media').upload(path,image,{upsert:true});if(up.error)throw up.error;const upd=await sb.from('rewards').update({image_path:path}).eq('id',created.id);if(upd.error)throw upd.error;}
    notify('تم حفظ المكافأة');await refresh();return;
   }
-  if(form.id==='staffInvite'){
-   const permissions=['issue_earn','confirm_redeem','view_analytics'].filter(k=>f.has(k));const r=await action(()=>sb.rpc('create_merchant_invite',{p_merchant_id:state.merchant.id,p_phone_e164:f.get('phone'),p_permissions:permissions}));if(!r.ok)throw new Error(r.error);app.insertAdjacentHTML('afterbegin','<div class="code-box" style="margin-bottom:18px"><span class="tag gold">رمز دعوة الموظف</span><strong>'+esc(r.code)+'</strong><small>صالح لمدة 48 ساعة · أرسله للموظف لقبول الدعوة.</small></div>');notify('تم إنشاء دعوة الموظف');form.reset();return;
-  }
-  if(form.id==='inviteAccept'){const r=await action(()=>sb.rpc('accept_merchant_invite',{p_code:String(f.get('code')).toUpperCase()}));if(!r.ok)throw new Error(r.error);notify('تم قبول الدعوة بنجاح');form.reset();return}
   if(form.id==='programCreate'){
    await action(()=>sb.from('loyalty_programs').insert({merchant_id:state.merchant.id,name:f.get('name'),kind:f.get('kind'),description:f.get('description'),points_per_currency:Number(f.get('rate')),stamp_goal:Number(f.get('goal')),rules:{minimum_purchase:Number(f.get('minimum_purchase')||0)},state:'draft'}));
    notify('تم إنشاء البرنامج كمسودة');await refresh();return;
   }
-  if(form.id==='earnConfirm'){
-   const r=await action(()=>sb.rpc('confirm_earn_code',{p_code:String(f.get('code')).toUpperCase(),p_purchase_amount:Number(f.get('amount'))}));
-   if(!r.ok)throw new Error(r.error);notify('نجحت العملية · أضيف '+money(r.points_added)+' نقطة و'+money(r.stamps_added)+' ختم');form.reset();return;
-  }
-  if(form.id==='redeemConfirm'){
-   const r=await action(()=>sb.rpc('confirm_redeem_code',{p_code:String(f.get('code')).toUpperCase()}));
-   if(!r.ok)throw new Error(r.error);notify('تم الاستبدال بنجاح · '+r.reward);form.reset();
-  }
- }catch(err){notify(err.message||'حدث خطأ غير متوقع')}
+  }catch(err){notify(err.message||'حدث خطأ غير متوقع')}
 });
 $('#authButton').addEventListener('click',()=>dialog.showModal());
 $('#googleSignIn').addEventListener('click',async()=>{
