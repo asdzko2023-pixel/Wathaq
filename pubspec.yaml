@@ -1,7 +1,7 @@
 name: wathaq
 description: WATHAQ native loyalty app
 publish_to: "none"
-version: 1.0.0+1
+version: 2.5.0+250
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -23,6 +23,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -43,3 +44,9 @@ flutter:
           weight: 800
         - asset: assets/fonts/Tajawal-Black.ttf
           weight: 900
+
+flutter_launcher_icons:
+  android: true
+  image_path: assets/brand/logo-mark-transparent.png
+  adaptive_icon_background: "#211342"
+  adaptive_icon_foreground: assets/brand/logo-mark-transparent.png
