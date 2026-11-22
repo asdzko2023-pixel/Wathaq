@@ -12,7 +12,7 @@ The standalone administration web surface lives in `platform-admin/`. It is sepa
 
 ## Available in this foundation
 - Platform overview counts for merchants, loyalty accounts, ledger rows, and audit events.
-- Merchant listing, search, and guarded status changes (pending/active/suspended/rejected). The database status guard records changes in `audit_events`.
+- Merchant listing and search. Status changes call the narrowly scoped `admin_set_merchant_status` RPC, which requires a platform-admin membership; the existing database trigger records the change in `audit_events`.
 - Read-only views for loyalty programs, recent ledger entries, loyalty account balances, and audit events.
 
 ## Deliberately not implemented yet
