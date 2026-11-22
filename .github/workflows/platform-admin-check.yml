@@ -55,6 +55,13 @@ jobs:
           grep -q 'archived_is_terminal' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
           grep -q 'platform.loyalty_program_state_changed' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
           grep -q 'security invoker' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
+          grep -q "rpc('admin_list_rewards'" platform-admin/app.js
+          grep -q "rpc('admin_set_reward_active'" platform-admin/app.js
+          test -s supabase/migrations/20261123103000_admin_reward_catalogue_controls.sql
+          grep -q 'private.is_platform_admin()' supabase/migrations/20261123103000_admin_reward_catalogue_controls.sql
+          grep -q 'platform.reward_status_changed' supabase/migrations/20261123103000_admin_reward_catalogue_controls.sql
+          grep -q 'active_program_and_merchant_required' supabase/migrations/20261123103000_admin_reward_catalogue_controls.sql
+          grep -q 'security invoker' supabase/migrations/20261123103000_admin_reward_catalogue_controls.sql
           ! grep -q "from('profiles')" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
