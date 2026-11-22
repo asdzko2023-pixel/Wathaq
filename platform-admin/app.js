@@ -91,8 +91,8 @@
       if(!merchant)return;
       if(!confirm('تأكيد تغيير حالة «'+merchant.name+'» إلى «'+(statusNames[next]||next)+'»؟ سيتم تسجيل العملية في سجل التدقيق.'))return;
       button.disabled=true;
-      const {data,error}=await sb.from('merchants').update({status:next}).eq('id',merchant.id).select('id,status').single();
-      if(error){toast('لم يتم تغيير الحالة: '+error.message,true);button.disabled=false;return;}
+      const {data,error}=await sb.rpc('admin_set_merchant_status',{p_merchant_id:merchant.id,p_status:next});
+      if(error||!data?.ok){toast('لم يتم تغيير الحالة: '+(error?.message||data?.error||'تعذر تنفيذ العملية'),true);button.disabled=false;return;}
       merchant.status=data.status;toast('تم تحديث حالة المتجر وتسجيل الحدث.');
       if(activeView==='overview')renderOverview();else renderMerchants();
     }));
