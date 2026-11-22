@@ -16,7 +16,8 @@ The standalone administration web surface lives in `platform-admin/`. It is sepa
 - Read-only views for loyalty programs, recent ledger entries, loyalty account balances, and audit events.
 - A restricted user-profile directory through `admin_list_user_profiles`, returning only user ID, display name, locale, and profile creation date. It does not query `auth.users`, email addresses, phone numbers, or authentication metadata.
 - A restricted merchant-staff membership directory through `admin_list_merchant_staff`, returning merchant, member ID, role, permission labels, active state, and membership date.
-- Platform administrators can activate/deactivate non-owner merchant memberships through `admin_set_merchant_member_active`; every change is written to `audit_events`. Owner memberships are protected. Invitations and permission editing remain pending.
+- Platform administrators can activate/deactivate non-owner merchant memberships through `admin_set_merchant_member_active`; every change is written to `audit_events`. Owner memberships are protected.
+- Platform administrators can create 48-hour staff invitations for active merchants, choose from the allowed staff permission set, list invitation states, and revoke unused invitations. Invitation codes are shown once and stored only as SHA-256 digests; creation and revocation are audited.
 
 ## Deliberately not implemented yet
 The browser must not query `auth.users` or directly administer user roles. Platform-admin RBAC, merchant staff administration, plans/subscriptions, platform settings workflows, fraud alerts, and exports require narrowly scoped, authenticated, audited server-side RPCs and matching tests before their controls are enabled. The user directory remains read-only until non-admin denial and pagination/search tests are completed.
