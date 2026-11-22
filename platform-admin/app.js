@@ -123,12 +123,12 @@
   async function renderStaff(){
     const host=document.getElementById('view-content');
     host.innerHTML='<div class="center-state">جارٍ تحميل عضويات موظفي المتاجر…</div>';
-    const rowsHtml=rows=>rows.length?rows.map(x=>'<tr><td><b>'+esc(x.merchant_name)+'</b><div class="small muted" dir="ltr">'+esc(x.merchant_id)+'</div></td><td dir="ltr">'+esc(x.user_id)+'</td><td>'+esc(x.role)+'</td><td>'+esc((x.permissions||[]).join('، ')||'لا توجد صلاحيات إضافية')+'</td><td><span class="status '+(x.is_active?'active':'suspended')+'">'+(x.is_active?'نشط':'غير نشط')+'</span></td><td>'+date(x.created_at)+'</td></tr>').join(''):'<tr><td colspan="6"><div class="empty-state">لا توجد عضويات موظفين تطابق البحث.</div></td></tr>';
+    const rowsHtml=rows=>rows.length?rows.map(x=>'<tr><td><b>'+esc(x.merchant_name)+'</b><div class="small muted" dir="ltr">'+esc(x.merchant_id)+'</div></td><td dir="ltr">'+esc(x.user_id)+'</td><td>'+esc(x.role)+'</td><td>'+esc((x.permissions||[]).join('، ')||'لا توجد صلاحيات إضافية')+'</td><td><span class="status '+(x.is_active?'active':'suspended')+'">'+(x.is_active?'نشط':'غير نشط')+'</span></td><td>'+date(x.created_at)+'</td><td>'+(x.role==='owner'?'<span class="small muted">محمي</span>':'<button class="ghost-btn staff-toggle" data-merchant="'+esc(x.merchant_id)+'" data-user="'+esc(x.user_id)+'" data-active="'+(!x.is_active)+'">'+(x.is_active?'إيقاف':'تفعيل')+'</button>')+'</td></tr>').join(''):'<tr><td colspan="7"><div class="empty-state">لا توجد عضويات موظفين تطابق البحث.</div></td></tr>';
     try{
       const {data,error}=await sb.rpc('admin_list_merchant_staff',{p_search:null,p_limit:200,p_offset:0});
       if(error)throw error;
       const rows=data||[];
-      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">دليل قراءة فقط لعضويات المتاجر · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section><section class="panel"><div class="notice">هذا القسم يعرض العضويات الحالية فقط. إضافة الموظفين وإرسال الدعوات وتعديل صلاحياتهم ستُفعّل بعد ربط واجهات الدعوات الموجودة واختبار قيود قاعدة البيانات وسجل التدقيق.</div></section>';
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">إدارة حالة عضويات الموظفين مع تسجيل كل تغيير · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th><th>إجراء</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section><section class="panel"><div class="notice">يمكن تفعيل الموظف أو إيقافه من هنا. لا يمكن تغيير عضوية مالك المتجر. كل تغيير يسجل في سجل التدقيق. دعوات الموظفين وتعديل تفاصيل الصلاحيات ستضاف في خطوة منفصلة.</div></section>';
       const input=host.querySelector('#staff-search');
       const search=async()=>{
         const btn=host.querySelector('#staff-search-btn');btn.disabled=true;
@@ -140,6 +140,19 @@
       };
       host.querySelector('#staff-search-btn').addEventListener('click',search);
       input.addEventListener('keydown',event=>{if(event.key==='Enter')search();});
+      host.querySelector('#staff-rows').addEventListener('click',async event=>{
+        const button=event.target.closest('.staff-toggle');
+        if(!button)return;
+        const active=button.dataset.active==='true';
+        const merchantId=button.dataset.merchant;
+        const userId=button.dataset.user;
+        button.disabled=true;
+        const {data,error:mutationError}=await sb.rpc('admin_set_merchant_member_active',{p_merchant_id:merchantId,p_user_id:userId,p_active:active});
+        if(mutationError){toast('تعذر تغيير حالة الموظف: '+mutationError.message,true);button.disabled=false;return;}
+        if(!data||data.ok!==true){toast('لم يتم تغيير العضوية: '+(data?.error||'unknown_error'),true);button.disabled=false;return;}
+        toast(active?'تم تفعيل عضوية الموظف وتسجيل الحدث.':'تم إيقاف عضوية الموظف وتسجيل الحدث.');
+        await search();
+      });
     }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل موظفي المتاجر: '+esc(e.message)+'</div>';}
   }
   async function renderLoyalty(){
