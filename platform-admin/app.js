@@ -128,7 +128,53 @@
       const {data,error}=await sb.rpc('admin_list_merchant_staff',{p_search:null,p_limit:200,p_offset:0});
       if(error)throw error;
       const rows=data||[];
-      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">إدارة حالة عضويات الموظفين مع تسجيل كل تغيير · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th><th>إجراء</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section><section class="panel"><div class="notice">يمكن تفعيل الموظف أو إيقافه من هنا. لا يمكن تغيير عضوية مالك المتجر. كل تغيير يسجل في سجل التدقيق. دعوات الموظفين وتعديل تفاصيل الصلاحيات ستضاف في خطوة منفصلة.</div></section>';
+      const [{data:invites,error:inviteError},{data:activeMerchants,error:merchantError}]=await Promise.all([
+        sb.rpc('admin_list_merchant_invites',{p_merchant_id:null,p_limit:100}),
+        sb.from('merchants').select('id,name').eq('status','active').order('name').limit(200)
+      ]);
+      if(inviteError)throw inviteError;
+      if(merchantError)throw merchantError;
+      const inviteRows=(invites||[]).map(i=>{
+        const state=i.accepted_at?'مقبولة':i.revoked_at?'ملغاة':new Date(i.expires_at)<=new Date()?'منتهية':'بانتظار الاستخدام';
+        const canRevoke=!i.accepted_at&&!i.revoked_at&&new Date(i.expires_at)>new Date();
+        return '<tr><td><b>'+esc(i.merchant_name)+'</b></td><td dir="ltr">'+esc(i.phone_e164)+'</td><td>'+esc((i.permissions||[]).join('، '))+'</td><td>'+state+'</td><td>'+date(i.expires_at)+'</td><td>'+(canRevoke?'<button class="danger-btn invite-revoke" data-id="'+esc(i.invite_id)+'">إلغاء الدعوة</button>':'—')+'</td></tr>';
+      }).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد دعوات مسجلة.</div></td></tr>';
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>دعوة موظف متجر</h2><div class="panel-subtitle">إنشاء رمز دعوة صالح لمدة 48 ساعة، مرتبط برقم الهاتف والصلاحيات المحددة.</div></div></div>'+
+        '<div class="toolbar"><select id="invite-merchant" class="search-input"><option value="">اختر المتجر النشط</option>'+(activeMerchants||[]).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join('')+'</select>'+
+        '<input id="invite-phone" class="search-input" type="tel" inputmode="tel" placeholder="رقم الهاتف بصيغة دولية +967…">'+
+        '<button id="create-invite" class="primary-btn">إنشاء الدعوة</button></div>'+
+        '<div class="toolbar" style="margin-top:14px"><label><input type="checkbox" name="invite-permission" value="issue_earn" checked> إصدار نقاط</label><label><input type="checkbox" name="invite-permission" value="confirm_redeem"> تأكيد الاستبدال</label><label><input type="checkbox" name="invite-permission" value="view_analytics"> عرض التحليلات</label></div>'+
+        '<div id="invite-result" class="notice hidden" style="margin-top:14px"></div></section>'+
+        '<section class="panel"><div class="panel-head"><div><h2>الدعوات الحالية</h2><div class="panel-subtitle">الرمز لا يُخزّن كنص مكشوف؛ يظهر مرة واحدة عند إنشائه.</div></div><button id="refresh-invites" class="ghost-btn">تحديث</button></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>الهاتف</th><th>الصلاحيات</th><th>الحالة</th><th>تنتهي في</th><th>إجراء</th></tr></thead><tbody id="invite-rows">'+inviteRows+'</tbody></table></div></section>'+
+        '<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">إدارة حالة عضويات الموظفين مع تسجيل كل تغيير · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th><th>إجراء</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section>'+
+        '<section class="panel"><div class="notice">يمكن تفعيل الموظف أو إيقافه من هنا. لا يمكن تغيير عضوية مالك المتجر. كل تغيير ودعوة أو إلغاء يسجل في سجل التدقيق.</div></section>';
+      host.querySelector('#create-invite').addEventListener('click',async()=>{
+        const merchantId=host.querySelector('#invite-merchant').value;
+        const phone=host.querySelector('#invite-phone').value.trim();
+        const permissions=[...host.querySelectorAll('[name="invite-permission"]:checked')].map(x=>x.value);
+        const button=host.querySelector('#create-invite');
+        if(!merchantId||!/^\\+[1-9][0-9]{7,14}$/.test(phone)||!permissions.length){toast('اختر متجراً نشطاً ورقماً دولياً وصلاحية واحدة على الأقل.',true);return;}
+        button.disabled=true;
+        const {data:created,error:createError}=await sb.rpc('admin_create_merchant_invite',{p_merchant_id:merchantId,p_phone_e164:phone,p_permissions:permissions});
+        button.disabled=false;
+        if(createError||!created?.ok){toast('تعذر إنشاء الدعوة: '+(createError?.message||created?.error||'unknown_error'),true);return;}
+        const result=host.querySelector('#invite-result');
+        result.classList.remove('hidden');
+        result.innerHTML='<b>تم إنشاء الدعوة.</b> انسخ الرمز وأرسله للموظف؛ لن يظهر مرة أخرى بعد مغادرة هذه الشاشة.<div dir="ltr" style="font-size:22px;font-weight:700;letter-spacing:3px;margin:12px 0">'+esc(created.code)+'</div><button id="copy-invite-code" class="ghost-btn">نسخ رمز الدعوة</button> <span class="small">صالح 48 ساعة</span>';
+        result.querySelector('#copy-invite-code').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(created.code);toast('تم نسخ رمز الدعوة.');}catch(_){toast('تعذر النسخ تلقائياً؛ انسخ الرمز يدوياً.',true);}});
+        toast('تم إنشاء الدعوة وتسجيلها في سجل التدقيق.');
+        await renderStaff();
+      });
+      host.querySelector('#refresh-invites').addEventListener('click',()=>renderStaff());
+      host.querySelector('#invite-rows').addEventListener('click',async event=>{
+        const button=event.target.closest('.invite-revoke');if(!button)return;
+        if(!confirm('هل تريد إلغاء هذه الدعوة؟ لن يتمكن المستلم من استخدامها.'))return;
+        button.disabled=true;
+        const {data:revoked,error:revokeError}=await sb.rpc('admin_revoke_merchant_invite',{p_invite_id:button.dataset.id});
+        if(revokeError||!revoked?.ok){toast('تعذر إلغاء الدعوة: '+(revokeError?.message||revoked?.error||'unknown_error'),true);button.disabled=false;return;}
+        toast('تم إلغاء الدعوة وتسجيل الحدث.');
+        await renderStaff();
+      });
       const input=host.querySelector('#staff-search');
       const search=async()=>{
         const btn=host.querySelector('#staff-search-btn');btn.disabled=true;
