@@ -34,6 +34,7 @@
         <nav class="nav-list" aria-label="القائمة الرئيسية">
           <button class="nav-btn active" data-view="overview"><span class="nav-icon">⌂</span>الرئيسية</button>
           <button class="nav-btn" data-view="merchants"><span class="nav-icon">▦</span>المتاجر</button>
+          <button class="nav-btn" data-view="users"><span class="nav-icon">♙</span>المستخدمون</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
           <button class="nav-btn" data-view="audit"><span class="nav-icon">≋</span>سجل التدقيق</button>
           <button class="nav-btn" data-view="roadmap"><span class="nav-icon">⚙</span>الإدارة المتقدمة</button>
@@ -97,6 +98,27 @@
       if(activeView==='overview')renderOverview();else renderMerchants();
     }));
   }
+  async function renderUsers(){
+    const host=document.getElementById('view-content');
+    host.innerHTML='<div class="center-state">جارٍ تحميل دليل المستخدمين…</div>';
+    const renderRows=rows=>rows.length?rows.map(u=>'<tr><td><b>'+esc(u.full_name||'بدون اسم')+'</b></td><td dir="ltr">'+esc(u.user_id)+'</td><td>'+esc(u.preferred_locale||'—')+'</td><td>'+date(u.created_at)+'</td></tr>').join(''):'<tr><td colspan="4"><div class="empty-state">لا توجد ملفات مستخدمين تطابق البحث.</div></td></tr>';
+    try{
+      const {data,error}=await sb.rpc('admin_list_user_profiles',{p_search:null,p_limit:100,p_offset:0});
+      if(error)throw error;
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>دليل المستخدمين</h2><div class="panel-subtitle">عرض محدود لملفات المستخدمين · حتى 100 سجل · دون البريد أو بيانات الدخول</div></div><div class="toolbar"><input id="user-search" class="search-input" placeholder="ابحث بالاسم أو معرّف المستخدم"><button id="user-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>الاسم</th><th>معرّف المستخدم</th><th>اللغة</th><th>تاريخ التسجيل</th></tr></thead><tbody id="user-rows">'+renderRows(data||[])+'</tbody></table></div><div class="panel-subtitle">النتائج المعروضة: '+(data||[]).length+'</div></section><section class="panel"><div class="notice">هذا القسم للقراءة فقط. إدارة أدوار المديرين وحالة حسابات الدخول تحتاج صلاحيات خادمية مستقلة واختبارات إضافية، ولن تُتاح من المتصفح.</div></section>';
+      const input=host.querySelector('#user-search');
+      const runSearch=async()=>{
+        const button=host.querySelector('#user-search-btn');button.disabled=true;
+        const {data:rows,error:searchError}=await sb.rpc('admin_list_user_profiles',{p_search:input.value.trim()||null,p_limit:100,p_offset:0});
+        if(searchError){toast('تعذر البحث عن المستخدمين: '+searchError.message,true);button.disabled=false;return;}
+        host.querySelector('#user-rows').innerHTML=renderRows(rows||[]);
+        host.querySelector('.panel-subtitle:last-child').textContent='النتائج المعروضة: '+(rows||[]).length;
+        button.disabled=false;
+      };
+      host.querySelector('#user-search-btn').addEventListener('click',runSearch);
+      input.addEventListener('keydown',event=>{if(event.key==='Enter')runSearch();});
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل دليل المستخدمين: '+esc(e.message)+'</div>';}
+  }
   async function renderLoyalty(){
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل نظام الولاء…</div>';
     try{
@@ -116,13 +138,13 @@
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة سجل التدقيق: '+esc(e.message)+'</div>';}
   }
   function renderRoadmap(){
-    document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>إدارة المستخدمين والمديرين</h3><p>تتطلب دوال خادم مخصصة لاستعراض الحسابات وإدارة الصلاحيات دون كشف auth.users أو منح الدور من المتصفح.</p><span class="tag">الخطوة التالية · أولوية عالية</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>إدارة العضويات والدعوات والصلاحيات، مع التحقق من هوية المدير وتسجيل كل تغيير.</p><span class="tag">يتطلب استكمال RPC</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
+    document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>إدارة العضويات والدعوات والصلاحيات، مع التحقق من هوية المدير وتسجيل كل تغيير.</p><span class="tag">يتطلب استكمال RPC</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
   }
   async function showView(view){
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',loyalty:'نظام الولاء',audit:'سجل التدقيق',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
