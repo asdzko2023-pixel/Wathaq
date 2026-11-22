@@ -35,6 +35,7 @@
           <button class="nav-btn active" data-view="overview"><span class="nav-icon">⌂</span>الرئيسية</button>
           <button class="nav-btn" data-view="merchants"><span class="nav-icon">▦</span>المتاجر</button>
           <button class="nav-btn" data-view="users"><span class="nav-icon">♙</span>المستخدمون</button>
+          <button class="nav-btn" data-view="staff"><span class="nav-icon">♧</span>موظفو المتاجر</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
           <button class="nav-btn" data-view="audit"><span class="nav-icon">≋</span>سجل التدقيق</button>
           <button class="nav-btn" data-view="roadmap"><span class="nav-icon">⚙</span>الإدارة المتقدمة</button>
@@ -119,6 +120,28 @@
       input.addEventListener('keydown',event=>{if(event.key==='Enter')runSearch();});
     }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل دليل المستخدمين: '+esc(e.message)+'</div>';}
   }
+  async function renderStaff(){
+    const host=document.getElementById('view-content');
+    host.innerHTML='<div class="center-state">جارٍ تحميل عضويات موظفي المتاجر…</div>';
+    const rowsHtml=rows=>rows.length?rows.map(x=>'<tr><td><b>'+esc(x.merchant_name)+'</b><div class="small muted" dir="ltr">'+esc(x.merchant_id)+'</div></td><td dir="ltr">'+esc(x.user_id)+'</td><td>'+esc(x.role)+'</td><td>'+esc((x.permissions||[]).join('، ')||'لا توجد صلاحيات إضافية')+'</td><td><span class="status '+(x.is_active?'active':'suspended')+'">'+(x.is_active?'نشط':'غير نشط')+'</span></td><td>'+date(x.created_at)+'</td></tr>').join(''):'<tr><td colspan="6"><div class="empty-state">لا توجد عضويات موظفين تطابق البحث.</div></td></tr>';
+    try{
+      const {data,error}=await sb.rpc('admin_list_merchant_staff',{p_search:null,p_limit:200,p_offset:0});
+      if(error)throw error;
+      const rows=data||[];
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">دليل قراءة فقط لعضويات المتاجر · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section><section class="panel"><div class="notice">هذا القسم يعرض العضويات الحالية فقط. إضافة الموظفين وإرسال الدعوات وتعديل صلاحياتهم ستُفعّل بعد ربط واجهات الدعوات الموجودة واختبار قيود قاعدة البيانات وسجل التدقيق.</div></section>';
+      const input=host.querySelector('#staff-search');
+      const search=async()=>{
+        const btn=host.querySelector('#staff-search-btn');btn.disabled=true;
+        const {data:found,error:e}=await sb.rpc('admin_list_merchant_staff',{p_search:input.value.trim()||null,p_limit:200,p_offset:0});
+        if(e){toast('تعذر البحث عن الموظفين: '+e.message,true);btn.disabled=false;return;}
+        host.querySelector('#staff-rows').innerHTML=rowsHtml(found||[]);
+        host.querySelector('#staff-count').textContent='العضويات المعروضة: '+(found||[]).length;
+        btn.disabled=false;
+      };
+      host.querySelector('#staff-search-btn').addEventListener('click',search);
+      input.addEventListener('keydown',event=>{if(event.key==='Enter')search();});
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل موظفي المتاجر: '+esc(e.message)+'</div>';}
+  }
   async function renderLoyalty(){
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل نظام الولاء…</div>';
     try{
@@ -138,13 +161,13 @@
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة سجل التدقيق: '+esc(e.message)+'</div>';}
   }
   function renderRoadmap(){
-    document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>إدارة العضويات والدعوات والصلاحيات، مع التحقق من هوية المدير وتسجيل كل تغيير.</p><span class="tag">يتطلب استكمال RPC</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
+    document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>أُضيف دليل قراءة عضويات الموظفين. الدعوات وتغيير الصلاحيات ستبقى معطلة حتى استكمال اختبار RPC وسجل التدقيق.</p><span class="tag">دليل العضويات متاح · إدارة العضويات لاحقاً</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
   }
   async function showView(view){
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',loyalty:'نظام الولاء',audit:'سجل التدقيق',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
