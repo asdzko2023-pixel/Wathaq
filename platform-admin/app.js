@@ -60,12 +60,13 @@
     if(error)throw error;return count??0;
   }
   async function loadStats(){
-    const [m,a,l,e]=await Promise.all([count('merchants'),count('loyalty_accounts'),count('loyalty_ledger'),count('audit_events')]);
-    return [{label:'إجمالي المتاجر',value:m},{label:'حسابات الولاء',value:a},{label:'حركات دفتر الولاء',value:l},{label:'أحداث التدقيق',value:e}];
+    const {data,error}=await sb.rpc('admin_get_platform_stats');
+    if(error)throw error;
+    return [{label:'إجمالي المتاجر',value:data?.merchants},{label:'حسابات الولاء',value:data?.loyalty_accounts},{label:'حركات دفتر الولاء',value:data?.loyalty_ledger},{label:'أحداث التدقيق',value:data?.audit_events}];
   }
-  function statsHtml(stats){return '<div class="grid-stats">'+stats.map(x=>'<article class="stat-card"><div class="label">'+esc(x.label)+'</div><div class="value">'+Number(x.value).toLocaleString('en-US')+'</div></article>').join('')+'</div>';}
+  function statsHtml(stats){return '<div class="grid-stats">'+stats.map(x=>'<article class="stat-card"><div class="label">'+esc(x.label)+'</div><div class="value">'+(x.value===null||x.value===undefined?'—':Number(x.value).toLocaleString('en-US'))+'</div></article>').join('')+'</div>';}
   async function loadMerchants(){
-    const {data,error}=await sb.from('merchants').select('id,name,slug,status,category,city,created_at').order('created_at',{ascending:false}).limit(200);
+    const {data,error}=await sb.rpc('admin_list_merchants',{p_search:null,p_limit:200});
     if(error)throw error;merchants=data||[];
   }
   function merchantRows(list){
@@ -131,7 +132,7 @@
       const rows=data||[];
       const [{data:invites,error:inviteError},{data:activeMerchants,error:merchantError}]=await Promise.all([
         sb.rpc('admin_list_merchant_invites',{p_merchant_id:null,p_limit:100}),
-        sb.from('merchants').select('id,name').eq('status','active').order('name').limit(200)
+        sb.rpc('admin_list_merchants',{p_search:null,p_limit:200})
       ]);
       if(inviteError)throw inviteError;
       if(merchantError)throw merchantError;
@@ -141,7 +142,7 @@
         return '<tr><td><b>'+esc(i.merchant_name)+'</b></td><td dir="ltr">'+esc(i.phone_e164)+'</td><td>'+esc((i.permissions||[]).join('، '))+'</td><td>'+state+'</td><td>'+date(i.expires_at)+'</td><td>'+(canRevoke?'<button class="danger-btn invite-revoke" data-id="'+esc(i.invite_id)+'">إلغاء الدعوة</button>':'—')+'</td></tr>';
       }).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد دعوات مسجلة.</div></td></tr>';
       host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>دعوة موظف متجر</h2><div class="panel-subtitle">إنشاء رمز دعوة صالح لمدة 48 ساعة، مرتبط برقم الهاتف والصلاحيات المحددة.</div></div></div>'+
-        '<div class="toolbar"><select id="invite-merchant" class="search-input"><option value="">اختر المتجر النشط</option>'+(activeMerchants||[]).map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join('')+'</select>'+
+        '<div class="toolbar"><select id="invite-merchant" class="search-input"><option value="">اختر المتجر النشط</option>'+(activeMerchants||[]).filter(m=>m.status==='active').map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join('')+'</select>'+
         '<input id="invite-phone" class="search-input" type="tel" inputmode="tel" placeholder="رقم الهاتف بصيغة دولية +967…">'+
         '<button id="create-invite" class="primary-btn">إنشاء الدعوة</button></div>'+
         '<div class="toolbar" style="margin-top:14px"><label><input type="checkbox" name="invite-permission" value="issue_earn" checked> إصدار نقاط</label><label><input type="checkbox" name="invite-permission" value="confirm_redeem"> تأكيد الاستبدال</label><label><input type="checkbox" name="invite-permission" value="view_analytics"> عرض التحليلات</label></div>'+
@@ -206,13 +207,9 @@
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل نظام الولاء…</div>';
     const stateNames={draft:'مسودة',active:'نشط',paused:'متوقف مؤقتاً',archived:'مؤرشف'};
     try{
-      const [{data:accounts,error:aErr},{data:ledger,error:lErr},{data:programs,error:pErr},{data:rewards,error:rErr}]=await Promise.all([
-        sb.from('loyalty_accounts').select('id,points_balance,stamps_balance,joined_at').order('joined_at',{ascending:false}).limit(8),
-        sb.from('loyalty_ledger').select('id,kind,points_delta,stamps_delta,created_at,reference').order('created_at',{ascending:false}).limit(12),
-        sb.from('loyalty_programs').select('id,merchant_id,name,kind,state,created_at').order('created_at',{ascending:false}).limit(100),
-        sb.rpc('admin_list_rewards',{p_search:null,p_limit:200})
-      ]);
-      if(aErr)throw aErr;if(lErr)throw lErr;if(pErr)throw pErr;if(rErr)throw rErr;
+      const {data:dashboard,error:dashboardError}=await sb.rpc('admin_get_loyalty_dashboard');
+      if(dashboardError)throw dashboardError;
+      const accounts=dashboard?.accounts||[],ledger=dashboard?.ledger||[],programs=dashboard?.programs||[],rewards=dashboard?.rewards||[];
       const programRows=(programs||[]).map(p=>{
         const actions=p.state==='draft'?[['active','تفعيل'],['archived','أرشفة']]:p.state==='active'?[['paused','إيقاف مؤقت'],['archived','أرشفة']]:p.state==='paused'?[['active','إعادة تفعيل'],['archived','أرشفة']]:[];
         return '<tr><td><b>'+esc(p.name)+'</b><div class="small muted" dir="ltr">'+esc(p.merchant_id)+'</div></td><td>'+esc(p.kind==='points'?'نقاط':'أختام')+'</td><td><span class="status '+esc(p.state)+'">'+esc(stateNames[p.state]||p.state)+'</span></td><td>'+date(p.created_at)+'</td><td><div class="row-actions">'+actions.map(a=>'<button class="'+(a[0]==='archived'?'danger-btn':'ghost-btn')+' program-state" data-id="'+esc(p.id)+'" data-state="'+a[0]+'">'+a[1]+'</button>').join('')+'</div></td></tr>';
@@ -246,7 +243,7 @@
   }
   async function renderAudit(){
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل سجل التدقيق…</div>';
-    try{const {data,error}=await sb.from('audit_events').select('id,action,entity_type,entity_id,merchant_id,created_at,details').order('created_at',{ascending:false}).limit(100);if(error)throw error;
+    try{const {data,error}=await sb.rpc('admin_list_platform_audit',{p_limit:100});if(error)throw error;
       host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>سجل التدقيق</h2><div class="panel-subtitle">آخر 100 حدث متاح وفق صلاحيات المدير</div></div></div><div class="table-wrap"><table><thead><tr><th>الحدث</th><th>الكيان</th><th>المعرّف</th><th>التفاصيل</th><th>التاريخ</th></tr></thead><tbody>'+(data||[]).map(x=>'<tr><td>'+esc(x.action)+'</td><td>'+esc(x.entity_type)+'</td><td>'+esc(x.entity_id||'—')+'</td><td>'+esc(JSON.stringify(x.details||{}))+'</td><td>'+date(x.created_at)+'</td></tr>').join('')+'</tbody></table></div></section>';
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة سجل التدقيق: '+esc(e.message)+'</div>';}
   }
