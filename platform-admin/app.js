@@ -5,7 +5,7 @@
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const date = value => value ? new Intl.DateTimeFormat('ar-YE',{dateStyle:'medium'}).format(new Date(value)) : '—';
   const statusNames = {pending:'بانتظار المراجعة',active:'نشط',suspended:'موقوف',rejected:'مرفوض'};
-  let sb, currentUser, merchants = [], activeView = 'overview';
+  let sb, currentUser, merchants = [], activeView = 'overview', isSuperAdmin = false, currentPermissions = new Set();
 
   function toast(message, error=false){
     document.querySelector('.toast')?.remove();
@@ -16,7 +16,7 @@
     root.innerHTML='<main class="center-state"><span class="brand-mark">و</span><p>'+esc(message)+'</p></main>';
   }
   function renderLogin(message='لوحة محمية لإدارة منصة وثاق. سجّل الدخول بحساب Google المعتمد كمدير منصة.'){
-    root.innerHTML='<main class="center-state"><section class="login-card"><span class="brand-mark">و</span><h1>إدارة وثاق</h1><p>'+esc(message)+'</p><button id="google-login" class="primary-btn">المتابعة باستخدام Google</button><p class="small">الدخول لا يمنح صلاحية الإدارة؛ يجب أن يكون الحساب مضافاً مسبقاً إلى platform_admins.</p></section></main>';
+    root.innerHTML='<main class="center-state"><section class="login-card"><span class="brand-mark">و</span><h1>إدارة وثاق</h1><p>'+esc(message)+'</p><button id="google-login" class="primary-btn">المتابعة باستخدام Google</button><p class="small">الدخول لا يمنح الصلاحيات تلقائياً؛ يجب اعتماد الحساب كمدير أعلى أو تعيينه ضمن مشغّلي المنصة.</p></section></main>';
     document.getElementById('google-login').addEventListener('click',async()=>{
       const redirectTo=window.location.href.split('#')[0];
       const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
@@ -24,7 +24,7 @@
     });
   }
   function renderDenied(){
-    root.innerHTML='<main class="center-state"><section class="denied-card"><span class="brand-mark">و</span><h1>لا توجد صلاحية إدارة</h1><p>تم تسجيل الدخول، لكن هذا الحساب غير مسجل في قائمة مديري منصة وثاق. لا يمكن فتح لوحة الإدارة قبل اعتماد الحساب من مسؤول مخوّل.</p><p class="small">'+esc(currentUser?.email||'')+'</p><button id="signout" class="ghost-btn">تسجيل الخروج</button></section></main>';
+    root.innerHTML='<main class="center-state"><section class="denied-card"><span class="brand-mark">و</span><h1>لا توجد صلاحية إدارة</h1><p>هذا الحساب غير مسجل كمدير أعلى ولا يملك عضوية مشغّل نشطة في منصة وثاق.</p><p class="small">'+esc(currentUser?.email||'')+'</p><button id="signout" class="ghost-btn">تسجيل الخروج</button></section></main>';
     document.getElementById('signout').addEventListener('click',()=>sb.auth.signOut());
   }
   function shell(){
@@ -53,7 +53,9 @@
     </div>`;
     document.getElementById('signout').addEventListener('click',()=>sb.auth.signOut());
     root.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
-    showView('overview');
+    const firstView=isSuperAdmin?'overview':['merchants','users','staff','loyalty','audit'].find(v=>viewAllowed(v))||'overview';
+    root.querySelectorAll('[data-view]').forEach(b=>{b.hidden=!viewAllowed(b.dataset.view);});
+    showView(firstView);
   }
   async function count(table){
     const {count,error}=await sb.from(table).select('*',{count:'exact',head:true});
@@ -71,13 +73,18 @@
   }
   function merchantRows(list){
     if(!list.length)return '<tr><td colspan="5"><div class="empty-state">لا توجد متاجر تطابق البحث.</div></td></tr>';
-    return list.map(m=>`<tr><td><b>${esc(m.name)}</b><div class="small muted">${esc(m.slug)}</div></td><td>${esc(m.category||'—')} · ${esc(m.city||'—')}</td><td><span class="status ${esc(m.status)}">${esc(statusNames[m.status]||m.status)}</span></td><td>${date(m.created_at)}</td><td><div class="row-actions">${m.status!=='active'?'<button class="primary-btn" data-status="active" data-id="'+esc(m.id)+'">اعتماد/تفعيل</button>':''}${m.status!=='suspended'?'<button class="ghost-btn" data-status="suspended" data-id="'+esc(m.id)+'">إيقاف</button>':''}${m.status!=='rejected'&&m.status!=='active'?'<button class="danger-btn" data-status="rejected" data-id="'+esc(m.id)+'">رفض</button>':''}</div></td></tr>`).join('');
+    return list.map(m=>`<tr><td><b>${esc(m.name)}</b><div class="small muted">${esc(m.slug)}</div></td><td>${esc(m.category||'—')} · ${esc(m.city||'—')}</td><td><span class="status ${esc(m.status)}">${esc(statusNames[m.status]||m.status)}</span></td><td>${date(m.created_at)}</td><td><div class="row-actions">${currentPermissions.has('merchants.status.manage')?(m.status!=='active'?'<button class="primary-btn" data-status="active" data-id="'+esc(m.id)+'">اعتماد/تفعيل</button>':'')+(m.status!=='suspended'?'<button class="ghost-btn" data-status="suspended" data-id="'+esc(m.id)+'">إيقاف</button>':'')+(m.status!=='rejected'&&m.status!=='active'?'<button class="danger-btn" data-status="rejected" data-id="'+esc(m.id)+'">رفض</button>':''):'—'}</div></td></tr>`).join('');
   }
   async function renderOverview(){
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل المؤشرات…</div>';
     try{
-      const [stats]=await Promise.all([loadStats(),loadMerchants()]);
-      host.innerHTML=statsHtml(stats)+'<section class="panel"><div class="panel-head"><div><h2>طلبات المتاجر الأخيرة</h2><div class="panel-subtitle">مراجعة حالة المتاجر عبر صلاحيات WATHAQ-CORE</div></div><button class="ghost-btn" data-goto="merchants">عرض كل المتاجر</button></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>التصنيف والموقع</th><th>الحالة</th><th>تاريخ الإنشاء</th><th>الإجراء</th></tr></thead><tbody>'+merchantRows(merchants.slice(0,6))+'</tbody></table></div></section><section class="panel"><div class="notice">تنبيه أمني: لا يمكن للوحة تعديل أرصدة العملاء أو دفتر الحركات أو الرموز مباشرة. تتم عمليات الاكتساب والاستبدال من خلال دوال الخادم المحمية.</div></section>';
+      const stats=await loadStats();
+      let merchantPanel='';
+      if(currentPermissions.has('merchants.read')){
+        await loadMerchants();
+        merchantPanel='<section class="panel"><div class="panel-head"><div><h2>طلبات المتاجر الأخيرة</h2><div class="panel-subtitle">عرض المتاجر وفق صلاحيات الحساب</div></div><button class="ghost-btn" data-goto="merchants">عرض كل المتاجر</button></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>التصنيف والموقع</th><th>الحالة</th><th>تاريخ الإنشاء</th><th>الإجراء</th></tr></thead><tbody>'+merchantRows(merchants.slice(0,6))+'</tbody></table></div></section>';
+      }
+      host.innerHTML=statsHtml(stats)+merchantPanel+'<section class="panel"><div class="notice">تنبيه أمني: لا يمكن للوحة تعديل أرصدة العملاء أو دفتر الحركات أو الرموز مباشرةً. العمليات الحساسة محمية في قاعدة البيانات.</div></section>';
       bindMerchantActions(host);
       host.querySelector('[data-goto]')?.addEventListener('click',()=>showView('merchants'));
     }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل مؤشرات المنصة: '+esc(e.message)+'</div>';}
@@ -125,15 +132,15 @@
   async function renderStaff(){
     const host=document.getElementById('view-content');
     host.innerHTML='<div class="center-state">جارٍ تحميل عضويات موظفي المتاجر…</div>';
-    const rowsHtml=rows=>rows.length?rows.map(x=>'<tr><td><b>'+esc(x.merchant_name)+'</b><div class="small muted" dir="ltr">'+esc(x.merchant_id)+'</div></td><td dir="ltr">'+esc(x.user_id)+'</td><td>'+esc(x.role)+'</td><td>'+esc((x.permissions||[]).join('، ')||'لا توجد صلاحيات إضافية')+'</td><td><span class="status '+(x.is_active?'active':'suspended')+'">'+(x.is_active?'نشط':'غير نشط')+'</span></td><td>'+date(x.created_at)+'</td><td>'+(x.role==='owner'?'<span class="small muted">محمي</span>':'<button class="ghost-btn staff-toggle" data-merchant="'+esc(x.merchant_id)+'" data-user="'+esc(x.user_id)+'" data-active="'+(!x.is_active)+'">'+(x.is_active?'إيقاف':'تفعيل')+'</button>')+'</td></tr>').join(''):'<tr><td colspan="7"><div class="empty-state">لا توجد عضويات موظفين تطابق البحث.</div></td></tr>';
+    const rowsHtml=rows=>rows.length?rows.map(x=>'<tr><td><b>'+esc(x.merchant_name)+'</b><div class="small muted" dir="ltr">'+esc(x.merchant_id)+'</div></td><td dir="ltr">'+esc(x.user_id)+'</td><td>'+esc(x.role)+'</td><td>'+esc((x.permissions||[]).join('، ')||'لا توجد صلاحيات إضافية')+'</td><td><span class="status '+(x.is_active?'active':'suspended')+'">'+(x.is_active?'نشط':'غير نشط')+'</span></td><td>'+date(x.created_at)+'</td><td>'+(x.role==='owner'?'<span class="small muted">محمي</span>':currentPermissions.has('staff.status.manage')?'<button class="ghost-btn staff-toggle" data-merchant="'+esc(x.merchant_id)+'" data-user="'+esc(x.user_id)+'" data-active="'+(!x.is_active)+'">'+(x.is_active?'إيقاف':'تفعيل')+'</button>':'—')+'</td></tr>').join(''):'<tr><td colspan="7"><div class="empty-state">لا توجد عضويات موظفين تطابق البحث.</div></td></tr>';
     try{
       const {data,error}=await sb.rpc('admin_list_merchant_staff',{p_search:null,p_limit:200,p_offset:0});
       if(error)throw error;
       const rows=data||[];
-      const [{data:invites,error:inviteError},{data:activeMerchants,error:merchantError}]=await Promise.all([
-        sb.rpc('admin_list_merchant_invites',{p_merchant_id:null,p_limit:100}),
-        sb.rpc('admin_list_merchants',{p_search:null,p_limit:200})
-      ]);
+      const canManageInvites=currentPermissions.has('staff.invites.manage');
+      const inviteResult=canManageInvites?await sb.rpc('admin_list_merchant_invites',{p_merchant_id:null,p_limit:100}):{data:[],error:null};
+      const merchantResult=await sb.rpc('admin_list_merchants',{p_search:null,p_limit:200});
+      const invites=inviteResult.data||[],inviteError=inviteResult.error,activeMerchants=merchantResult.data||[],merchantError=merchantResult.error;
       if(inviteError)throw inviteError;
       if(merchantError)throw merchantError;
       const inviteRows=(invites||[]).map(i=>{
@@ -141,16 +148,17 @@
         const canRevoke=!i.accepted_at&&!i.revoked_at&&new Date(i.expires_at)>new Date();
         return '<tr><td><b>'+esc(i.merchant_name)+'</b></td><td dir="ltr">'+esc(i.phone_e164)+'</td><td>'+esc((i.permissions||[]).join('، '))+'</td><td>'+state+'</td><td>'+date(i.expires_at)+'</td><td>'+(canRevoke?'<button class="danger-btn invite-revoke" data-id="'+esc(i.invite_id)+'">إلغاء الدعوة</button>':'—')+'</td></tr>';
       }).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد دعوات مسجلة.</div></td></tr>';
-      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>دعوة موظف متجر</h2><div class="panel-subtitle">إنشاء رمز دعوة صالح لمدة 48 ساعة، مرتبط برقم الهاتف والصلاحيات المحددة.</div></div></div>'+
+      const invitePanel=canManageInvites?'<section class="panel"><div class="panel-head"><div><h2>دعوة موظف متجر</h2><div class="panel-subtitle">إنشاء رمز دعوة صالح لمدة 48 ساعة، مرتبط برقم الهاتف والصلاحيات المحددة.</div></div></div>'+
         '<div class="toolbar"><select id="invite-merchant" class="search-input"><option value="">اختر المتجر النشط</option>'+(activeMerchants||[]).filter(m=>m.status==='active').map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join('')+'</select>'+
         '<input id="invite-phone" class="search-input" type="tel" inputmode="tel" placeholder="رقم الهاتف بصيغة دولية +967…">'+
         '<button id="create-invite" class="primary-btn">إنشاء الدعوة</button></div>'+
         '<div class="toolbar" style="margin-top:14px"><label><input type="checkbox" name="invite-permission" value="issue_earn" checked> إصدار نقاط</label><label><input type="checkbox" name="invite-permission" value="confirm_redeem"> تأكيد الاستبدال</label><label><input type="checkbox" name="invite-permission" value="view_analytics"> عرض التحليلات</label></div>'+
         '<div id="invite-result" class="notice hidden" style="margin-top:14px"></div></section>'+
         '<section class="panel"><div class="panel-head"><div><h2>الدعوات الحالية</h2><div class="panel-subtitle">الرمز لا يُخزّن كنص مكشوف؛ يظهر مرة واحدة عند إنشائه.</div></div><button id="refresh-invites" class="ghost-btn">تحديث</button></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>الهاتف</th><th>الصلاحيات</th><th>الحالة</th><th>تنتهي في</th><th>إجراء</th></tr></thead><tbody id="invite-rows">'+inviteRows+'</tbody></table></div></section>'+
-        '<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">إدارة حالة عضويات الموظفين مع تسجيل كل تغيير · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th><th>إجراء</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section>'+
+        ' : '';
+      host.innerHTML=invitePanel+'<section class="panel"><div class="panel-head"><div><h2>موظفو المتاجر</h2><div class="panel-subtitle">إدارة حالة عضويات الموظفين مع تسجيل كل تغيير · حتى 200 سجل</div></div><div class="toolbar"><input id="staff-search" class="search-input" placeholder="ابحث باسم المتجر أو المعرّف أو الدور"><button id="staff-search-btn" class="ghost-btn">بحث</button></div></div><div class="table-wrap"><table><thead><tr><th>المتجر</th><th>معرّف الموظف</th><th>الدور</th><th>الصلاحيات</th><th>الحالة</th><th>تاريخ الإضافة</th><th>إجراء</th></tr></thead><tbody id="staff-rows">'+rowsHtml(rows)+'</tbody></table></div><div class="panel-subtitle" id="staff-count">العضويات المعروضة: '+rows.length+'</div></section>'+
         '<section class="panel"><div class="notice">يمكن تفعيل الموظف أو إيقافه من هنا. لا يمكن تغيير عضوية مالك المتجر. كل تغيير ودعوة أو إلغاء يسجل في سجل التدقيق.</div></section>';
-      host.querySelector('#create-invite').addEventListener('click',async()=>{
+      if(canManageInvites)host.querySelector('#create-invite').addEventListener('click',async()=>{
         const merchantId=host.querySelector('#invite-merchant').value;
         const phone=host.querySelector('#invite-phone').value.trim();
         const permissions=[...host.querySelectorAll('[name="invite-permission"]:checked')].map(x=>x.value);
@@ -167,6 +175,7 @@
         toast('تم إنشاء الدعوة وتسجيلها في سجل التدقيق.');
         await renderStaff();
       });
+      if(canManageInvites){
       host.querySelector('#refresh-invites').addEventListener('click',()=>renderStaff());
       host.querySelector('#invite-rows').addEventListener('click',async event=>{
         const button=event.target.closest('.invite-revoke');if(!button)return;
@@ -177,6 +186,7 @@
         toast('تم إلغاء الدعوة وتسجيل الحدث.');
         await renderStaff();
       });
+      }
       const input=host.querySelector('#staff-search');
       const search=async()=>{
         const btn=host.querySelector('#staff-search-btn');btn.disabled=true;
@@ -211,7 +221,7 @@
       if(dashboardError)throw dashboardError;
       const accounts=dashboard?.accounts||[],ledger=dashboard?.ledger||[],programs=dashboard?.programs||[],rewards=dashboard?.rewards||[];
       const programRows=(programs||[]).map(p=>{
-        const actions=p.state==='draft'?[['active','تفعيل'],['archived','أرشفة']]:p.state==='active'?[['paused','إيقاف مؤقت'],['archived','أرشفة']]:p.state==='paused'?[['active','إعادة تفعيل'],['archived','أرشفة']]:[];
+        const actions=!currentPermissions.has('loyalty.programs.manage')?[]:p.state==='draft'?[['active','تفعيل'],['archived','أرشفة']]:p.state==='active'?[['paused','إيقاف مؤقت'],['archived','أرشفة']]:p.state==='paused'?[['active','إعادة تفعيل'],['archived','أرشفة']]:[];
         return '<tr><td><b>'+esc(p.name)+'</b><div class="small muted" dir="ltr">'+esc(p.merchant_id)+'</div></td><td>'+esc(p.kind==='points'?'نقاط':'أختام')+'</td><td><span class="status '+esc(p.state)+'">'+esc(stateNames[p.state]||p.state)+'</span></td><td>'+date(p.created_at)+'</td><td><div class="row-actions">'+actions.map(a=>'<button class="'+(a[0]==='archived'?'danger-btn':'ghost-btn')+' program-state" data-id="'+esc(p.id)+'" data-state="'+a[0]+'">'+a[1]+'</button>').join('')+'</div></td></tr>';
       }).join('')||'<tr><td colspan="5"><div class="empty-state">لا توجد برامج ولاء.</div></td></tr>';
       const rewardRows=(rewards||[]).map(r=>'<tr><td><b>'+esc(r.title)+'</b><div class="small muted">'+esc(r.merchant_name)+' · '+esc(r.program_name)+'</div></td><td>'+(r.points_cost!==null?Number(r.points_cost).toLocaleString('en-US')+' نقطة':Number(r.stamps_cost).toLocaleString('en-US')+' ختم')+'</td><td>'+(r.stock_quantity===null?'غير محدود':Number(r.stock_quantity).toLocaleString('en-US'))+'</td><td><span class="status '+(r.is_active?'active':'suspended')+'">'+(r.is_active?'نشطة':'متوقفة')+'</span></td><td><button class="ghost-btn reward-toggle" data-id="'+esc(r.reward_id)+'" data-active="'+(!r.is_active)+'">'+(r.is_active?'إيقاف':'تفعيل')+'</button></td></tr>').join('')||'<tr><td colspan="5"><div class="empty-state">لا توجد مكافآت مسجلة.</div></td></tr>';
@@ -249,6 +259,7 @@
   }
   async function renderOperators(){
     const host=document.getElementById('view-content');
+    if(!isSuperAdmin){host.innerHTML='<div class="notice error">هذه الشاشة مخصصة للمدير الأعلى.</div>';return;}
     host.innerHTML='<div class="center-state">جارٍ تحميل أدوار مشغّلي المنصة…</div>';
     try{
       const [{data:roles,error:rolesError},{data:operators,error:operatorsError}]=await Promise.all([
@@ -287,7 +298,14 @@
   function renderRoadmap(){
     document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>دليل الموظفين، تفعيل وإيقاف العضويات، إنشاء دعوات برموز أحادية العرض، وإلغاء الدعوات مع تسجيل الأحداث.</p><span class="tag">الدعوات وإدارة الحالة متاحتان</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
   }
+  function viewAllowed(view){
+    if(view==='overview')return isSuperAdmin||currentPermissions.size>0;
+    if(view==='operators'||view==='roadmap')return isSuperAdmin;
+    const required={merchants:'merchants.read',users:'users.read',staff:'staff.read',loyalty:'loyalty.read',audit:'audit.read'}[view];
+    return !!required&&currentPermissions.has(required);
+  }
   async function showView(view){
+    if(!viewAllowed(view)){toast('ليس لديك صلاحية لفتح هذا القسم.',true);return;}
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
     const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
@@ -302,8 +320,12 @@
     if(!currentUser){renderLogin();return;}
     loading();
     const {data:admin,error:adminError}=await sb.from('platform_admins').select('user_id').eq('user_id',currentUser.id).maybeSingle();
-    if(adminError){renderLogin('تعذر التحقق من صلاحيات المدير. '+adminError.message);return;}
-    if(!admin){renderDenied();return;}
+    if(adminError){renderLogin('تعذر التحقق من صلاحيات الحساب. '+adminError.message);return;}
+    isSuperAdmin=!!admin;
+    const {data:permissions,error:permissionError}=await sb.rpc('admin_get_my_permissions');
+    if(permissionError){renderLogin('تعذر تحميل صلاحيات الحساب. '+permissionError.message);return;}
+    currentPermissions=new Set(permissions||[]);
+    if(!isSuperAdmin&&currentPermissions.size===0){renderDenied();return;}
     shell();
   }
   boot().catch(e=>{root.innerHTML='<main class="center-state"><section class="denied-card"><h1>تعذر فتح لوحة الإدارة</h1><p>'+esc(e.message)+'</p></section></main>';});
