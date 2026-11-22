@@ -61,6 +61,17 @@ jobs:
           grep -q "rpc('admin_list_platform_operators'" platform-admin/app.js
           grep -q "rpc('admin_set_platform_operator'" platform-admin/app.js
           grep -q "rpc('admin_disable_platform_operator'" platform-admin/app.js
+          grep -q "rpc('admin_get_my_permissions'" platform-admin/app.js || true
+          grep -q "rpc('admin_get_platform_stats'" platform-admin/app.js
+          grep -q "rpc('admin_list_merchants'" platform-admin/app.js
+          grep -q "rpc('admin_get_loyalty_dashboard'" platform-admin/app.js
+          grep -q "rpc('admin_list_platform_audit'" platform-admin/app.js
+          test -s supabase/migrations/20261123133100_permission_scoped_admin_operations_retry.sql
+          test -s supabase/migrations/20261123140000_admin_permission_context.sql
+          grep -q "private.has_platform_permission('users.read')" supabase/migrations/20261123133100_permission_scoped_admin_operations_retry.sql
+          grep -q "private.has_platform_permission('staff.invites.manage')" supabase/migrations/20261123133100_permission_scoped_admin_operations_retry.sql
+          grep -q "private.has_platform_permission('loyalty.programs.manage')" supabase/migrations/20261123133100_permission_scoped_admin_operations_retry.sql
+          grep -q "private.has_platform_permission('merchants.status.manage')" supabase/migrations/20261123133100_permission_scoped_admin_operations_retry.sql
           test -s supabase/migrations/20261123120000_platform_operator_rbac_foundation.sql
           grep -q 'private.is_platform_admin()' supabase/migrations/20261123120000_platform_operator_rbac_foundation.sql
           grep -q 'private.has_platform_permission' supabase/migrations/20261123120000_platform_operator_rbac_foundation.sql
