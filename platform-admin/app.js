@@ -38,6 +38,7 @@
           <button class="nav-btn" data-view="staff"><span class="nav-icon">♧</span>موظفو المتاجر</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
           <button class="nav-btn" data-view="audit"><span class="nav-icon">≋</span>سجل التدقيق</button>
+          <button class="nav-btn" data-view="operators"><span class="nav-icon">♙</span>مديرو المنصة</button>
           <button class="nav-btn" data-view="roadmap"><span class="nav-icon">⚙</span>الإدارة المتقدمة</button>
         </nav>
         <div class="sidebar-foot">وصول مقيد بهوية المدير وسياسات قاعدة البيانات. كل تغيير في حالة المتجر يسجله الخادم في سجل التدقيق.</div>
@@ -249,14 +250,51 @@
       host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>سجل التدقيق</h2><div class="panel-subtitle">آخر 100 حدث متاح وفق صلاحيات المدير</div></div></div><div class="table-wrap"><table><thead><tr><th>الحدث</th><th>الكيان</th><th>المعرّف</th><th>التفاصيل</th><th>التاريخ</th></tr></thead><tbody>'+(data||[]).map(x=>'<tr><td>'+esc(x.action)+'</td><td>'+esc(x.entity_type)+'</td><td>'+esc(x.entity_id||'—')+'</td><td>'+esc(JSON.stringify(x.details||{}))+'</td><td>'+date(x.created_at)+'</td></tr>').join('')+'</tbody></table></div></section>';
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة سجل التدقيق: '+esc(e.message)+'</div>';}
   }
+  async function renderOperators(){
+    const host=document.getElementById('view-content');
+    host.innerHTML='<div class="center-state">جارٍ تحميل أدوار مشغّلي المنصة…</div>';
+    try{
+      const [{data:roles,error:rolesError},{data:operators,error:operatorsError}]=await Promise.all([
+        sb.rpc('admin_list_platform_roles'),
+        sb.rpc('admin_list_platform_operators')
+      ]);
+      if(rolesError)throw rolesError;if(operatorsError)throw operatorsError;
+      const roleOptions=(roles||[]).map(r=>'<option value="'+esc(r.role_key)+'">'+esc(r.name)+' · '+esc(r.role_key)+'</option>').join('');
+      const rows=(operators||[]).map(o=>'<tr><td><b>'+esc(o.full_name||'بدون اسم')+'</b><div class="small muted" dir="ltr">'+esc(o.user_id)+'</div></td><td>'+esc(o.role_name)+' <span class="small muted">('+esc(o.role_key)+')</span></td><td><span class="status '+(o.is_active?'active':'suspended')+'">'+(o.is_active?'نشط':'موقوف')+'</span></td><td>'+date(o.created_at)+'</td><td>'+(o.is_active?'<button class="danger-btn operator-disable" data-user="'+esc(o.user_id)+'">إيقاف الصلاحية</button>':'<span class="small muted">موقوف</span>')+'</td></tr>').join('')||'<tr><td colspan="5"><div class="empty-state">لا يوجد مشغّلون مضافون حالياً.</div></td></tr>';
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>إضافة أو تحديث مشغّل</h2><div class="panel-subtitle">هذه الوظيفة للمدير الأعلى فقط. استخدم UUID لحساب موجود في وثاق.</div></div></div><form id="operator-form" class="toolbar" style="flex-wrap:wrap"><input id="operator-user-id" class="search-input" style="min-width:260px" placeholder="معرّف المستخدم UUID" required><select id="operator-role" class="search-input" required>'+roleOptions+'</select><label class="small"><input id="operator-active" type="checkbox" checked> تفعيل الصلاحية</label><button class="primary-btn" type="submit">حفظ العضوية</button></form><p class="small muted">لا يمكن تعيين نفسك أو ترقية حساب إلى مدير أعلى من هنا. المدير الأعلى يُدار حصراً عبر قائمة platform_admins.</p></section><section class="panel"><div class="panel-head"><div><h2>مشغّلو المنصة</h2><div class="panel-subtitle">لا تُعرض عناوين البريد أو أرقام الهواتف في هذا الدليل.</div></div><button id="operators-refresh" class="ghost-btn">تحديث</button></div><div class="table-wrap"><table><thead><tr><th>المستخدم</th><th>الدور</th><th>الحالة</th><th>تاريخ الإضافة</th><th>الإجراء</th></tr></thead><tbody>'+rows+'</tbody></table></div></section><section class="panel"><h2>مصفوفة الأدوار</h2><div class="table-wrap"><table><thead><tr><th>الدور</th><th>الصلاحيات الممنوحة</th></tr></thead><tbody>'+(roles||[]).map(r=>'<tr><td><b>'+esc(r.name)+'</b><div class="small muted">'+esc(r.role_key)+'</div></td><td>'+esc((r.permissions||[]).join(' · '))+'</td></tr>').join('')+'</tbody></table></div></section>';
+      host.querySelector('#operator-form').addEventListener('submit',async event=>{
+        event.preventDefault();
+        const userId=host.querySelector('#operator-user-id').value.trim();
+        const roleKey=host.querySelector('#operator-role').value;
+        const active=host.querySelector('#operator-active').checked;
+        if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)){toast('أدخل UUID صحيحاً للمستخدم.',true);return;}
+        if(!confirm('تأكيد حفظ دور '+roleKey+' لهذا المستخدم؟'))return;
+        const button=event.submitter;button.disabled=true;
+        const {data,error}=await sb.rpc('admin_set_platform_operator',{p_user_id:userId,p_role_key:roleKey,p_active:active});
+        if(error||!data?.ok){toast('تعذر حفظ العضوية: '+(error?.message||data?.error||'unknown_error'),true);button.disabled=false;return;}
+        toast('تم حفظ عضوية المشغّل وتسجيلها في سجل التدقيق.');
+        await renderOperators();
+      });
+      host.querySelector('#operators-refresh').addEventListener('click',renderOperators);
+      host.querySelector('tbody')?.addEventListener('click',async event=>{
+        const button=event.target.closest('.operator-disable');if(!button)return;
+        if(!confirm('تأكيد إيقاف صلاحيات هذا المشغّل؟'))return;
+        button.disabled=true;
+        const {data,error}=await sb.rpc('admin_disable_platform_operator',{p_user_id:button.dataset.user});
+        if(error||!data?.ok){toast('تعذر إيقاف المشغّل: '+(error?.message||data?.error||'unknown_error'),true);button.disabled=false;return;}
+        toast('تم إيقاف صلاحيات المشغّل.');
+        await renderOperators();
+      });
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل إدارة المشغّلين: '+esc(e.message)+'</div>';}
+  }
   function renderRoadmap(){
     document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>دليل الموظفين، تفعيل وإيقاف العضويات، إنشاء دعوات برموز أحادية العرض، وإلغاء الدعوات مع تسجيل الأحداث.</p><span class="tag">الدعوات وإدارة الحالة متاحتان</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
   }
   async function showView(view){
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else if(view==='operators')await renderOperators();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
