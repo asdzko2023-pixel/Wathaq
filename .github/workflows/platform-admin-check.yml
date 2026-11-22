@@ -6,6 +6,7 @@ on:
       - 'platform-admin/**'
       - 'packages/design-tokens/**'
       - 'app/config.js'
+      - 'supabase/migrations/**'
       - '.github/workflows/platform-admin-check.yml'
   pull_request:
     paths:
@@ -33,6 +34,10 @@ jobs:
           grep -q "rpc('admin_set_merchant_status'" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
+          test -s supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
+          grep -q 'private.is_platform_admin()' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
+          grep -q 'grant execute.*authenticated' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
+          ! grep -qi 'grant update on public.merchants' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
           ! grep -R -E 'service_role|SUPABASE_SERVICE_ROLE_KEY' platform-admin/
       - name: Package platform admin site
         run: |
