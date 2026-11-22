@@ -1,0 +1,47 @@
+name: WATHAQ Platform Admin Checks
+on:
+  push:
+    branches: [admin/platform-console-v1]
+    paths:
+      - 'platform-admin/**'
+      - 'packages/design-tokens/**'
+      - 'app/config.js'
+      - '.github/workflows/platform-admin-check.yml'
+  pull_request:
+    paths:
+      - 'platform-admin/**'
+      - 'packages/design-tokens/**'
+      - 'app/config.js'
+      - '.github/workflows/platform-admin-check.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check platform admin JavaScript syntax
+        run: node --check platform-admin/app.js
+      - name: Validate standalone console assets
+        run: |
+          test -s platform-admin/index.html
+          test -s platform-admin/styles.css
+          test -s platform-admin/app.js
+          grep -q '../app/config.js' platform-admin/index.html
+          grep -q 'platform_admins' platform-admin/app.js
+          grep -q 'audit_events' platform-admin/app.js
+          ! grep -R -E 'service_role|SUPABASE_SERVICE_ROLE_KEY' platform-admin/
+      - name: Package platform admin site
+        run: |
+          mkdir -p dist
+          cp -R platform-admin dist/admin
+          cp -R packages/design-tokens dist/packages
+          mkdir -p dist/app
+          cp app/config.js dist/app/config.js
+          cd dist && zip -qr ../wathaq-platform-admin.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wathaq-platform-admin
+          path: wathaq-platform-admin.zip
+          if-no-files-found: error
