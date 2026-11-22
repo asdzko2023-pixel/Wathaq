@@ -203,14 +203,30 @@
   }
   async function renderLoyalty(){
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل نظام الولاء…</div>';
+    const stateNames={draft:'مسودة',active:'نشط',paused:'متوقف مؤقتاً',archived:'مؤرشف'};
     try{
       const [{data:accounts,error:aErr},{data:ledger,error:lErr},{data:programs,error:pErr}]=await Promise.all([
         sb.from('loyalty_accounts').select('id,points_balance,stamps_balance,joined_at').order('joined_at',{ascending:false}).limit(8),
         sb.from('loyalty_ledger').select('id,kind,points_delta,stamps_delta,created_at,reference').order('created_at',{ascending:false}).limit(12),
-        sb.from('loyalty_programs').select('id,name,kind,state,created_at').order('created_at',{ascending:false}).limit(12)
+        sb.from('loyalty_programs').select('id,merchant_id,name,kind,state,created_at').order('created_at',{ascending:false}).limit(100)
       ]);
       if(aErr)throw aErr;if(lErr)throw lErr;if(pErr)throw pErr;
-      host.innerHTML='<div class="notice warn">هذه الشاشة للمتابعة والقراءة فقط. لا تُجرى تعديلات على الأرصدة أو دفتر الحركات من واجهة الإدارة.</div><section class="panel"><div class="panel-head"><h2>البرامج</h2><span class="small muted">'+(programs||[]).length+' حديثة</span></div><div class="table-wrap"><table><thead><tr><th>البرنامج</th><th>النوع</th><th>الحالة</th><th>تاريخ الإنشاء</th></tr></thead><tbody>'+(programs||[]).map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.kind==='points'?'نقاط':'أختام')+'</td><td>'+esc(p.state)+'</td><td>'+date(p.created_at)+'</td></tr>').join('')+'</tbody></table></div></section><section class="panel"><div class="panel-head"><h2>أحدث حركات الولاء</h2></div><div class="table-wrap"><table><thead><tr><th>النوع</th><th>تغير النقاط</th><th>تغير الأختام</th><th>المرجع</th><th>التاريخ</th></tr></thead><tbody>'+(ledger||[]).map(x=>'<tr><td>'+esc(x.kind)+'</td><td dir="ltr">'+Number(x.points_delta).toLocaleString('en-US')+'</td><td dir="ltr">'+Number(x.stamps_delta).toLocaleString('en-US')+'</td><td>'+esc(x.reference||'—')+'</td><td>'+date(x.created_at)+'</td></tr>').join('')+'</tbody></table></div></section><section class="panel"><div class="panel-head"><h2>أحدث حسابات الولاء</h2></div><div class="table-wrap"><table><thead><tr><th>معرّف الحساب</th><th>رصيد النقاط</th><th>رصيد الأختام</th><th>تاريخ الانضمام</th></tr></thead><tbody>'+(accounts||[]).map(x=>'<tr><td>'+esc(x.id.slice(0,8))+'…</td><td>'+Number(x.points_balance).toLocaleString('en-US')+'</td><td>'+Number(x.stamps_balance).toLocaleString('en-US')+'</td><td>'+date(x.joined_at)+'</td></tr>').join('')+'</tbody></table></div></section>';
+      const programRows=(programs||[]).map(p=>{
+        const actions=p.state==='draft'?[['active','تفعيل'],['archived','أرشفة']]:p.state==='active'?[['paused','إيقاف مؤقت'],['archived','أرشفة']]:p.state==='paused'?[['active','إعادة تفعيل'],['archived','أرشفة']]:[];
+        return '<tr><td><b>'+esc(p.name)+'</b><div class="small muted" dir="ltr">'+esc(p.merchant_id)+'</div></td><td>'+esc(p.kind==='points'?'نقاط':'أختام')+'</td><td><span class="status '+esc(p.state)+'">'+esc(stateNames[p.state]||p.state)+'</span></td><td>'+date(p.created_at)+'</td><td><div class="row-actions">'+actions.map(a=>'<button class="'+(a[0]==='archived'?'danger-btn':'ghost-btn')+' program-state" data-id="'+esc(p.id)+'" data-state="'+a[0]+'">'+a[1]+'</button>').join('')+'</div></td></tr>';
+      }).join('')||'<tr><td colspan="5"><div class="empty-state">لا توجد برامج ولاء.</div></td></tr>';
+      host.innerHTML='<div class="notice warn">إدارة حالة البرامج متاحة وفق انتقالات محددة. لا تُجرى تعديلات على أرصدة العملاء أو دفتر الحركات من واجهة الإدارة.</div><section class="panel"><div class="panel-head"><div><h2>برامج الولاء</h2><div class="panel-subtitle">تفعيل أو إيقاف مؤقت أو أرشفة مع تسجيل كل تغيير في سجل التدقيق.</div></div></div><div class="table-wrap"><table><thead><tr><th>البرنامج والمتجر</th><th>النوع</th><th>الحالة</th><th>تاريخ الإنشاء</th><th>الإجراءات</th></tr></thead><tbody id="program-rows">'+programRows+'</tbody></table></div></section><section class="panel"><div class="panel-head"><h2>أحدث حركات الولاء</h2></div><div class="table-wrap"><table><thead><tr><th>النوع</th><th>تغير النقاط</th><th>تغير الأختام</th><th>المرجع</th><th>التاريخ</th></tr></thead><tbody>'+(ledger||[]).map(x=>'<tr><td>'+esc(x.kind)+'</td><td dir="ltr">'+Number(x.points_delta).toLocaleString('en-US')+'</td><td dir="ltr">'+Number(x.stamps_delta).toLocaleString('en-US')+'</td><td>'+esc(x.reference||'—')+'</td><td>'+date(x.created_at)+'</td></tr>').join('')+'</tbody></table></div></section><section class="panel"><div class="panel-head"><h2>أحدث حسابات الولاء</h2></div><div class="table-wrap"><table><thead><tr><th>معرّف الحساب</th><th>رصيد النقاط</th><th>رصيد الأختام</th><th>تاريخ الانضمام</th></tr></thead><tbody>'+(accounts||[]).map(x=>'<tr><td>'+esc(x.id.slice(0,8))+'…</td><td>'+Number(x.points_balance).toLocaleString('en-US')+'</td><td>'+Number(x.stamps_balance).toLocaleString('en-US')+'</td><td>'+date(x.joined_at)+'</td></tr>').join('')+'</tbody></table></div></section>';
+      host.querySelector('#program-rows').addEventListener('click',async event=>{
+        const button=event.target.closest('.program-state');if(!button)return;
+        const next=button.dataset.state;
+        const label=stateNames[next]||next;
+        if(!confirm('تأكيد تغيير حالة البرنامج إلى «'+label+'»؟ سيتم تسجيل العملية في سجل التدقيق.'))return;
+        button.disabled=true;
+        const {data,error}=await sb.rpc('admin_set_loyalty_program_state',{p_program_id:button.dataset.id,p_state:next});
+        if(error||!data?.ok){toast('لم يتم تغيير حالة البرنامج: '+(error?.message||data?.error||'تعذر تنفيذ العملية'),true);button.disabled=false;return;}
+        toast('تم تحديث حالة البرنامج وتسجيل الحدث.');
+        await renderLoyalty();
+      });
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة بيانات الولاء: '+esc(e.message)+'</div>';}
   }
   async function renderAudit(){
