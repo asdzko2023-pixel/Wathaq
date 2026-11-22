@@ -49,6 +49,12 @@ jobs:
           grep -q 'on conflict'  supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
           grep -q "'already_member'" supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
           grep -q 'security definer' supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
+          grep -q "rpc('admin_set_loyalty_program_state'" platform-admin/app.js
+          test -s supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
+          grep -q 'private.is_platform_admin()' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
+          grep -q 'archived_is_terminal' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
+          grep -q 'platform.loyalty_program_state_changed' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
+          grep -q 'security invoker' supabase/migrations/20261123100000_admin_loyalty_program_lifecycle.sql
           ! grep -q "from('profiles')" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
