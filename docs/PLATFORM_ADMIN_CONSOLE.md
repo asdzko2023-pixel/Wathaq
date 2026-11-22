@@ -1,0 +1,28 @@
+# WATHAQ Platform Admin Console
+
+## Surface
+The standalone administration web surface lives in `platform-admin/`. It is separate from the customer Flutter application and uses the existing WATHAQ-CORE Supabase project and shared design tokens.
+
+## Authentication and authorization
+- Uses the public/publishable Supabase key from `app/config.js`; no service-role key or database password is permitted in browser assets.
+- Google OAuth signs the operator in through Supabase Auth.
+- The console checks the signed-in user's ID against `public.platform_admins`. A successful login alone never grants platform privileges.
+- Bootstrap the first administrator only through the reviewed procedure in `docs/PLATFORM_BOOTSTRAP.md`. Never set role metadata from the browser.
+- All data access remains subject to database grants and RLS.
+
+## Available in this foundation
+- Platform overview counts for merchants, loyalty accounts, ledger rows, and audit events.
+- Merchant listing, search, and guarded status changes (pending/active/suspended/rejected). The database status guard records changes in `audit_events`.
+- Read-only views for loyalty programs, recent ledger entries, loyalty account balances, and audit events.
+
+## Deliberately not implemented yet
+The browser must not query `auth.users` or directly administer user roles. User directory, platform-admin RBAC, merchant staff administration, plans/subscriptions, platform settings workflows, fraud alerts, and exports require narrowly scoped, authenticated, audited server-side RPCs and matching tests before their controls are enabled.
+
+## Hosting
+Deploy the contents of `platform-admin/` as a static site or under a dedicated `/admin` path. It references `../app/config.js` and `../packages/design-tokens/tokens.css`; preserve these relative paths or adjust them deliberately for the chosen hosting root.
+
+## Verification still required
+- Run the web CI and inspect its result.
+- Add a test identity to `platform_admins` through the approved SQL bootstrap after confirming the exact account.
+- Test login, non-admin denial, merchant status transitions, audit event creation, and mobile layout against WATHAQ-CORE.
+- This foundation is not a production-ready admin release until the above tests and the remaining secure RPCs are complete.
