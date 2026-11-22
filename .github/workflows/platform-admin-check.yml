@@ -36,6 +36,15 @@ jobs:
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
           grep -q "rpc('admin_list_merchant_staff'" platform-admin/app.js
           grep -q "rpc('admin_set_merchant_member_active'" platform-admin/app.js
+          grep -q "rpc('admin_create_merchant_invite'" platform-admin/app.js
+          grep -q "rpc('admin_list_merchant_invites'" platform-admin/app.js
+          grep -q "rpc('admin_revoke_merchant_invite'" platform-admin/app.js
+          test -s supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
+          grep -q 'private.is_platform_admin()' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
+          grep -q 'extensions.digest(v_code' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
+          grep -q 'platform.merchant_staff_invited' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
+          grep -q 'platform.merchant_invite_revoked' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
+          grep -q 'security invoker' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
           ! grep -q "from('profiles')" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
