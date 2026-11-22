@@ -45,6 +45,10 @@ jobs:
           grep -q 'platform.merchant_staff_invited' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
           grep -q 'platform.merchant_invite_revoked' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
           grep -q 'security invoker' supabase/migrations/20261123090000_admin_merchant_staff_invitation_controls.sql
+          test -s supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
+          grep -q 'on conflict (merchant_id, user_id) do nothing' supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
+          grep -q "'already_member'" supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
+          grep -q 'security definer' supabase/migrations/20261123093000_guard_merchant_invite_acceptance.sql
           ! grep -q "from('profiles')" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
