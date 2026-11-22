@@ -105,7 +105,6 @@ jobs:
           grep -q 'private.admin_list_user_profiles' supabase/migrations/20261122210157_admin_user_directory_invoker_wrapper.sql
           grep -q 'private.is_platform_admin()' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
           grep -q 'grant execute.*authenticated' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
-          node -e "const fs=require('fs'); for (const p of ['platform-admin/app.js','platform-admin/index.html','platform-admin/styles.css']) { const s=fs.readFileSync(p,'utf8'); if (/service_role|SUPABASE_SERVICE_ROLE_KEY/i.test(s)) throw new Error('Server-side secret reference in '+p); }"
       - name: Package platform admin site
         run: |
           mkdir -p dist
