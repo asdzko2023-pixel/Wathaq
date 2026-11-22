@@ -35,6 +35,7 @@ jobs:
           grep -q "rpc('admin_set_merchant_status'" platform-admin/app.js
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
           grep -q "rpc('admin_list_merchant_staff'" platform-admin/app.js
+          grep -q "rpc('admin_set_merchant_member_active'" platform-admin/app.js
           ! grep -q "from('profiles')" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
@@ -47,6 +48,11 @@ jobs:
           test -s supabase/migrations/20261122220947_admin_merchant_staff_directory.sql
           grep -q 'private.is_platform_admin()' supabase/migrations/20261122220947_admin_merchant_staff_directory.sql
           grep -q 'security invoker' supabase/migrations/20261122220947_admin_merchant_staff_directory.sql
+          test -s supabase/migrations/20261122224500_admin_manage_merchant_member_status.sql
+          grep -q 'private.is_platform_admin()' supabase/migrations/20261122224500_admin_manage_merchant_member_status.sql
+          grep -q "v_member.role = 'owner'" supabase/migrations/20261122224500_admin_manage_merchant_member_status.sql
+          grep -q 'insert into public.audit_events' supabase/migrations/20261122224500_admin_manage_merchant_member_status.sql
+          grep -q 'security invoker' supabase/migrations/20261122224500_admin_manage_merchant_member_status.sql
           grep -q 'security invoker' supabase/migrations/20261122210157_admin_user_directory_invoker_wrapper.sql
           grep -q 'private.admin_list_user_profiles' supabase/migrations/20261122210157_admin_user_directory_invoker_wrapper.sql
           grep -q 'private.is_platform_admin()' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
