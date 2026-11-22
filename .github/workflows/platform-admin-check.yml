@@ -33,9 +33,15 @@ jobs:
           grep -q '../app/config.js' platform-admin/index.html
           grep -q 'platform_admins' platform-admin/app.js
           grep -q "rpc('admin_set_merchant_status'" platform-admin/app.js
+          grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
+          ! grep -q "from('profiles')" platform-admin/app.js
           grep -q 'audit_events' platform-admin/app.js
           ! grep -q "from('merchants').update" platform-admin/app.js
           test -s supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
+          test -s supabase/migrations/20261123000100_admin_user_directory_rpc.sql
+          grep -q 'private.is_platform_admin()' supabase/migrations/20261123000100_admin_user_directory_rpc.sql
+          grep -q 'revoke all on function public.admin_list_user_profiles' supabase/migrations/20261123000100_admin_user_directory_rpc.sql
+          grep -q 'grant execute on function public.admin_list_user_profiles.*authenticated' supabase/migrations/20261123000100_admin_user_directory_rpc.sql
           grep -q 'private.is_platform_admin()' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
           grep -q 'grant execute.*authenticated' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
           ! grep -qi 'grant update on public.merchants' supabase/migrations/20261122160000_admin_set_merchant_status_rpc.sql
