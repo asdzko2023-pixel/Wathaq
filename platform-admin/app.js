@@ -167,7 +167,7 @@
           store_email:host.querySelector('#new-merchant-email').value.trim()||null,
           timezone:host.querySelector('#new-merchant-timezone').value.trim()
         };
-        if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(payload.owner_email)){toast('أدخل بريداً إلكترونياً صحيحاً للمالك.',true);return;}
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.owner_email)){toast('أدخل بريداً إلكترونياً صحيحاً للمالك.',true);return;}
         if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload.slug)){toast('المعرّف المختصر غير صالح.',true);return;}
         if(!confirm('إنشاء حساب «'+payload.owner_name+'» لمتجر «'+payload.name+'» على باقة '+payload.plan_key+' وإرسال دعوة إلى '+payload.owner_email+'؟'))return;
         button.disabled=true;button.textContent='جارٍ إنشاء الحساب وإرسال الدعوة…';
