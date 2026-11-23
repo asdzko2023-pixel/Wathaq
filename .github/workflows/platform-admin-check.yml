@@ -54,6 +54,7 @@ jobs:
           test -s supabase/migrations/20261123143000_admin_status_invoker_wrapper.sql
           test -s supabase/migrations/20261123150000_platform_analytics_report_rpc.sql
           test -s supabase/migrations/20261123153000_permission_aware_merchant_status_guard.sql
+          test -s supabase/migrations/20261123160000_enforce_loyalty_program_date_windows.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
