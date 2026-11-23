@@ -35,6 +35,7 @@
           <button class="nav-btn active" data-view="overview"><span class="nav-icon">⌂</span>الرئيسية</button>
           <button class="nav-btn" data-view="merchants"><span class="nav-icon">▦</span>المتاجر</button>
           <button class="nav-btn" data-view="merchant-create"><span class="nav-icon">＋</span>إنشاء متجر جديد</button>
+          <button class="nav-btn" data-view="subscriptions"><span class="nav-icon">＄</span>إدارة الاشتراكات</button>
           <button class="nav-btn" data-view="users"><span class="nav-icon">♙</span>المستخدمون</button>
           <button class="nav-btn" data-view="staff"><span class="nav-icon">♧</span>موظفو المتاجر</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
@@ -113,41 +114,35 @@
   }
   async function renderMerchantCreate(){
     const host=document.getElementById('view-content');
-    if(!isSuperAdmin){host.innerHTML='<div class="notice error">إنشاء المتاجر متاح للمدير الأعلى فقط.</div>';return;}
-    host.innerHTML='<div class="center-state">جارٍ تحميل حسابات المالكين المتاحة…</div>';
+    if(!isSuperAdmin){host.innerHTML='<div class="notice error">إنشاء حسابات التجار متاح للمدير الأعلى فقط.</div>';return;}
+    host.innerHTML='<div class="center-state">جارٍ تحميل باقات الاشتراك…</div>';
     try{
-      const {data:profiles,error}=await sb.rpc('admin_list_user_profiles',{p_search:null,p_limit:100,p_offset:0});
+      const {data:plans,error}=await sb.rpc('admin_list_subscription_plans');
       if(error)throw error;
-      const options=(profiles||[]).map(u=>'<option value="'+esc(u.user_id)+'">'+esc(u.full_name||'مستخدم بدون اسم')+' · '+esc(u.user_id.slice(0,8))+'</option>').join('');
-      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>إنشاء متجر جديد على مستوى المنصة</h2><div class="panel-subtitle">إنشاء مركزي من المدير الأعلى وربط المالك بحساب وثاق موجود.</div></div><span class="status pending">يبدأ قيد المراجعة</span></div>'+
-        '<div class="notice">اختر مالكاً لديه حساب موجود في وثاق. لن يتم إنشاء حساب دخول أو كلمة مرور من هذه الشاشة. بعد الإنشاء تُنشأ عضوية المالك تلقائياً بواسطة قاعدة البيانات.</div>'+
+      const activePlans=(plans||[]).filter(p=>p.is_active);
+      if(!activePlans.length)throw new Error('لا توجد باقات اشتراك فعالة.');
+      const planOptions=activePlans.map(p=>'<option value="'+esc(p.plan_key)+'">'+esc(p.display_name)+' · $'+Number(p.price_usd).toFixed(0)+'/شهر</option>').join('');
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>إنشاء حساب تاجر جديد</h2><div class="panel-subtitle">تُنشئ المنصة دعوة آمنة للبريد الإلكتروني، وتربط المتجر والاشتراك في معاملة واحدة.</div></div><span class="status pending">دعوة مالك المتجر</span></div>'+
+        '<div class="notice">سيصل إلى المالك بريد دعوة من وثاق لإكمال حسابه. لا تُنشأ كلمة مرور من لوحة الإدارة. يمكن استخدام حساب موجود وموثّق أيضاً. يبدأ المتجر بحالة قيد المراجعة، ولا يعني تعيين الخطة أن الدفع الإلكتروني قد تم.</div>'+
         '<form id="platform-merchant-form" class="merchant-create-form">'+
+        '<label>اسم مالك المتجر *<input class="search-input" id="new-owner-name" maxlength="120" required placeholder="الاسم الكامل"></label>'+
+        '<label>البريد الإلكتروني للمالك *<input class="search-input" id="new-owner-email" type="email" maxlength="254" required dir="ltr" placeholder="owner@example.com"></label>'+
         '<label>اسم المتجر *<input class="search-input" id="new-merchant-name" maxlength="120" required placeholder="مثال: متجر الأمل"></label>'+
         '<label>المعرّف المختصر (Slug) *<input class="search-input" id="new-merchant-slug" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" required dir="ltr" placeholder="al-amal-store"></label>'+
-        '<div class="wide owner-search-row"><input class="search-input" id="new-merchant-owner-search" maxlength="100" placeholder="ابحث عن المالك بالاسم أو UUID"><button class="ghost-btn" id="search-merchant-owner" type="button">بحث عن المالك</button></div>'+
-        '<label>مالك المتجر *<select class="search-input" id="new-merchant-owner" required><option value="">اختر حساب المالك الموجود</option>'+options+'</select></label>'+
+        '<label>خطة الاشتراك *<select class="search-input" id="new-merchant-plan" required>'+planOptions+'</select></label>'+
+        '<label>مدة الاشتراك بالشهور *<select class="search-input" id="new-merchant-duration" required><option value="1">شهر واحد</option><option value="3">3 أشهر</option><option value="6">6 أشهر</option><option value="12">12 شهراً</option></select></label>'+
+        '<label>حالة الدفع الأولية<select class="search-input" id="new-merchant-billing"><option value="admin_assigned">تعيين إداري — الدفع غير مؤكد</option><option value="manual_paid">تم التحقق من الدفع يدوياً</option><option value="complimentary">اشتراك مجاني / ترويجي</option></select></label>'+
         '<label>التصنيف<input class="search-input" id="new-merchant-category" maxlength="80" placeholder="مطاعم، ملابس، إلكترونيات…"></label>'+
         '<label>الدولة (رمز ISO)<input class="search-input" id="new-merchant-country" maxlength="2" minlength="2" value="YE" required dir="ltr"></label>'+
         '<label>المدينة<input class="search-input" id="new-merchant-city" maxlength="100" placeholder="عدن"></label>'+
         '<label>العنوان<input class="search-input" id="new-merchant-address" maxlength="240" placeholder="العنوان أو المنطقة"></label>'+
         '<label>رقم التواصل<input class="search-input" id="new-merchant-phone" maxlength="40" dir="ltr" placeholder="+967…"></label>'+
-        '<label>البريد الإلكتروني<input class="search-input" id="new-merchant-email" type="email" maxlength="254" dir="ltr" placeholder="store@example.com"></label>'+
+        '<label>بريد التواصل الخاص بالمتجر<input class="search-input" id="new-merchant-email" type="email" maxlength="254" dir="ltr" placeholder="store@example.com"></label>'+
         '<label>المنطقة الزمنية<input class="search-input" id="new-merchant-timezone" value="Asia/Aden" maxlength="80" dir="ltr" required></label>'+
         '<label class="wide">وصف المتجر<textarea class="search-input" id="new-merchant-description" maxlength="1000" rows="3" placeholder="نبذة مختصرة عن المتجر"></textarea></label>'+
-        '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">إنشاء المتجر</button><span class="small muted">الحالة الابتدائية: قيد المراجعة · لا يتم التفعيل تلقائياً</span></div>'+
+        '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">إنشاء حساب التاجر وإرسال الدعوة</button><span class="small muted">المتجر يبدأ قيد المراجعة · الاشتراك يبدأ فور الإنشاء</span></div>'+
         '</form></section>'+
-        '<section class="panel"><h2>ملاحظات الإنشاء الآمن</h2><p class="small muted">يُتحقق من صلاحية المدير الأعلى داخل قاعدة البيانات، ومن وجود حساب المالك، وصحة المعرّف وعدم تكراره. تُسجّل العملية في سجل التدقيق. لا يملك مشغّلو المنصة صلاحية إنشاء متجر من هذه الشاشة.</p></section>';
-      const ownerSearch=host.querySelector('#new-merchant-owner-search'),ownerSelect=host.querySelector('#new-merchant-owner');
-      const searchOwners=async()=>{
-        const query=ownerSearch.value.trim();
-        const searchButton=host.querySelector('#search-merchant-owner');searchButton.disabled=true;
-        const {data:matches,error:searchError}=await sb.rpc('admin_list_user_profiles',{p_search:query||null,p_limit:100,p_offset:0});
-        if(searchError){toast('تعذر البحث عن المالكين: '+searchError.message,true);searchButton.disabled=false;return;}
-        ownerSelect.innerHTML='<option value="">اختر حساب المالك الموجود</option>'+((matches||[]).map(u=>'<option value="'+esc(u.user_id)+'">'+esc(u.full_name||'مستخدم بدون اسم')+' · '+esc(u.user_id.slice(0,8))+'</option>').join('')||'<option value="" disabled>لا توجد نتائج</option>');
-        searchButton.disabled=false;
-      };
-      host.querySelector('#search-merchant-owner').addEventListener('click',searchOwners);
-      ownerSearch.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchOwners();}});
+        '<section class="panel"><h2>قبل إنشاء الحساب</h2><p class="small muted">إذا كان البريد مسجلاً في وثاق، يجب أن يكون موثقاً. إذا لم يكن موجوداً، ترسل المنصة دعوة آمنة. الحسابات المدعوة غير المكتملة لا تُمنح صلاحية مدير منصة. ويمكن تعديل خطة الاشتراك لاحقاً من قسم إدارة الاشتراكات.</p></section>';
       const nameInput=host.querySelector('#new-merchant-name'),slugInput=host.querySelector('#new-merchant-slug');
       const arabicSlugMap={'ا':'a','أ':'a','إ':'i','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'h','و':'w','ي':'y','ى':'a','ؤ':'w','ئ':'y','ء':''};
       const slugify=value=>Array.from(value.normalize('NFKD').toLowerCase()).map(ch=>arabicSlugMap[ch]??ch).join('').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-').slice(0,80);
@@ -157,28 +152,184 @@
         event.preventDefault();
         const button=event.submitter;
         const payload={
-          p_owner_user_id:host.querySelector('#new-merchant-owner').value,
-          p_name:nameInput.value.trim(),p_slug:slugInput.value.trim(),
-          p_category:host.querySelector('#new-merchant-category').value.trim()||null,
-          p_description:host.querySelector('#new-merchant-description').value.trim()||null,
-          p_country_code:host.querySelector('#new-merchant-country').value.trim().toUpperCase(),
-          p_city:host.querySelector('#new-merchant-city').value.trim()||null,
-          p_address:host.querySelector('#new-merchant-address').value.trim()||null,
-          p_phone:host.querySelector('#new-merchant-phone').value.trim()||null,
-          p_email:host.querySelector('#new-merchant-email').value.trim()||null,
-          p_timezone:host.querySelector('#new-merchant-timezone').value.trim()
+          owner_name:host.querySelector('#new-owner-name').value.trim(),
+          owner_email:host.querySelector('#new-owner-email').value.trim().toLowerCase(),
+          name:nameInput.value.trim(),slug:slugInput.value.trim(),
+          plan_key:host.querySelector('#new-merchant-plan').value,
+          duration_months:Number(host.querySelector('#new-merchant-duration').value),
+          billing_status:host.querySelector('#new-merchant-billing').value,
+          category:host.querySelector('#new-merchant-category').value.trim()||null,
+          description:host.querySelector('#new-merchant-description').value.trim()||null,
+          country_code:host.querySelector('#new-merchant-country').value.trim().toUpperCase(),
+          city:host.querySelector('#new-merchant-city').value.trim()||null,
+          address:host.querySelector('#new-merchant-address').value.trim()||null,
+          phone:host.querySelector('#new-merchant-phone').value.trim()||null,
+          store_email:host.querySelector('#new-merchant-email').value.trim()||null,
+          timezone:host.querySelector('#new-merchant-timezone').value.trim()
         };
-        if(!payload.p_owner_user_id){toast('اختر مالكاً من حسابات وثاق الموجودة.',true);return;}
-        if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload.p_slug)){toast('المعرّف المختصر غير صالح.',true);return;}
-        if(!confirm('إنشاء متجر «'+payload.p_name+'» وربطه بالمالك المحدد بحالة قيد المراجعة؟'))return;
-        button.disabled=true;button.textContent='جارٍ إنشاء المتجر…';
-        const {data,error}=await sb.rpc('admin_create_merchant',payload);
-        if(error||!data?.ok){toast('تعذر إنشاء المتجر: '+(error?.message||data?.error||'unknown_error'),true);button.disabled=false;button.textContent='إنشاء المتجر';return;}
-        toast('تم إنشاء المتجر وربطه بالمالك. الحالة: قيد المراجعة.');
-        await loadMerchants();
-        showView('merchants');
+        if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(payload.owner_email)){toast('أدخل بريداً إلكترونياً صحيحاً للمالك.',true);return;}
+        if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload.slug)){toast('المعرّف المختصر غير صالح.',true);return;}
+        if(!confirm('إنشاء حساب «'+payload.owner_name+'» لمتجر «'+payload.name+'» على باقة '+payload.plan_key+' وإرسال دعوة إلى '+payload.owner_email+'؟'))return;
+        button.disabled=true;button.textContent='جارٍ إنشاء الحساب وإرسال الدعوة…';
+        const {data,error}=await sb.functions.invoke('platform-create-merchant-account',{body:payload});
+        if(error||!data?.ok){
+          const message=data?.message||data?.error||error?.message||'تعذر تنفيذ العملية';
+          toast('لم يتم إنشاء حساب التاجر: '+message,true);
+          if(data?.pending_invite_kept)toast('تم الاحتفاظ بدعوة معلّقة؛ صحح سبب الخطأ ثم أعد المحاولة بنفس البريد.',true);
+          button.disabled=false;button.textContent='إنشاء حساب التاجر وإرسال الدعوة';return;
+        }
+        const note=data.invitation_sent?'تم إنشاء المتجر والاشتراك وإرسال دعوة التفعيل إلى '+payload.owner_email+'.':'تم ربط الحساب الموجود وإنشاء المتجر والاشتراك بنجاح.';
+        toast(note);
+        if(data.metadata_warning)toast(data.metadata_warning,true);
+        await showView('subscriptions');
       });
-    }catch(e){host.innerHTML='<div class="notice error">تعذر تجهيز نموذج إنشاء المتجر: '+esc(e.message)+'</div>';}
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تجهيز نموذج إنشاء حساب التاجر: '+esc(e.message)+'</div>'; }
+  }
+
+  function subscriptionFeatureName(key){
+    const names={
+      points_and_stamps:'النقاط والأختام',rewards_catalogue:'إدارة المكافآت',
+      secure_qr_batches:'إنشاء وطباعة QR آمن',basic_platform_reports:'التقارير الأساسية',
+      campaigns:'الحملات الترويجية',program_branding:'هوية برامج الولاء',csv_export:'تصدير CSV',
+      advanced_analytics:'التحليلات المتقدمة',customer_segments:'شرائح العملاء',
+      multi_branch_reports:'تقارير الفروع',api_access:'تكامل API',custom_roles:'صلاحيات مخصصة',
+      multi_branch_management:'إدارة فروع متعددة',priority_support:'دعم بأولوية',advanced_exports:'تصدير متقدم'
+    };
+    return names[key]||key;
+  }
+  function subscriptionStatusName(status){
+    return ({active:'نشط',paused:'مجمّد',expired:'منتهي',cancelled:'ملغي',unassigned:'غير معيّن'})[status]||status||'—';
+  }
+  function subscriptionBillingName(status){
+    return ({admin_assigned:'تعيين إداري · الدفع غير مؤكد',manual_paid:'مدفوع يدوياً',complimentary:'مجاني / ترويجي'})[status]||'—';
+  }
+  async function renderSubscriptions(){
+    const host=document.getElementById('view-content');
+    if(!isSuperAdmin){host.innerHTML='<div class="notice error">إدارة الاشتراكات متاحة للمدير الأعلى فقط.</div>';return;}
+    host.innerHTML='<div class="center-state">جارٍ تحميل الباقات واشتراكات المتاجر…</div>';
+    try{
+      const [planResult,subscriptionResult]=await Promise.all([
+        sb.rpc('admin_list_subscription_plans'),
+        sb.rpc('admin_list_merchant_subscriptions',{p_search:null,p_limit:500})
+      ]);
+      if(planResult.error)throw planResult.error;
+      if(subscriptionResult.error)throw subscriptionResult.error;
+      const plans=planResult.data||[],records=subscriptionResult.data||[];
+      const planCards=plans.map(p=>{
+        const live=Array.isArray(p.live_features)?p.live_features:[];
+        const planned=Array.isArray(p.planned_features)?p.planned_features:[];
+        return '<article class="feature-card subscription-plan-card"><div class="subscription-plan-head"><div><h3>'+esc(p.display_name)+'</h3><span class="small muted">'+esc(p.plan_key)+'</span></div><strong class="subscription-price">$'+Number(p.price_usd).toFixed(0)+'<small> / شهر</small></strong></div>'+
+          '<div class="subscription-limits"><span>'+Number(p.staff_limit)+' مقاعد موظفين</span><span>'+Number(p.active_program_limit)+' برامج نشطة</span><span>'+Number(p.monthly_qr_limit).toLocaleString('en-US')+' رمز QR شهرياً</span></div>'+
+          '<div class="small muted">المتاح حالياً</div><div class="subscription-features">'+live.map(k=>'<span>'+esc(subscriptionFeatureName(k))+'</span>').join('')+'</div>'+
+          (planned.length?'<div class="small muted">مزايا مقترحة قيد التطوير — ليست مفعّلة حالياً</div><div class="subscription-planned">'+planned.map(k=>'<span>'+esc(subscriptionFeatureName(k))+'</span>').join('')+'</div>':'')+
+          '</article>';
+      }).join('');
+      const rows=records.map(m=>{
+        const status=m.subscription_status||'unassigned';
+        return '<tr data-sub-row="'+esc(m.merchant_id)+'"><td><b>'+esc(m.merchant_name)+'</b><div class="small muted">'+esc(m.merchant_slug)+'</div></td>'+
+          '<td>'+esc(m.owner_name||'—')+'<div class="small muted" dir="ltr">'+esc(m.owner_email||'')+'</div></td>'+
+          '<td><b>'+esc(m.plan_name||'بدون خطة')+'</b><div class="small muted">'+(m.price_usd===null?'—':'$'+Number(m.price_usd).toFixed(0)+' / شهر')+'</div></td>'+
+          '<td><span class="status '+(status==='active'?'active':status==='unassigned'?'pending':'suspended')+'">'+esc(subscriptionStatusName(status))+'</span><div class="small muted">'+esc(subscriptionBillingName(m.billing_status))+'</div></td>'+
+          '<td>'+date(m.ends_at)+'</td><td><div class="row-actions"><button class="primary-btn" data-sub-manage="'+esc(m.merchant_id)+'">إدارة الخطة</button><button class="ghost-btn" data-sub-history="'+esc(m.merchant_id)+'">السجل</button></div></td></tr>';
+      }).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد متاجر في المنصة بعد.</div></td></tr>';
+      host.innerHTML='<div class="section-grid subscription-plan-grid">'+planCards+'</div>'+
+        '<section class="panel"><div class="panel-head"><div><h2>اشتراكات المتاجر</h2><div class="panel-subtitle">تعيين الخطة، الترقية والتخفيض، التمديد، التجميد، وتسجيل الدفع اليدوي.</div></div><div class="toolbar"><input id="subscription-search" class="search-input" placeholder="ابحث باسم المتجر أو البريد أو UUID"><button id="subscription-refresh" class="ghost-btn">تحديث</button></div></div>'+
+        '<div class="table-wrap"><table><thead><tr><th>المتجر</th><th>المالك</th><th>الخطة</th><th>الحالة / الدفع</th><th>ينتهي في</th><th>الإجراءات</th></tr></thead><tbody id="subscription-rows">'+rows+'</tbody></table></div></section>'+
+        '<section class="panel"><div class="notice">كل تغيير في الخطة أو المدة أو حالة الاشتراك يُسجل في سجل الاشتراكات وسجل تدقيق المنصة. الأسعار بالدولار شهرياً كمرجع للباقات؛ الدفع الإلكتروني والتجديد التلقائي غير مربوطين بعد.</div></section>';
+      const rowHost=host.querySelector('#subscription-rows');
+      const renderRows=list=>{
+        rowHost.innerHTML=list.map(m=>{
+          const status=m.subscription_status||'unassigned';
+          return '<tr data-sub-row="'+esc(m.merchant_id)+'"><td><b>'+esc(m.merchant_name)+'</b><div class="small muted">'+esc(m.merchant_slug)+'</div></td><td>'+esc(m.owner_name||'—')+'<div class="small muted" dir="ltr">'+esc(m.owner_email||'')+'</div></td><td><b>'+esc(m.plan_name||'بدون خطة')+'</b><div class="small muted">'+(m.price_usd===null?'—':'$'+Number(m.price_usd).toFixed(0)+' / شهر')+'</div></td><td><span class="status '+(status==='active'?'active':status==='unassigned'?'pending':'suspended')+'">'+esc(subscriptionStatusName(status))+'</span><div class="small muted">'+esc(subscriptionBillingName(m.billing_status))+'</div></td><td>'+date(m.ends_at)+'</td><td><div class="row-actions"><button class="primary-btn" data-sub-manage="'+esc(m.merchant_id)+'">إدارة الخطة</button><button class="ghost-btn" data-sub-history="'+esc(m.merchant_id)+'">السجل</button></div></td></tr>';
+        }).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد نتائج مطابقة.</div></td></tr>';
+      };
+      renderRows(records);
+      host.querySelector('#subscription-search').addEventListener('input',event=>{
+        const q=event.target.value.trim().toLowerCase();
+        renderRows(records.filter(m=>[m.merchant_name,m.merchant_slug,m.owner_name,m.owner_email,m.owner_user_id].some(v=>String(v||'').toLowerCase().includes(q))));
+      });
+      host.querySelector('#subscription-refresh').addEventListener('click',()=>renderSubscriptions());
+      rowHost.addEventListener('click',async event=>{
+        const manage=event.target.closest('[data-sub-manage]');
+        const history=event.target.closest('[data-sub-history]');
+        if(manage){
+          const merchant=records.find(m=>m.merchant_id===manage.dataset.subManage);if(!merchant)return;
+          const hasSub=!!merchant.subscription_id;
+          const actionOptions=(hasSub?[
+            ['change_plan','تغيير / ترقية / تخفيض الخطة'],['renew','تمديد الاشتراك'],['pause','تجميد الاشتراك'],['reactivate','إعادة التفعيل'],['cancel','إلغاء الاشتراك'],['mark_paid','تسجيل الدفع يدوياً'],['mark_comped','منح اشتراك مجاني']
+          ]:[['assign','تعيين خطة لهذا المتجر'],['mark_paid','تسجيل الدفع يدوياً'],['mark_comped','منح اشتراك مجاني']]);
+          const modal=document.createElement('div');modal.className='subscription-modal-backdrop';
+          const options=plans.map(p=>'<option value="'+esc(p.plan_key)+'" '+(p.plan_key===merchant.plan_key?'selected':'')+'>'+esc(p.display_name)+' · $'+Number(p.price_usd).toFixed(0)+'/شهر</option>').join('');
+          modal.innerHTML='<section class="subscription-modal" role="dialog" aria-modal="true" aria-label="إدارة اشتراك المتجر">'+
+            '<div class="panel-head"><div><h2>إدارة اشتراك '+esc(merchant.merchant_name)+'</h2><div class="panel-subtitle">'+esc(merchant.owner_email||merchant.owner_user_id)+'</div></div><button type="button" class="ghost-btn" data-sub-close>إغلاق</button></div>'+
+            '<form id="subscription-manage-form" class="merchant-create-form">'+
+            '<label>الإجراء<select id="sub-action" class="search-input">'+actionOptions.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('')+'</select></label>'+
+            '<label>الخطة<select id="sub-plan" class="search-input">'+options+'</select></label>'+
+            '<label>المدة الإضافية (شهر)<input id="sub-duration" class="search-input" type="number" min="1" max="12" value="1"></label>'+
+            '<label>حالة الدفع عند التعيين / التجديد<select id="sub-billing" class="search-input"><option value="admin_assigned">تعيين إداري — غير مؤكد الدفع</option><option value="manual_paid">مدفوع يدوياً</option><option value="complimentary">مجاني / ترويجي</option></select></label>'+
+            '<label class="wide">ملاحظة إدارية<textarea id="sub-note" class="search-input" rows="2" maxlength="500" placeholder="سبب التغيير أو مرجع الدفع (اختياري)"></textarea></label>'+
+            '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">تنفيذ التغيير</button><span class="small muted">سيُسجل الإجراء في سجل التدقيق.</span></div></form></section>';
+          host.appendChild(modal);
+          const actionSelect=modal.querySelector('#sub-action'),planSelect=modal.querySelector('#sub-plan'),durationInput=modal.querySelector('#sub-duration');
+          const refreshFields=()=>{
+            const action=actionSelect.value;
+            planSelect.disabled=!['assign','change_plan'].includes(action);
+            durationInput.disabled=!['assign','renew'].includes(action);
+            modal.querySelector('#sub-billing').disabled=!['assign','renew'].includes(action);
+          };
+          actionSelect.addEventListener('change',refreshFields);refreshFields();
+          modal.querySelector('[data-sub-close]').addEventListener('click',()=>modal.remove());
+          modal.addEventListener('click',ev=>{if(ev.target===modal)modal.remove();});
+          modal.querySelector('#subscription-manage-form').addEventListener('submit',async ev=>{
+            ev.preventDefault();
+            const action=actionSelect.value;
+            const payload={
+              p_merchant_id:merchant.merchant_id,p_action:action,
+              p_plan_key:['assign','change_plan'].includes(action)?planSelect.value:null,
+              p_duration_months:['assign','renew'].includes(action)?Number(durationInput.value):1,
+              p_billing_status:['assign','renew'].includes(action)?modal.querySelector('#sub-billing').value:null,
+              p_note:modal.querySelector('#sub-note').value.trim()||null
+            };
+            if(['assign','renew'].includes(action)&&(!Number.isInteger(payload.p_duration_months)||payload.p_duration_months<1||payload.p_duration_months>12)){toast('المدة يجب أن تكون بين شهر و12 شهراً.',true);return;}
+            if(!confirm('تأكيد تنفيذ الإجراء «'+action+'» للمتجر «'+merchant.merchant_name+'»؟'))return;
+            const button=ev.submitter;button.disabled=true;
+            const {data,error}=await sb.rpc('admin_manage_merchant_subscription',payload);
+            if(error||!data?.ok){toast('تعذر تحديث الاشتراك: '+(error?.message||data?.error||'unknown_error'),true);button.disabled=false;return;}
+            modal.remove();toast('تم تحديث الاشتراك وتسجيل العملية.');await renderSubscriptions();
+          });
+        }else if(history){
+          const merchantId=history.dataset.subHistory;
+          const merchant=records.find(m=>m.merchant_id===merchantId);if(!merchant)return;
+          const {data,error}=await sb.rpc('admin_list_subscription_history',{p_merchant_id:merchantId,p_limit:100});
+          if(error){toast('تعذر تحميل سجل الاشتراك: '+error.message,true);return;}
+          let historyHost=host.querySelector('#subscription-history-panel');
+          if(!historyHost){historyHost=document.createElement('section');historyHost.id='subscription-history-panel';historyHost.className='panel';host.appendChild(historyHost);}
+          const entries=data||[];
+          historyHost.innerHTML='<div class="panel-head"><div><h2>سجل اشتراك '+esc(merchant.merchant_name)+'</h2><div class="panel-subtitle">آخر 100 تغيير</div></div><button class="ghost-btn" id="close-sub-history">إغلاق السجل</button></div>'+
+            '<div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>الإجراء</th><th>من</th><th>إلى</th><th>الحالة</th><th>المدة الجديدة</th><th>المنفذ</th><th>الملاحظة</th></tr></thead><tbody>'+
+            (entries.map(h=>'<tr><td>'+date(h.created_at)+'</td><td>'+esc(h.action)+'</td><td>'+esc(h.from_plan_name||'—')+'</td><td>'+esc(h.to_plan_name||'—')+'</td><td>'+esc(subscriptionStatusName(h.to_status))+'</td><td>'+date(h.to_ends_at)+'</td><td>'+esc(h.actor_name||h.actor_user_id||'—')+'</td><td>'+esc(h.note||'—')+'</td></tr>').join('')||'<tr><td colspan="8"><div class="empty-state">لا يوجد سجل اشتراكات لهذا المتجر.</div></td></tr>')+
+            '</tbody></table></div>';
+          historyHost.querySelector('#close-sub-history').addEventListener('click',()=>historyHost.remove());
+          historyHost.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل إدارة الاشتراكات: '+esc(e.message)+'</div>';}
+  }
+  function renderMerchantWelcome(){
+    const metadata=currentUser?.user_metadata||{};
+    root.innerHTML='<main class="center-state"><section class="login-card merchant-welcome-card"><span class="brand-mark">و</span><h1>مرحباً بك في وثاق</h1><p>تم تجهيز حساب التاجر وربط المتجر باشتراكه. حسابك ليس حساب إدارة منصة.</p>'+
+      '<div class="notice"><b>'+esc(metadata.wathaq_merchant_name||'متجر وثاق')+'</b><br>الخطة المعيّنة: '+esc(metadata.wathaq_subscription_plan||'—')+'<br>حساب المالك: '+esc(currentUser?.email||'')+'</div>'+
+      '<form id="merchant-set-password" class="merchant-password-form"><label>تعيين كلمة مرور للحساب (اختياري)<input id="merchant-new-password" class="search-input" type="password" minlength="8" autocomplete="new-password" placeholder="8 أحرف على الأقل"></label><button class="primary-btn" type="submit">حفظ كلمة المرور</button></form>'+
+      '<p class="small">بوابة إدارة المتجر قيد التجهيز، لذلك لن نعرض لك وظائف غير مكتملة أو ندّعي أنها متاحة الآن.</p><button id="merchant-signout" class="ghost-btn">تسجيل الخروج</button></section></main>';
+    root.querySelector('#merchant-set-password').addEventListener('submit',async event=>{
+      event.preventDefault();const password=root.querySelector('#merchant-new-password').value;
+      if(password.length<8){toast('كلمة المرور يجب ألا تقل عن 8 أحرف.',true);return;}
+      const button=event.submitter;button.disabled=true;
+      const {error}=await sb.auth.updateUser({password});
+      if(error){toast('تعذر حفظ كلمة المرور: '+error.message,true);button.disabled=false;return;}
+      toast('تم حفظ كلمة المرور بنجاح.');root.querySelector('#merchant-new-password').value='';button.textContent='تم الحفظ';button.disabled=true;
+    });
+    root.querySelector('#merchant-signout').addEventListener('click',()=>sb.auth.signOut());
   }
   async function renderUsers(){
     const host=document.getElementById('view-content');
@@ -472,11 +623,11 @@
     }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل إدارة المشغّلين: '+esc(e.message)+'</div>';}
   }
   function renderRoadmap(){
-    document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>دليل الموظفين، تفعيل وإيقاف العضويات، إنشاء دعوات برموز أحادية العرض، وإلغاء الدعوات مع تسجيل الأحداث.</p><span class="tag">الدعوات وإدارة الحالة متاحتان</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>لا توجد بعد واجهات تشغيلية مكتملة للباقات والاشتراكات؛ ستُبنى بعد تحديد قواعدها.</p><span class="tag">قيد التخطيط</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
+    document.getElementById('view-content').innerHTML='<div class="notice warn">لن نعرض هذه الوظائف على أنها جاهزة قبل إضافة واجهات RPC إدارية محمية واختبارها على قاعدة WATHAQ-CORE.</div><div class="section-grid"><article class="feature-card"><h3>دليل المستخدمين والأدوار</h3><p>أُضيف دليل قراءة محدود لملفات المستخدمين. إدارة أدوار المديرين وتغيير الصلاحيات ما زالت تحتاج نموذج RBAC محكماً واختبارات مستقلة.</p><span class="tag">دليل القراءة قيد الاختبار · RBAC لاحقاً</span></article><article class="feature-card"><h3>التجار والموظفون</h3><p>دليل الموظفين، تفعيل وإيقاف العضويات، إنشاء دعوات برموز أحادية العرض، وإلغاء الدعوات مع تسجيل الأحداث.</p><span class="tag">الدعوات وإدارة الحالة متاحتان</span></article><article class="feature-card"><h3>الباقات والاشتراكات</h3><p>أُضيفت الباقات الأربع وإدارة خطط المتاجر، مع تعيين وترقية وتخفيض وتجديد وتجميد وتاريخ تدقيق. المزايا الموسومة قيد التطوير ليست مفعّلة حالياً.</p><span class="tag">خدمات الاشتراك الأساسية متاحة للمدير الأعلى</span></article><article class="feature-card"><h3>الإعدادات العامة</h3><p>إدارة إعدادات المنصة مع سجل تغييرات وتحقق من القيم المسموح بها في قاعدة البيانات.</p><span class="tag">يتطلب تصميم صلاحيات</span></article><article class="feature-card"><h3>التحليلات ومكافحة الاحتيال</h3><p>تقارير تشغيلية ومؤشرات إساءة الاستخدام والتنبيهات، دون تعديل السجلات المالية.</p><span class="tag">قيد التطوير</span></article><article class="feature-card"><h3>تصدير البيانات</h3><p>تصدير محدود ومصرّح به مع سجل تدقيق وإخفاء الحقول الحساسة.</p><span class="tag">قيد التخطيط</span></article></div>';
   }
   function viewAllowed(view){
     if(view==='overview')return isSuperAdmin||currentPermissions.size>0;
-    if(view==='operators'||view==='roadmap'||view==='merchant-create')return isSuperAdmin;
+    if(view==='operators'||view==='roadmap'||view==='merchant-create'||view==='subscriptions')return isSuperAdmin;
     if(view==='analytics')return currentPermissions.has('analytics.read');
     if(view==='qr-factory')return isSuperAdmin||currentPermissions.has('loyalty.qr.manage');
     const required={merchants:'merchants.read',users:'users.read',staff:'staff.read',loyalty:'loyalty.read',audit:'audit.read'}[view];
@@ -485,9 +636,9 @@
   async function showView(view){
     if(!viewAllowed(view)){toast('ليس لديك صلاحية لفتح هذا القسم.',true);return;}
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر','merchant-create':'إنشاء متجر جديد',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء','qr-factory':'مصنع الباركودات',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر','merchant-create':'إنشاء حساب تاجر','subscriptions':'إدارة الاشتراكات',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء','qr-factory':'مصنع الباركودات',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='merchant-create')await renderMerchantCreate();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='qr-factory')await renderQrFactory();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='merchant-create')await renderMerchantCreate();else if(view==='subscriptions')await renderSubscriptions();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='qr-factory')await renderQrFactory();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
@@ -503,7 +654,7 @@
     const {data:permissions,error:permissionError}=await sb.rpc('admin_get_my_permissions');
     if(permissionError){renderLogin('تعذر تحميل صلاحيات الحساب. '+permissionError.message);return;}
     currentPermissions=new Set(permissions||[]);
-    if(!isSuperAdmin&&currentPermissions.size===0){renderDenied();return;}
+    if(!isSuperAdmin&&currentPermissions.size===0){if(currentUser.user_metadata?.wathaq_merchant_account===true){renderMerchantWelcome();return;}renderDenied();return;}
     shell();
   }
   boot().catch(e=>{root.innerHTML='<main class="center-state"><section class="denied-card"><h1>تعذر فتح لوحة الإدارة</h1><p>'+esc(e.message)+'</p></section></main>';});
