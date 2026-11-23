@@ -116,7 +116,7 @@
     if(!isSuperAdmin){host.innerHTML='<div class="notice error">إنشاء المتاجر متاح للمدير الأعلى فقط.</div>';return;}
     host.innerHTML='<div class="center-state">جارٍ تحميل حسابات المالكين المتاحة…</div>';
     try{
-      const {data:profiles,error}=await sb.rpc('admin_list_user_profiles',{p_search:null,p_limit:200,p_offset:0});
+      const {data:profiles,error}=await sb.rpc('admin_list_user_profiles',{p_search:null,p_limit:100,p_offset:0});
       if(error)throw error;
       const options=(profiles||[]).map(u=>'<option value="'+esc(u.user_id)+'">'+esc(u.full_name||'مستخدم بدون اسم')+' · '+esc(u.user_id.slice(0,8))+'</option>').join('');
       host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>إنشاء متجر جديد على مستوى المنصة</h2><div class="panel-subtitle">إنشاء مركزي من المدير الأعلى وربط المالك بحساب وثاق موجود.</div></div><span class="status pending">يبدأ قيد المراجعة</span></div>'+
@@ -124,6 +124,7 @@
         '<form id="platform-merchant-form" class="merchant-create-form">'+
         '<label>اسم المتجر *<input class="search-input" id="new-merchant-name" maxlength="120" required placeholder="مثال: متجر الأمل"></label>'+
         '<label>المعرّف المختصر (Slug) *<input class="search-input" id="new-merchant-slug" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" required dir="ltr" placeholder="al-amal-store"></label>'+
+        '<div class="wide owner-search-row"><input class="search-input" id="new-merchant-owner-search" maxlength="100" placeholder="ابحث عن المالك بالاسم أو UUID"><button class="ghost-btn" id="search-merchant-owner" type="button">بحث عن المالك</button></div>'+
         '<label>مالك المتجر *<select class="search-input" id="new-merchant-owner" required><option value="">اختر حساب المالك الموجود</option>'+options+'</select></label>'+
         '<label>التصنيف<input class="search-input" id="new-merchant-category" maxlength="80" placeholder="مطاعم، ملابس، إلكترونيات…"></label>'+
         '<label>الدولة (رمز ISO)<input class="search-input" id="new-merchant-country" maxlength="2" minlength="2" value="YE" required dir="ltr"></label>'+
@@ -136,6 +137,17 @@
         '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">إنشاء المتجر</button><span class="small muted">الحالة الابتدائية: قيد المراجعة · لا يتم التفعيل تلقائياً</span></div>'+
         '</form></section>'+
         '<section class="panel"><h2>ملاحظات الإنشاء الآمن</h2><p class="small muted">يُتحقق من صلاحية المدير الأعلى داخل قاعدة البيانات، ومن وجود حساب المالك، وصحة المعرّف وعدم تكراره. تُسجّل العملية في سجل التدقيق. لا يملك مشغّلو المنصة صلاحية إنشاء متجر من هذه الشاشة.</p></section>';
+      const ownerSearch=host.querySelector('#new-merchant-owner-search'),ownerSelect=host.querySelector('#new-merchant-owner');
+      const searchOwners=async()=>{
+        const query=ownerSearch.value.trim();
+        const searchButton=host.querySelector('#search-merchant-owner');searchButton.disabled=true;
+        const {data:matches,error:searchError}=await sb.rpc('admin_list_user_profiles',{p_search:query||null,p_limit:100,p_offset:0});
+        if(searchError){toast('تعذر البحث عن المالكين: '+searchError.message,true);searchButton.disabled=false;return;}
+        ownerSelect.innerHTML='<option value="">اختر حساب المالك الموجود</option>'+((matches||[]).map(u=>'<option value="'+esc(u.user_id)+'">'+esc(u.full_name||'مستخدم بدون اسم')+' · '+esc(u.user_id.slice(0,8))+'</option>').join('')||'<option value="" disabled>لا توجد نتائج</option>');
+        searchButton.disabled=false;
+      };
+      host.querySelector('#search-merchant-owner').addEventListener('click',searchOwners);
+      ownerSearch.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();searchOwners();}});
       const nameInput=host.querySelector('#new-merchant-name'),slugInput=host.querySelector('#new-merchant-slug');
       const arabicSlugMap={'ا':'a','أ':'a','إ':'i','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'h','و':'w','ي':'y','ى':'a','ؤ':'w','ئ':'y','ء':''};
       const slugify=value=>Array.from(value.normalize('NFKD').toLowerCase()).map(ch=>arabicSlugMap[ch]??ch).join('').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-').slice(0,80);
