@@ -34,7 +34,7 @@ Deploy the contents of `platform-admin/` as a static site or under a dedicated `
 
 ## Permission-scoped operator access
 
-The console now reads `admin_get_my_permissions` after sign-in and filters navigation and actions by the returned database permissions. The same permission checks are enforced inside the RPCs; the browser-side checks are only presentation controls.
+The console now reads `admin_get_my_permissions` after sign-in and filters navigation and actions by the returned database permissions. The same permission checks are enforced inside the RPCs and the merchant-status trigger; the browser-side checks are only presentation controls. The public merchant-status RPC is a SECURITY INVOKER wrapper around a private SECURITY DEFINER implementation.
 
 | Role | Effective scope |
 |---|---|
@@ -52,7 +52,7 @@ The analytics page uses `admin_get_analytics_report`, a read-only aggregate RPC.
 ## Validation boundaries
 
 - GitHub Actions validates JavaScript syntax, RPC wiring, and migration presence.
-- SQL tests exercised each seeded role's permission boundary, disabled-membership revocation, Super Admin analytics report shape, and unauthenticated denial.
+- SQL tests exercised each seeded role's permission boundary, disabled-membership revocation, Super Admin analytics report shape, unauthenticated denial, and a temporary merchant status update with its audit trigger. The temporary merchant and membership were rolled back in the test block.
 - The role-matrix SQL tests used a temporary existing profile membership and removed it within the same test block.
-- A real browser sign-in/session test for an operator account and a live authenticated non-admin HTTP denial test remain outstanding.
+- A real browser sign-in/session test for an operator account and a live authenticated non-admin HTTP denial test remain outstanding. The SQL permission tests simulate the Supabase JWT subject claim; they are not a substitute for an HTTP session test.
 - Subscription rules and writable platform settings remain unimplemented until their commercial and operational rules are specified; no fake plans or settings are exposed.
