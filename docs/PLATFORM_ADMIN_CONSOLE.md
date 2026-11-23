@@ -20,7 +20,7 @@ The standalone administration web surface lives in `platform-admin/`. It is sepa
 - Platform administrators can create 48-hour staff invitations for active merchants, choose from the allowed staff permission set, list invitation states, and revoke unused invitations. Invitation codes are shown once and stored only as SHA-256 digests; creation and revocation are audited.
 
 ## Deliberately not implemented yet
-The browser must not query `auth.users` or directly administer user roles. Platform-admin RBAC, merchant staff administration, plans/subscriptions, platform settings workflows, fraud alerts, and exports require narrowly scoped, authenticated, audited server-side RPCs and matching tests before their controls are enabled. The user directory remains read-only until non-admin denial and pagination/search tests are completed.
+The browser must not query `auth.users` or directly administer user roles. The platform-admin RBAC, merchant staff administration, and subscription workflows use narrowly scoped, authenticated, audited server-side RPCs. Platform settings workflows, fraud alerts, and exports remain future work. The user directory remains read-only.
 
 ## Hosting
 Deploy the contents of `platform-admin/` as a static site or under a dedicated `/admin` path. It references `../app/config.js` and `../packages/design-tokens/tokens.css`; preserve these relative paths or adjust them deliberately for the chosen hosting root.
@@ -86,13 +86,13 @@ The prices are administrative monthly reference prices. There is no payment gate
 - The Super Admin can assign a plan to an existing legacy merchant, change/up-or-downgrade a plan, renew for 1–12 months, pause, reactivate an eligible paused subscription, cancel, or record manual payment/complimentary status.
 - Each change writes both a subscription-history row and a platform audit event.
 - Direct API access to plan, subscription, and history tables is revoked from anon/authenticated clients. The console reads and mutates through Super Admin-checked RPCs.
-- Database triggers enforce active-program count, active staff-seat count, and monthly QR issue quantity for merchants with active subscriptions. Per-merchant advisory locks serialize capacity-consuming changes. Existing merchants without an assigned subscription are grandfathered until an administrator assigns a plan.
+- Database triggers enforce active-program count, active employee-seat count (the owner membership is excluded), and monthly QR issue quantity for merchants with active subscriptions. Per-merchant advisory locks serialize capacity-consuming changes. Existing merchants without an assigned subscription are grandfathered until an administrator assigns a plan.
 - A paused, expired, or cancelled subscription blocks new capacity-consuming program/member/QR batch creation. It does not delete existing programs, staff, customer points, rewards, or QR history.
 - Branch counts, campaigns, customer segments, API access, advanced exports, and priority support remain planned capabilities unless separately implemented. Plan cards label these as planned, not live.
 
 ### Validation and limits
 
-A rollback-only authenticated-database-role test created a temporary merchant account, verified the owner membership and initial plan via protected RPCs, exercised upgrade, downgrade, renewal, pause, reactivation, and confirmed a non-Super-Admin request is denied. The whole transaction was rolled back. No subscription or merchant test row was left behind. CI type-checks the invitation Edge Function and checks the admin UI/RPC wiring. A live invitation email delivery and owner acceptance test still requires a real recipient inbox.
+A rollback-only authenticated-database-role test created a temporary merchant account, verified the owner membership and initial plan via protected RPCs, exercised upgrade, downgrade, renewal, pause, reactivation, and confirmed a non-Super-Admin request is denied. A further rollback-only capacity test verified that the owner does not consume an employee seat, two employees fit the $9 plan, and a third employee is rejected. All temporary rows were rolled back. No test subscription or merchant row was left behind. CI type-checks the invitation Edge Function and checks the admin UI/RPC wiring. A live invitation email delivery and owner acceptance test still requires a real recipient inbox.
 
 ## Secure bulk QR factory
 
