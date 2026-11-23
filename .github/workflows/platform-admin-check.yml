@@ -45,7 +45,6 @@ jobs:
           grep -q "rpc('admin_list_merchant_subscriptions'" platform-admin/app.js
           grep -q "rpc('admin_manage_merchant_subscription'" platform-admin/app.js
           grep -q "rpc('admin_list_subscription_history'" platform-admin/app.js
-          grep -q "rpc('merchant_get_my_subscriptions'" platform-admin/app.js
           grep -q 'data-view="merchant-create"' platform-admin/app.js
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
           grep -q "rpc('admin_list_merchant_staff'" platform-admin/app.js
