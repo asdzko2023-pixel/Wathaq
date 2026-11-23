@@ -40,6 +40,11 @@ jobs:
           grep -q "rpc('admin_get_loyalty_dashboard'" platform-admin/app.js
           grep -q "rpc('admin_list_platform_audit'" platform-admin/app.js
           grep -q "rpc('admin_get_analytics_report'" platform-admin/app.js
+          grep -q "rpc('admin_create_qr_batch'" platform-admin/app.js
+          grep -q "rpc('admin_list_qr_batches'" platform-admin/app.js
+          grep -q "rpc('admin_get_qr_batch_print_data'" platform-admin/app.js
+          grep -q "rpc('admin_revoke_qr_batch'" platform-admin/app.js
+          grep -q "data-view=\\\"qr-factory\\\"" platform-admin/app.js
           grep -q "data-view=\"analytics\"" platform-admin/app.js
           grep -q "rpc('admin_list_platform_roles'" platform-admin/app.js
           grep -q "rpc('admin_get_my_permissions'" platform-admin/app.js
@@ -55,6 +60,7 @@ jobs:
           test -s supabase/migrations/20261123150000_platform_analytics_report_rpc.sql
           test -s supabase/migrations/20261123153000_permission_aware_merchant_status_guard.sql
           test -s supabase/migrations/20261123160000_enforce_loyalty_program_date_windows.sql
+          test -s supabase/migrations/20261124010000_secure_bulk_qr_batches.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
