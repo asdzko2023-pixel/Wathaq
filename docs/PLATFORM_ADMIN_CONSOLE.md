@@ -30,3 +30,29 @@ Deploy the contents of `platform-admin/` as a static site or under a dedicated `
 - Add a test identity to `platform_admins` through the approved SQL bootstrap after confirming the exact account.
 - Test login, non-admin denial, merchant status transitions, audit event creation, and mobile layout against WATHAQ-CORE.
 - This foundation is not a production-ready admin release until the above tests and the remaining secure RPCs are complete.
+
+
+## Permission-scoped operator access
+
+The console now reads `admin_get_my_permissions` after sign-in and filters navigation and actions by the returned database permissions. The same permission checks are enforced inside the RPCs; the browser-side checks are only presentation controls.
+
+| Role | Effective scope |
+|---|---|
+| `support_viewer` | Read user profiles, merchants, staff, loyalty summaries, and audit |
+| `merchant_operator` | Read merchants/staff, change merchant status, manage staff status and invitations, read audit |
+| `loyalty_operator` | Read loyalty data, manage program lifecycle and reward activation, read audit |
+| `analytics_viewer` | Read aggregate analytics and audit |
+
+Super Admin remains a separate allowlist in `platform_admins`; operator memberships cannot promote a user into Super Admin. Revoking an operator membership removes the permissions on the next RPC request.
+
+## Analytics
+
+The analytics page uses `admin_get_analytics_report`, a read-only aggregate RPC. It reports user/merchant/program/reward counts and 30-day ledger activity by day and kind without returning customer identifiers. It is available only to `analytics.read` and Super Admin.
+
+## Validation boundaries
+
+- GitHub Actions validates JavaScript syntax, RPC wiring, and migration presence.
+- SQL tests exercised each seeded role's permission boundary, disabled-membership revocation, Super Admin analytics report shape, and unauthenticated denial.
+- The role-matrix SQL tests used a temporary existing profile membership and removed it within the same test block.
+- A real browser sign-in/session test for an operator account and a live authenticated non-admin HTTP denial test remain outstanding.
+- Subscription rules and writable platform settings remain unimplemented until their commercial and operational rules are specified; no fake plans or settings are exposed.
