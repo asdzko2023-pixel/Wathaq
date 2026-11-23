@@ -255,15 +255,12 @@
     const host=document.getElementById('view-content');
     host.innerHTML='<div class="center-state">جارٍ تحميل مصنع الباركودات…</div>';
     try{
-      const [{data:dashboard,error:dashError},{data:merchantList,error:merchantError},{data:batches,error:batchError}]=await Promise.all([
-        sb.rpc('admin_get_loyalty_dashboard'),
-        sb.rpc('admin_list_merchants',{p_search:null,p_limit:200}),
+      const [{data:programs,error:programError},{data:batches,error:batchError}]=await Promise.all([
+        sb.rpc('admin_list_qr_eligible_programs'),
         sb.rpc('admin_list_qr_batches',{p_limit:100})
       ]);
-      if(dashError)throw dashError;if(merchantError)throw merchantError;if(batchError)throw batchError;
-      const activeMerchantIds=new Set((merchantList||[]).filter(m=>m.status==='active').map(m=>m.id));
-      const programs=(dashboard?.programs||[]).filter(p=>p.state==='active'&&activeMerchantIds.has(p.merchant_id));
-      const options=programs.map(p=>'<option value="'+esc(p.id)+'" data-merchant="'+esc(p.merchant_id)+'" data-kind="'+esc(p.kind)+'">'+esc(p.name)+' · '+(p.kind==='points'?'نقاط':'أختام')+'</option>').join('');
+      if(programError)throw programError;if(batchError)throw batchError;
+      const options=(programs||[]).map(p=>'<option value="'+esc(p.program_id)+'" data-merchant="'+esc(p.merchant_id)+'" data-kind="'+esc(p.kind)+'">'+esc(p.merchant_name)+' · '+esc(p.program_name)+' · '+(p.kind==='points'?'نقاط':'أختام')+'</option>').join('');
       const rows=(batches||[]).map(b=>{
         const expired=new Date(b.expires_at)<=new Date();
         const state=b.state==='revoked'?'ملغاة':expired?'منتهية':'نشطة';
