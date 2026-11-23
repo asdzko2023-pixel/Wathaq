@@ -94,5 +94,6 @@ Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem con
 - The public RPC is SECURITY INVOKER; privileged insert logic is isolated in a private SECURITY DEFINER function with an empty search_path, authenticated-user check, and Super Admin check. Direct execution of the private function is revoked from API roles.
 - Verified on WATHAQ-CORE: a rollback-only test under the authenticated database role created a pending merchant, confirmed the automatic owner membership and audit event, then rolled back. A second authenticated-role test confirmed a non-Super-Admin receives insufficient privilege. No test merchant remains.
 
-- Preview deployment for this feature is READY at https://wathaq-platform-admin-4cu3puljo-novexa14.vercel.app (commit 61f6c19). The production alias remains unchanged. A live browser sign-in and form submission check is still pending.
-- GitHub Actions validation passed: https://github.com/asdzko2023-pixel/Wathaq/actions/runs/45277471097.
+- Preview deployment for this feature is READY at https://wathaq-platform-admin-4ldsrhcks-novexa14.vercel.app (commit f0cb21f). The production alias remains unchanged. A live browser sign-in and form submission check is still pending.
+- GitHub Actions validation passed: https://github.com/asdzko2023-pixel/Wathaq/actions/runs/45277836569.
+- Owner selection now includes a server-side search by profile name or UUID to work within the profile RPC's 100-row page limit.
