@@ -33,7 +33,7 @@ begin
  if v_replacement=v_definition then raise exception 'redeem code program state guard not found'; end if;
  execute v_replacement;
 
- select pg_get_functiondef(p.oid) into v_definition from pg_proc p join pg_namespace n on n.oid=n.oid
+ select pg_get_functiondef(p.oid) into v_definition from pg_proc p join pg_namespace n on p.pronamespace=n.oid
  where n.nspname='public' and p.proname='confirm_redeem_code' and pg_get_function_identity_arguments(p.oid)='p_code text';
  if v_definition is null then raise exception 'confirm_redeem_code missing'; end if;
  v_replacement:=replace(v_definition,
