@@ -23,8 +23,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
       - name: Check platform admin JavaScript syntax
         run: node --check platform-admin/app.js
+      - name: Type-check secure merchant invitation function
+        run: deno check --no-lock supabase/functions/platform-create-merchant-account/index.ts
       - name: Validate standalone console assets
         run: |
           test -s platform-admin/index.html
@@ -33,7 +38,11 @@ jobs:
           test -s app/config.js
           test -s packages/design-tokens/tokens.css
           grep -q "rpc('admin_set_merchant_status'" platform-admin/app.js
-          grep -q "rpc('admin_create_merchant'" platform-admin/app.js
+          grep -q "functions.invoke('platform-create-merchant-account'" platform-admin/app.js
+          grep -q "rpc('admin_list_subscription_plans'" platform-admin/app.js
+          grep -q "rpc('admin_list_merchant_subscriptions'" platform-admin/app.js
+          grep -q "rpc('admin_manage_merchant_subscription'" platform-admin/app.js
+          grep -q "rpc('admin_list_subscription_history'" platform-admin/app.js
           grep -q 'data-view="merchant-create"' platform-admin/app.js
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
           grep -q "rpc('admin_list_merchant_staff'" platform-admin/app.js
@@ -70,6 +79,12 @@ jobs:
           test -s supabase/migrations/20261124030000_qr_eligible_programs.sql
           test -s supabase/migrations/20261124040000_qr_claim_lock_order.sql
           test -s supabase/migrations/20261124050000_platform_super_admin_create_merchant.sql
+          test -s supabase/migrations/20261124060000_merchant_subscription_management.sql
+          test -s supabase/migrations/20261124061000_fix_subscription_directory_email_type.sql
+          test -s supabase/migrations/20261124062000_subscription_history_rpc.sql
+          test -s supabase/functions/platform-create-merchant-account/index.ts
+          grep -q "auth.admin.inviteUserByEmail" supabase/functions/platform-create-merchant-account/index.ts
+          grep -q "platform_admins" supabase/functions/platform-create-merchant-account/index.ts
       - name: Package platform admin site
         run: |
           mkdir -p dist
