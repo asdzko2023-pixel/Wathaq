@@ -66,6 +66,7 @@ jobs:
           test -s supabase/migrations/20261124020000_hide_qr_claim_definer.sql
           test -s supabase/migrations/20261124023000_grant_qr_admin_wrappers.sql
           test -s supabase/migrations/20261124030000_qr_eligible_programs.sql
+          test -s supabase/migrations/20261124040000_qr_claim_lock_order.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
