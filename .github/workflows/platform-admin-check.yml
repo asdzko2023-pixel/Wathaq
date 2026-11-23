@@ -15,6 +15,7 @@ on:
       - 'packages/design-tokens/**'
       - 'app/config.js'
       - 'supabase/migrations/**'
+      - 'supabase/functions/**'
       - '.github/workflows/platform-admin-check.yml'
 jobs:
   validate:
@@ -30,7 +31,7 @@ jobs:
       - name: Check platform admin JavaScript syntax
         run: node --check platform-admin/app.js
       - name: Type-check secure merchant invitation function
-        run: deno check --no-lock supabase/functions/platform-create-merchant-account/index.ts
+        run: deno check --no-lock --config supabase/functions/platform-create-merchant-account/deno.json supabase/functions/platform-create-merchant-account/index.ts
       - name: Validate standalone console assets
         run: |
           test -s platform-admin/index.html
@@ -83,6 +84,8 @@ jobs:
           test -s supabase/migrations/20261124060000_merchant_subscription_management.sql
           test -s supabase/migrations/20261124061000_fix_subscription_directory_email_type.sql
           test -s supabase/migrations/20261124062000_subscription_history_rpc.sql
+          test -s supabase/migrations/20261124063000_subscription_fk_indexes.sql
+          test -s supabase/functions/platform-create-merchant-account/deno.json
           test -s supabase/functions/platform-create-merchant-account/index.ts
           grep -q "auth.admin.inviteUserByEmail" supabase/functions/platform-create-merchant-account/index.ts
           grep -q "platform_admins" supabase/functions/platform-create-merchant-account/index.ts
