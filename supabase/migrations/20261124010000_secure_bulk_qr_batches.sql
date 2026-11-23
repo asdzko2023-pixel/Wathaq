@@ -157,3 +157,17 @@ begin
  insert into public.audit_events(actor_user_id,merchant_id,action,entity_type,entity_id,details) values((select auth.uid()),v_batch.merchant_id,'loyalty.qr_batch_reprinted','qr_batch',p_batch_id::text,jsonb_build_object('quantity',v_batch.quantity));
  return jsonb_build_object('batch_id',v_batch.id,'merchant_id',v_batch.merchant_id,'program_id',v_batch.program_id,'kind',v_batch.reward_kind,'amount',v_batch.amount,'expires_at',v_batch.expires_at,'state',v_batch.state,'codes',v_codes);
 end; $$;
+
+
+-- Keep the privileged claim implementation outside the exposed API schema.
+alter function public.claim_admin_qr_code(text) set schema private;
+alter function private.claim_admin_qr_code(text) security definer;
+alter function private.claim_admin_qr_code(text) set search_path='';
+revoke all on function private.claim_admin_qr_code(text) from public,anon,authenticated;
+grant usage on schema private to authenticated;
+grant execute on function private.claim_admin_qr_code(text) to authenticated;
+create or replace function public.claim_admin_qr_code(p_code text)
+returns jsonb language sql security invoker set search_path=''
+as $$ select private.claim_admin_qr_code($1); $$;
+revoke all on function public.claim_admin_qr_code(text) from public,anon;
+grant execute on function public.claim_admin_qr_code(text) to authenticated;
