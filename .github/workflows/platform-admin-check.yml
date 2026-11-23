@@ -33,6 +33,8 @@ jobs:
           test -s app/config.js
           test -s packages/design-tokens/tokens.css
           grep -q "rpc('admin_set_merchant_status'" platform-admin/app.js
+          grep -q "rpc('admin_create_merchant'" platform-admin/app.js
+          grep -q 'data-view="merchant-create"' platform-admin/app.js
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
           grep -q "rpc('admin_list_merchant_staff'" platform-admin/app.js
           grep -q "rpc('admin_get_platform_stats'" platform-admin/app.js
@@ -67,6 +69,7 @@ jobs:
           test -s supabase/migrations/20261124023000_grant_qr_admin_wrappers.sql
           test -s supabase/migrations/20261124030000_qr_eligible_programs.sql
           test -s supabase/migrations/20261124040000_qr_claim_lock_order.sql
+          test -s supabase/migrations/20261124050000_platform_super_admin_create_merchant.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
