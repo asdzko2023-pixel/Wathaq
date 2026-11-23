@@ -7,6 +7,7 @@ on:
       - 'packages/design-tokens/**'
       - 'app/config.js'
       - 'supabase/migrations/**'
+      - 'supabase/functions/**'
       - '.github/workflows/platform-admin-check.yml'
   pull_request:
     paths:
