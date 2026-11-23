@@ -37,6 +37,7 @@
           <button class="nav-btn" data-view="users"><span class="nav-icon">♙</span>المستخدمون</button>
           <button class="nav-btn" data-view="staff"><span class="nav-icon">♧</span>موظفو المتاجر</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
+          <button class="nav-btn" data-view="qr-factory"><span class="nav-icon">▦</span>مصنع الباركودات</button>
           <button class="nav-btn" data-view="audit"><span class="nav-icon">≋</span>سجل التدقيق</button>
           <button class="nav-btn" data-view="analytics"><span class="nav-icon">▤</span>التقارير والتحليلات</button>
           <button class="nav-btn" data-view="operators"><span class="nav-icon">♙</span>مديرو المنصة</button>
@@ -250,6 +251,91 @@
       });
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة بيانات الولاء: '+esc(e.message)+'</div>';}
   }
+  async function renderQrFactory(){
+    const host=document.getElementById('view-content');
+    host.innerHTML='<div class="center-state">جارٍ تحميل مصنع الباركودات…</div>';
+    try{
+      const [{data:dashboard,error:dashError},{data:merchantList,error:merchantError},{data:batches,error:batchError}]=await Promise.all([
+        sb.rpc('admin_get_loyalty_dashboard'),
+        sb.rpc('admin_list_merchants',{p_search:null,p_limit:200}),
+        sb.rpc('admin_list_qr_batches',{p_limit:100})
+      ]);
+      if(dashError)throw dashError;if(merchantError)throw merchantError;if(batchError)throw batchError;
+      const activeMerchantIds=new Set((merchantList||[]).filter(m=>m.status==='active').map(m=>m.id));
+      const programs=(dashboard?.programs||[]).filter(p=>p.state==='active'&&activeMerchantIds.has(p.merchant_id));
+      const options=programs.map(p=>'<option value="'+esc(p.id)+'" data-merchant="'+esc(p.merchant_id)+'" data-kind="'+esc(p.kind)+'">'+esc(p.name)+' · '+(p.kind==='points'?'نقاط':'أختام')+'</option>').join('');
+      const rows=(batches||[]).map(b=>{
+        const expired=new Date(b.expires_at)<=new Date();
+        const state=b.state==='revoked'?'ملغاة':expired?'منتهية':'نشطة';
+        return '<tr><td><b>'+esc(b.merchant_name)+'</b><div class="small muted">'+esc(b.program_name)+'</div></td><td>'+esc(b.reward_kind==='points'?'نقاط':'أختام')+'</td><td>'+Number(b.amount).toLocaleString('en-US')+'</td><td>'+Number(b.quantity).toLocaleString('en-US')+'</td><td>'+Number(b.issued_count).toLocaleString('en-US')+' / '+Number(b.consumed_count).toLocaleString('en-US')+'</td><td>'+date(b.expires_at)+'</td><td><span class="status '+(state==='نشطة'?'active':state==='منتهية'?'pending':'suspended')+'">'+state+'</span></td><td><div class="row-actions"><button class="ghost-btn qr-print" data-id="'+esc(b.batch_id)+'">إعادة طباعة</button>'+(b.state==='active'&&!expired?'<button class="danger-btn qr-revoke" data-id="'+esc(b.batch_id)+'">إلغاء</button>':'')+'</div></td></tr>';
+      }).join('')||'<tr><td colspan="8"><div class="empty-state">لا توجد دفعات باركودات حتى الآن.</div></td></tr>';
+      host.innerHTML=
+        '<section class="panel"><div class="panel-head"><div><h2>إنشاء دفعة باركودات</h2><div class="panel-subtitle">رموز QR فريدة من 128 بت، مرتبطة ببرنامج نشط وتُصرف مرة واحدة فقط.</div></div></div>'+
+        '<form id="qr-batch-form" class="qr-form">'+
+        '<label>برنامج الولاء<select id="qr-program" class="search-input" required><option value="">اختر برنامجاً نشطاً</option>'+options+'</select></label>'+
+        '<label>عدد الباركودات<input id="qr-quantity" class="search-input" type="number" min="1" max="1000" value="100" required></label>'+
+        '<label>قيمة كل باركود<input id="qr-amount" class="search-input" type="number" min="1" max="1000000" placeholder="مثلاً 50" required></label>'+
+        '<label>تاريخ ووقت الانتهاء<input id="qr-expiry" class="search-input" type="datetime-local" required></label>'+
+        '<div class="qr-kind-note" id="qr-kind-note">اختر البرنامج لمعرفة نوع الرصيد.</div>'+
+        '<div class="qr-actions"><button id="qr-create" class="primary-btn" type="submit" '+(programs.length?'':'disabled')+'>إنشاء الدفعة وتجهيز الطباعة</button></div></form>'+
+        '<div class="notice" style="margin-top:14px">لا يتم تخزين الرمز كنص مكشوف: تحفظ قاعدة البيانات بصمة SHA-256 ونسخة مشفرة مخصصة لإعادة الطباعة. إعادة الطباعة تعيد الرموز نفسها ولا تنشئ دفعة جديدة.</div></section>'+
+        '<section class="panel"><div class="panel-head"><div><h2>دفعات الباركودات</h2><div class="panel-subtitle">متابعة الصلاحية والاستخدام وإعادة الطباعة أو إلغاء الرموز غير المستخدمة.</div></div><button id="qr-refresh" class="ghost-btn">تحديث</button></div>'+
+        '<div class="table-wrap"><table><thead><tr><th>المتجر والبرنامج</th><th>النوع</th><th>قيمة الرمز</th><th>العدد</th><th>متبقي / مستخدم</th><th>ينتهي في</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="qr-batch-rows">'+rows+'</tbody></table></div></section>';
+      const programSelect=host.querySelector('#qr-program');
+      const updateKind=()=>{const opt=programSelect.selectedOptions[0];host.querySelector('#qr-kind-note').textContent=opt?.dataset.kind==='points'?'سيضيف كل رمز نقاطاً إلى حساب العميل.':opt?.dataset.kind==='stamps'?'سيضيف كل رمز أختاماً إلى حساب العميل.':'اختر البرنامج لمعرفة نوع الرصيد.';};
+      programSelect.addEventListener('change',updateKind);
+      host.querySelector('#qr-batch-form').addEventListener('submit',async event=>{
+        event.preventDefault();
+        const opt=programSelect.selectedOptions[0],programId=programSelect.value;
+        const merchantId=opt?.dataset.merchant;
+        const quantity=Number(host.querySelector('#qr-quantity').value);
+        const amount=Number(host.querySelector('#qr-amount').value);
+        const expiryValue=host.querySelector('#qr-expiry').value;
+        const expiresAt=expiryValue?new Date(expiryValue).toISOString():null;
+        if(!programId||!merchantId||!Number.isInteger(quantity)||quantity<1||quantity>1000||!Number.isInteger(amount)||amount<1||!expiresAt||new Date(expiresAt)<=new Date()){toast('تحقق من البرنامج والعدد والقيمة وموعد الانتهاء.',true);return;}
+        if(!confirm('إنشاء '+quantity+' باركود بقيمة '+amount+' '+(opt.dataset.kind==='points'?'نقطة':'ختم')+' لكل رمز؟'))return;
+        const button=host.querySelector('#qr-create');button.disabled=true;
+        const {data,error}=await sb.rpc('admin_create_qr_batch',{p_merchant_id:merchantId,p_program_id:programId,p_quantity:quantity,p_amount:amount,p_expires_at:expiresAt});
+        button.disabled=false;
+        if(error||!data?.ok){toast('تعذر إنشاء الدفعة: '+(error?.message||data?.error||'unknown_error'),true);return;}
+        toast('تم إنشاء '+data.quantity+' رمزاً فريداً. جارٍ تجهيز صفحة الطباعة.');
+        await openQrPrint(data);
+        await renderQrFactory();
+      });
+      host.querySelector('#qr-refresh').addEventListener('click',renderQrFactory);
+      host.querySelector('#qr-batch-rows').addEventListener('click',async event=>{
+        const printButton=event.target.closest('.qr-print');
+        if(printButton){
+          printButton.disabled=true;
+          const {data,error}=await sb.rpc('admin_get_qr_batch_print_data',{p_batch_id:printButton.dataset.id});
+          printButton.disabled=false;
+          if(error){toast('تعذرت إعادة الطباعة: '+error.message,true);return;}
+          await openQrPrint(data);return;
+        }
+        const revokeButton=event.target.closest('.qr-revoke');
+        if(revokeButton){
+          if(!confirm('إلغاء جميع الرموز غير المستخدمة في هذه الدفعة؟ لا يمكن التراجع عن الإلغاء.'))return;
+          revokeButton.disabled=true;
+          const {data,error}=await sb.rpc('admin_revoke_qr_batch',{p_batch_id:revokeButton.dataset.id});
+          if(error||!data?.ok){toast('تعذر إلغاء الدفعة: '+(error?.message||data?.error||'unknown_error'),true);revokeButton.disabled=false;return;}
+          toast('تم إلغاء الرموز غير المستخدمة.');await renderQrFactory();
+        }
+      });
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل مصنع الباركودات: '+esc(e.message)+'</div>';}
+  }
+
+  async function openQrPrint(batch){
+    if(!window.QRCode?.toDataURL){toast('مكتبة إنشاء QR غير متاحة حالياً. حدّث الصفحة وحاول مجدداً.',true);return;}
+    const printWindow=window.open('','_blank');
+    if(!printWindow){toast('اسمح بالنوافذ المنبثقة لفتح ملف الطباعة.',true);return;}
+    const safe=JSON.stringify(batch).replace(/</g,'\\u003c');
+    const kind=batch.kind==='points'?'نقطة':'ختم';
+    printWindow.document.open();
+    printWindow.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باركودات وثاق</title><style>'+
+      'body{font-family:Arial,sans-serif;color:#142033;margin:12mm}.head{display:flex;justify-content:space-between;border-bottom:2px solid #c9a34a;padding-bottom:10px;margin-bottom:12px}.head h1{margin:0 0 5px;font-size:20px}.meta{font-size:12px;color:#46556a;line-height:1.8}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7mm}.card{border:1px solid #cbd3df;border-radius:8px;padding:5mm;text-align:center;break-inside:avoid;page-break-inside:avoid;min-height:48mm}.card img{width:30mm;height:30mm;display:block;margin:0 auto 3mm}.serial{font-size:10px;color:#667085}.amount{font-weight:bold;font-size:13px;margin:2mm 0}.expiry{font-size:10px;color:#667085}@page{size:A4;margin:10mm}@media print{body{margin:0}.card{border-color:#aeb8c6}}'+
+      '</style><script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"><\\/script></head><body><div class="head"><div><h1>وِثاق · باركودات الولاء</h1><div class="meta">دفعة: '+String(batch.batch_id||'')+'<br>النوع: '+kind+' · القيمة: '+Number(batch.amount)+' لكل رمز<br>الانتهاء: '+new Date(batch.expires_at).toLocaleString('ar-YE')+'</div></div><strong>WATHAQ</strong></div><div id="grid" class="grid"></div><script>const batch='+safe+';const grid=document.getElementById("grid");Promise.all((batch.codes||[]).map(async item=>{const card=document.createElement("div");card.className="card";const img=document.createElement("img");img.src=await QRCode.toDataURL(item.code,{width:300,margin:1,errorCorrectionLevel:"M"});const serial=document.createElement("div");serial.className="serial";serial.textContent="WQ-"+String(item.serial).padStart(4,"0");const amount=document.createElement("div");amount.className="amount";amount.textContent=batch.amount+" '+kind+'";const expiry=document.createElement("div");expiry.className="expiry";expiry.textContent="صالح حتى "+new Date(batch.expires_at).toLocaleDateString("ar-YE");card.append(img,serial,amount,expiry);grid.append(card);})).then(()=>{document.title="WATHAQ-QR-"+batch.batch_id;setTimeout(()=>window.print(),500);}).catch(e=>{document.body.innerHTML="تعذر تجهيز الطباعة: "+String(e);});<\\/script></body></html>');
+    printWindow.document.close();
+  }
   async function renderAnalytics(){
     const host=document.getElementById('view-content');
     host.innerHTML='<div class="center-state">جارٍ إعداد تقرير التحليلات…</div>';
@@ -322,15 +408,16 @@
     if(view==='overview')return isSuperAdmin||currentPermissions.size>0;
     if(view==='operators'||view==='roadmap')return isSuperAdmin;
     if(view==='analytics')return currentPermissions.has('analytics.read');
+    if(view==='qr-factory')return isSuperAdmin||currentPermissions.has('loyalty.qr.manage');
     const required={merchants:'merchants.read',users:'users.read',staff:'staff.read',loyalty:'loyalty.read',audit:'audit.read'}[view];
     return !!required&&currentPermissions.has(required);
   }
   async function showView(view){
     if(!viewAllowed(view)){toast('ليس لديك صلاحية لفتح هذا القسم.',true);return;}
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء','qr-factory':'مصنع الباركودات',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='qr-factory')await renderQrFactory();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
