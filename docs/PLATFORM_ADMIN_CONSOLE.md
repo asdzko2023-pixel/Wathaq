@@ -75,9 +75,11 @@ Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem con
 
 ## QR factory preview deployment
 
-- A preview build of the QR factory was deployed to Vercel for review: `https://wathaq-platform-admin-eexkq4b15-novexa14.vercel.app`.
+- A preview build of the QR factory was deployed to Vercel for review: `https://wathaq-platform-admin-3vfpj07kz-novexa14.vercel.app`.
 - The existing production alias was intentionally left unchanged until the preview is checked in a real browser session.
 
 - The QR factory loads eligible programs through its own `loyalty.qr.manage`-scoped RPC; it does not require the operator to also have the broader `merchants.read` permission.
 
 - Claim and revoke routines acquire locks in the same batch-then-code order, avoiding a claim/revoke lock inversion under concurrent use.
+
+- When there are no active merchants with active, in-window loyalty programs, the factory shows an explicit empty-state message and disables batch creation.
