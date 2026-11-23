@@ -92,4 +92,7 @@ Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem con
 - New merchants are always created with `pending` status. Name, slug, ISO alpha-2 country code, timezone, owner existence, and slug uniqueness are validated server-side.
 - The existing `merchant_owner_membership` trigger creates the owner's merchant membership atomically. The RPC writes a `platform.merchant_created` audit event in the same transaction.
 - The public RPC is SECURITY INVOKER; privileged insert logic is isolated in a private SECURITY DEFINER function with an empty search_path, authenticated-user check, and Super Admin check. Direct execution of the private function is revoked from API roles.
-- Runtime verification must include a rollback-only create test and a non-Super-Admin denial test. A real merchant is not seeded as part of testing.
+- Verified on WATHAQ-CORE: a rollback-only test under the authenticated database role created a pending merchant, confirmed the automatic owner membership and audit event, then rolled back. A second authenticated-role test confirmed a non-Super-Admin receives insufficient privilege. No test merchant remains.
+
+- Preview deployment for this feature is READY at https://wathaq-platform-admin-4cu3puljo-novexa14.vercel.app (commit 61f6c19). The production alias remains unchanged. A live browser sign-in and form submission check is still pending.
+- GitHub Actions validation passed: https://github.com/asdzko2023-pixel/Wathaq/actions/runs/45277471097.
