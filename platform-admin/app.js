@@ -54,7 +54,7 @@
     </div>`;
     document.getElementById('signout').addEventListener('click',()=>sb.auth.signOut());
     root.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
-    const firstView=isSuperAdmin?'overview':['merchants','users','staff','loyalty','audit','analytics'].find(v=>viewAllowed(v))||'overview';
+    const firstView=isSuperAdmin?'overview':['analytics','merchants','users','staff','loyalty','audit'].find(v=>viewAllowed(v))||'overview';
     root.querySelectorAll('[data-view]').forEach(b=>{b.hidden=!viewAllowed(b.dataset.view);});
     showView(firstView);
   }
