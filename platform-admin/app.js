@@ -257,7 +257,7 @@
           const hasSub=!!merchant.subscription_id;
           const actionOptions=(hasSub?[
             ['change_plan','تغيير / ترقية / تخفيض الخطة'],['renew','تمديد الاشتراك'],['pause','تجميد الاشتراك'],['reactivate','إعادة التفعيل'],['cancel','إلغاء الاشتراك'],['mark_paid','تسجيل الدفع يدوياً'],['mark_comped','منح اشتراك مجاني']
-          ]:[['assign','تعيين خطة لهذا المتجر'],['mark_paid','تسجيل الدفع يدوياً'],['mark_comped','منح اشتراك مجاني']]);
+          ]:[['assign','تعيين خطة لهذا المتجر']]);
           const modal=document.createElement('div');modal.className='subscription-modal-backdrop';
           const options=plans.map(p=>'<option value="'+esc(p.plan_key)+'" '+(p.plan_key===merchant.plan_key?'selected':'')+'>'+esc(p.display_name)+' · $'+Number(p.price_usd).toFixed(0)+'/شهر</option>').join('');
           modal.innerHTML='<section class="subscription-modal" role="dialog" aria-modal="true" aria-label="إدارة اشتراك المتجر">'+
