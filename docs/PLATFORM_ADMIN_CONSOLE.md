@@ -56,3 +56,8 @@ The analytics page uses `admin_get_analytics_report`, a read-only aggregate RPC.
 - The role-matrix SQL tests used a temporary existing profile membership and removed it within the same test block.
 - A real browser sign-in/session test for an operator account and a live authenticated non-admin HTTP denial test remain outstanding. The SQL permission tests simulate the Supabase JWT subject claim; they are not a substitute for an HTTP session test.
 - Subscription rules and writable platform settings remain unimplemented until their commercial and operational rules are specified; no fake plans or settings are exposed.
+
+
+## Loyalty program validity window
+
+Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem confirmation now reject programs outside their configured `starts_at` / `ends_at` window, even if the program state remains active. Internal `can_issue_earn` and `can_confirm_redeem` helper functions are no longer directly executable by authenticated clients; their trusted SECURITY DEFINER API functions continue to call them.
