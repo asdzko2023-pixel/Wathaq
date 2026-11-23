@@ -18,7 +18,7 @@
   function renderLogin(message='لوحة محمية لإدارة منصة وثاق. سجّل الدخول بحساب Google المعتمد كمدير منصة.'){
     root.innerHTML='<main class="center-state"><section class="login-card"><span class="brand-mark">و</span><h1>إدارة وثاق</h1><p>'+esc(message)+'</p><button id="google-login" class="primary-btn">المتابعة باستخدام Google</button><p class="small">الدخول لا يمنح الصلاحيات تلقائياً؛ يجب اعتماد الحساب كمدير أعلى أو تعيينه ضمن مشغّلي المنصة.</p></section></main>';
     document.getElementById('google-login').addEventListener('click',async()=>{
-      const redirectTo=window.location.href.split('#')[0];
+      const redirectTo=`${window.location.origin}${window.location.pathname}`;
       const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
       if(error)toast(error.message,true);
     });
