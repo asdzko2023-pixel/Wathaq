@@ -63,6 +63,37 @@ The analytics page uses `admin_get_analytics_report`, a read-only aggregate RPC.
 Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem confirmation now reject programs outside their configured `starts_at` / `ends_at` window, even if the program state remains active. Internal `can_issue_earn` and `can_confirm_redeem` helper functions are no longer directly executable by authenticated clients; their trusted SECURITY DEFINER API functions continue to call them.
 
 
+
+## Merchant accounts and subscription plans
+
+The Super Admin console now provides central merchant account creation and subscription management. New merchant account creation uses the `platform-create-merchant-account` Supabase Edge Function. The function verifies the caller's Supabase JWT and checks the caller's row in `platform_admins` with a server-only service key; it never exposes that key to the browser. A new owner receives a Supabase Auth invitation, while an already verified owner account can be linked without issuing a second identity. Unverified unrelated accounts are rejected rather than silently linked.
+
+The Edge Function calls the authenticated `admin_create_merchant_account` RPC. Merchant insertion, automatic owner membership, initial plan assignment, subscription history, and audit event are one database transaction. Newly created merchants start in `pending` review state. An invitation that was sent before a database validation failure is retained as a pending invitation so the administrator can correct the input and retry using the same email; it does not create a merchant until the RPC succeeds.
+
+### Monthly plans currently configured
+
+| Plan | Monthly reference price | Staff seats | Active loyalty programs | QR codes / month |
+| --- | ---: | ---: | ---: | ---: |
+| WATHAQ STARTER | $9 | 2 | 1 | 500 |
+| WATHAQ GROWTH | $19 | 5 | 3 | 2,500 |
+| WATHAQ BUSINESS | $39 | 15 | 10 | 10,000 |
+| WATHAQ ENTERPRISE | $99 | 50 | 30 | 50,000 |
+
+The prices are administrative monthly reference prices. There is no payment gateway, automated billing, or automatic renewal connected yet. Billing status can be tagged as admin-assigned/unconfirmed, manually paid, or complimentary. Features stored under `planned_features` are explicitly not implemented and are not presented as enabled functionality.
+
+### Subscription administration and enforcement
+
+- The Super Admin can assign a plan to an existing legacy merchant, change/up-or-downgrade a plan, renew for 1–12 months, pause, reactivate an eligible paused subscription, cancel, or record manual payment/complimentary status.
+- Each change writes both a subscription-history row and a platform audit event.
+- Direct API access to plan, subscription, and history tables is revoked from anon/authenticated clients. The console reads and mutates through Super Admin-checked RPCs.
+- Database triggers enforce active-program count, active staff-seat count, and monthly QR issue quantity for merchants with active subscriptions. Per-merchant advisory locks serialize capacity-consuming changes. Existing merchants without an assigned subscription are grandfathered until an administrator assigns a plan.
+- A paused, expired, or cancelled subscription blocks new capacity-consuming program/member/QR batch creation. It does not delete existing programs, staff, customer points, rewards, or QR history.
+- Branch counts, campaigns, customer segments, API access, advanced exports, and priority support remain planned capabilities unless separately implemented. Plan cards label these as planned, not live.
+
+### Validation and limits
+
+A rollback-only authenticated-database-role test created a temporary merchant account, verified the owner membership and initial plan via protected RPCs, exercised upgrade, downgrade, renewal, pause, reactivation, and confirmed a non-Super-Admin request is denied. The whole transaction was rolled back. No subscription or merchant test row was left behind. CI type-checks the invitation Edge Function and checks the admin UI/RPC wiring. A live invitation email delivery and owner acceptance test still requires a real recipient inbox.
+
 ## Secure bulk QR factory
 
 - The platform admin console includes a permission-gated QR factory for active points/stamps programs. Super Admin and the `loyalty.qr.manage` permission can create batches of 1–1,000 codes with a fixed value and required expiry (maximum 365 days).
