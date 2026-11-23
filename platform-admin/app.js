@@ -137,7 +137,8 @@
         '</form></section>'+
         '<section class="panel"><h2>ملاحظات الإنشاء الآمن</h2><p class="small muted">يُتحقق من صلاحية المدير الأعلى داخل قاعدة البيانات، ومن وجود حساب المالك، وصحة المعرّف وعدم تكراره. تُسجّل العملية في سجل التدقيق. لا يملك مشغّلو المنصة صلاحية إنشاء متجر من هذه الشاشة.</p></section>';
       const nameInput=host.querySelector('#new-merchant-name'),slugInput=host.querySelector('#new-merchant-slug');
-      const slugify=value=>value.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-').slice(0,80);
+      const arabicSlugMap={'ا':'a','أ':'a','إ':'i','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'h','و':'w','ي':'y','ى':'a','ؤ':'w','ئ':'y','ء':''};
+      const slugify=value=>Array.from(value.normalize('NFKD').toLowerCase()).map(ch=>arabicSlugMap[ch]??ch).join('').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-').slice(0,80);
       nameInput.addEventListener('input',()=>{if(!slugInput.dataset.edited)slugInput.value=slugify(nameInput.value);});
       slugInput.addEventListener('input',()=>{slugInput.dataset.edited='1';slugInput.value=slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/-{2,}/g,'-').replace(/^-+|-+$/g,'');});
       host.querySelector('#platform-merchant-form').addEventListener('submit',async event=>{
