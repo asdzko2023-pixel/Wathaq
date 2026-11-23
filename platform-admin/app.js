@@ -294,23 +294,27 @@
         const expiresAt=expiryValue?new Date(expiryValue).toISOString():null;
         if(!programId||!merchantId||!Number.isInteger(quantity)||quantity<1||quantity>1000||!Number.isInteger(amount)||amount<1||!expiresAt||new Date(expiresAt)<=new Date()){toast('تحقق من البرنامج والعدد والقيمة وموعد الانتهاء.',true);return;}
         if(!confirm('إنشاء '+quantity+' باركود بقيمة '+amount+' '+(opt.dataset.kind==='points'?'نقطة':'ختم')+' لكل رمز؟'))return;
+        const printWindow=window.open('about:blank','_blank');
+        if(!printWindow){toast('اسمح بالنوافذ المنبثقة لفتح صفحة الطباعة.',true);return;}
         const button=host.querySelector('#qr-create');button.disabled=true;
         const {data,error}=await sb.rpc('admin_create_qr_batch',{p_merchant_id:merchantId,p_program_id:programId,p_quantity:quantity,p_amount:amount,p_expires_at:expiresAt});
         button.disabled=false;
-        if(error||!data?.ok){toast('تعذر إنشاء الدفعة: '+(error?.message||data?.error||'unknown_error'),true);return;}
+        if(error||!data?.ok){printWindow.close();toast('تعذر إنشاء الدفعة: '+(error?.message||data?.error||'unknown_error'),true);return;}
         toast('تم إنشاء '+data.quantity+' رمزاً فريداً. جارٍ تجهيز صفحة الطباعة.');
-        await openQrPrint(data);
+        await openQrPrint(data,printWindow);
         await renderQrFactory();
       });
       host.querySelector('#qr-refresh').addEventListener('click',renderQrFactory);
       host.querySelector('#qr-batch-rows').addEventListener('click',async event=>{
         const printButton=event.target.closest('.qr-print');
         if(printButton){
+          const printWindow=window.open('about:blank','_blank');
+          if(!printWindow){toast('اسمح بالنوافذ المنبثقة لإعادة الطباعة.',true);return;}
           printButton.disabled=true;
           const {data,error}=await sb.rpc('admin_get_qr_batch_print_data',{p_batch_id:printButton.dataset.id});
           printButton.disabled=false;
-          if(error){toast('تعذرت إعادة الطباعة: '+error.message,true);return;}
-          await openQrPrint(data);return;
+          if(error){printWindow.close();toast('تعذرت إعادة الطباعة: '+error.message,true);return;}
+          await openQrPrint(data,printWindow);return;
         }
         const revokeButton=event.target.closest('.qr-revoke');
         if(revokeButton){
@@ -324,10 +328,8 @@
     }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل مصنع الباركودات: '+esc(e.message)+'</div>';}
   }
 
-  async function openQrPrint(batch){
-    if(!window.QRCode?.toDataURL){toast('مكتبة إنشاء QR غير متاحة حالياً. حدّث الصفحة وحاول مجدداً.',true);return;}
-    const printWindow=window.open('','_blank');
-    if(!printWindow){toast('اسمح بالنوافذ المنبثقة لفتح ملف الطباعة.',true);return;}
+  async function openQrPrint(batch,printWindow){
+    if(!printWindow||printWindow.closed){toast('تعذر فتح نافذة الطباعة.',true);return;}
     const safe=JSON.stringify(batch).replace(/</g,'\\u003c');
     const kind=batch.kind==='points'?'نقطة':'ختم';
     printWindow.document.open();
