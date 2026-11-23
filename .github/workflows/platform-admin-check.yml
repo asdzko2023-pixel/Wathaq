@@ -85,6 +85,7 @@ jobs:
           test -s supabase/migrations/20261124061000_fix_subscription_directory_email_type.sql
           test -s supabase/migrations/20261124062000_subscription_history_rpc.sql
           test -s supabase/migrations/20261124063000_subscription_fk_indexes.sql
+          test -s supabase/migrations/20261124070000_exclude_owner_from_staff_seat_limit.sql
           test -s supabase/functions/platform-create-merchant-account/deno.json
           test -s supabase/functions/platform-create-merchant-account/index.ts
           grep -q "auth.admin.inviteUserByEmail" supabase/functions/platform-create-merchant-account/index.ts
