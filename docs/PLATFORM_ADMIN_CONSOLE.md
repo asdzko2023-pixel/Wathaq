@@ -83,7 +83,7 @@ The prices are administrative monthly reference prices. There is no payment gate
 
 ### Subscription administration and enforcement
 
-- The Super Admin can assign a plan to an existing legacy merchant, change/up-or-downgrade a plan, renew for 1–12 months, pause, reactivate an eligible paused subscription, cancel, or record manual payment/complimentary status. A merchant owner can read only their own current plan, expiry, quotas, and live/planned feature labels through `merchant_get_my_subscriptions`; the view is sourced from the database, so upgrades do not rely on stale user metadata.
+- The Super Admin can assign a plan to an existing legacy merchant, change/up-or-downgrade a plan, renew for 1–12 months, pause, reactivate an eligible paused subscription, cancel, or record manual payment/complimentary status. The database also exposes an owner-scoped `merchant_get_my_subscriptions` RPC for a future merchant account view; the merchant-facing portal UI is not yet wired to this endpoint.
 - Each change writes both a subscription-history row and a platform audit event.
 - Direct API access to plan, subscription, and history tables is revoked from anon/authenticated clients. The console reads and mutates through Super Admin-checked RPCs.
 - Database triggers enforce active-program count, active employee-seat count (the owner membership is excluded), and monthly QR issue quantity for merchants with active subscriptions. Per-merchant advisory locks serialize capacity-consuming changes. Existing merchants without an assigned subscription are grandfathered until an administrator assigns a plan.
