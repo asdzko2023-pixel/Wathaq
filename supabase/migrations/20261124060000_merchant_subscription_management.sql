@@ -269,7 +269,7 @@ begin
   if p_duration_months is null or p_duration_months not between 1 and 12 then
     raise exception 'subscription duration must be 1 to 12 months' using errcode = '22023';
   end if;
-  if p_billing_status not in ('admin_assigned','manual_paid','complimentary') then
+  if coalesce(p_billing_status, 'admin_assigned') not in ('admin_assigned','manual_paid','complimentary') then
     raise exception 'invalid billing status' using errcode = '22023';
   end if;
   select * into v_plan from public.subscription_plans where plan_key = p_plan_key and is_active = true;
@@ -390,6 +390,7 @@ begin
     raise exception 'duration must be 1 to 12 months' using errcode = '22023';
   end if;
 
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_merchant_id::text, 0));
   perform 1 from public.merchants where id = p_merchant_id for update;
   if not found then
     raise exception 'merchant not found' using errcode = 'P0002';
@@ -561,6 +562,15 @@ declare
   v_used integer;
   v_period_start timestamptz;
 begin
+  -- Resource-decreasing or metadata-only changes do not consume new plan capacity.
+  if tg_table_schema = 'public' and tg_table_name = 'loyalty_programs' then
+    if new.state::text <> 'active' then return new; end if;
+    if tg_op = 'UPDATE' and old.state::text = 'active' then return new; end if;
+  elsif tg_table_schema = 'public' and tg_table_name = 'merchant_members' then
+    if not new.is_active then return new; end if;
+    if tg_op = 'UPDATE' and old.is_active then return new; end if;
+  end if;
+
   -- Serialize per merchant so concurrent resource creation cannot exceed a plan limit.
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(new.merchant_id::text, 0));
 
