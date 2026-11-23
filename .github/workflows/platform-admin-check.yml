@@ -42,6 +42,7 @@ jobs:
           grep -q "rpc('admin_get_analytics_report'" platform-admin/app.js
           grep -q "rpc('admin_create_qr_batch'" platform-admin/app.js
           grep -q "rpc('admin_list_qr_batches'" platform-admin/app.js
+          grep -q "rpc('admin_list_qr_eligible_programs'" platform-admin/app.js
           grep -q "rpc('admin_get_qr_batch_print_data'" platform-admin/app.js
           grep -q "rpc('admin_revoke_qr_batch'" platform-admin/app.js
           grep -q "data-view=\\\"qr-factory\\\"" platform-admin/app.js
@@ -64,6 +65,7 @@ jobs:
           test -s supabase/migrations/20261124013000_qr_batch_stable_serials.sql
           test -s supabase/migrations/20261124020000_hide_qr_claim_definer.sql
           test -s supabase/migrations/20261124023000_grant_qr_admin_wrappers.sql
+          test -s supabase/migrations/20261124030000_qr_eligible_programs.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
