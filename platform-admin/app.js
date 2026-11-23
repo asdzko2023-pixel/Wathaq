@@ -38,6 +38,7 @@
           <button class="nav-btn" data-view="staff"><span class="nav-icon">♧</span>موظفو المتاجر</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
           <button class="nav-btn" data-view="audit"><span class="nav-icon">≋</span>سجل التدقيق</button>
+          <button class="nav-btn" data-view="analytics"><span class="nav-icon">▤</span>التقارير والتحليلات</button>
           <button class="nav-btn" data-view="operators"><span class="nav-icon">♙</span>مديرو المنصة</button>
           <button class="nav-btn" data-view="roadmap"><span class="nav-icon">⚙</span>الإدارة المتقدمة</button>
         </nav>
@@ -53,7 +54,7 @@
     </div>`;
     document.getElementById('signout').addEventListener('click',()=>sb.auth.signOut());
     root.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
-    const firstView=isSuperAdmin?'overview':['merchants','users','staff','loyalty','audit'].find(v=>viewAllowed(v))||'overview';
+    const firstView=isSuperAdmin?'overview':['merchants','users','staff','loyalty','audit','analytics'].find(v=>viewAllowed(v))||'overview';
     root.querySelectorAll('[data-view]').forEach(b=>{b.hidden=!viewAllowed(b.dataset.view);});
     showView(firstView);
   }
@@ -249,6 +250,27 @@
       });
     }catch(e){host.innerHTML='<div class="notice error">تعذر قراءة بيانات الولاء: '+esc(e.message)+'</div>';}
   }
+  async function renderAnalytics(){
+    const host=document.getElementById('view-content');
+    host.innerHTML='<div class="center-state">جارٍ إعداد تقرير التحليلات…</div>';
+    try{
+      const {data,error}=await sb.rpc('admin_get_analytics_report',{p_days:30});
+      if(error)throw error;
+      const d=data||{};
+      const metrics=[
+        ['المستخدمون',d.users_total],['المتاجر',d.merchants_total],['المتاجر النشطة',d.merchants_active],
+        ['برامج الولاء النشطة',d.programs_active],['المكافآت النشطة',d.rewards_active],['حسابات الولاء',d.loyalty_accounts_total],
+        ['نقاط مكتسبة خلال 30 يوماً',d.points_earned_period],['نقاط مستبدلة خلال 30 يوماً',d.points_redeemed_period]
+      ];
+      const cards='<div class="grid-stats">'+metrics.map(x=>'<article class="stat-card"><div class="label">'+esc(x[0])+'</div><div class="value">'+(x[1]===null||x[1]===undefined?'—':Number(x[1]).toLocaleString('en-US'))+'</div></article>').join('')+'</div>';
+      const trend=(d.trend||[]).slice().reverse().map(x=>'<tr><td>'+esc(x.day)+'</td><td>'+Number(x.ledger_entries||0).toLocaleString('en-US')+'</td><td>'+Number(x.points_earned||0).toLocaleString('en-US')+'</td><td>'+Number(x.points_redeemed||0).toLocaleString('en-US')+'</td></tr>').join('')||'<tr><td colspan="4">لا توجد حركات في الفترة.</td></tr>';
+      const kinds=(d.ledger_by_kind||[]).map(x=>'<tr><td>'+esc(x.kind)+'</td><td>'+Number(x.entries||0).toLocaleString('en-US')+'</td><td>'+Number(x.points_delta||0).toLocaleString('en-US')+'</td></tr>').join('')||'<tr><td colspan="3">لا توجد بيانات.</td></tr>';
+      host.innerHTML=cards+
+        '<section class="panel"><div class="panel-head"><div><h2>حركة الولاء اليومية</h2><div class="panel-subtitle">آخر '+Number(d.period_days||30)+' يوماً · دون كشف هوية العملاء</div></div></div><div class="table-wrap"><table><thead><tr><th>اليوم</th><th>عدد الحركات</th><th>نقاط مكتسبة</th><th>نقاط مستبدلة</th></tr></thead><tbody>'+trend+'</tbody></table></div></section>'+
+        '<section class="panel"><div class="panel-head"><div><h2>ملخص دفتر الولاء</h2><div class="panel-subtitle">تجميع حسب نوع الحركة خلال الفترة</div></div></div><div class="table-wrap"><table><thead><tr><th>النوع</th><th>عدد الحركات</th><th>صافي النقاط</th></tr></thead><tbody>'+kinds+'</tbody></table></div></section>'+
+        '<section class="panel"><div class="notice">هذه تقارير مجمّعة للقراءة فقط. لا تسمح بتعديل أرصدة العملاء أو دفتر الحركات.</div></section>';
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تحميل التقارير: '+esc(e.message)+'</div>';}
+  }
   async function renderAudit(){
     const host=document.getElementById('view-content');host.innerHTML='<div class="center-state">جارٍ تحميل سجل التدقيق…</div>';
     try{const {data,error}=await sb.rpc('admin_list_platform_audit',{p_limit:100});if(error)throw error;
@@ -299,15 +321,16 @@
   function viewAllowed(view){
     if(view==='overview')return isSuperAdmin||currentPermissions.size>0;
     if(view==='operators'||view==='roadmap')return isSuperAdmin;
+    if(view==='analytics')return currentPermissions.has('analytics.read');
     const required={merchants:'merchants.read',users:'users.read',staff:'staff.read',loyalty:'loyalty.read',audit:'audit.read'}[view];
     return !!required&&currentPermissions.has(required);
   }
   async function showView(view){
     if(!viewAllowed(view)){toast('ليس لديك صلاحية لفتح هذا القسم.',true);return;}
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else if(view==='operators')await renderOperators();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
