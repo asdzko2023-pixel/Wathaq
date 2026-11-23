@@ -61,3 +61,13 @@ The analytics page uses `admin_get_analytics_report`, a read-only aggregate RPC.
 ## Loyalty program validity window
 
 Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem confirmation now reject programs outside their configured `starts_at` / `ends_at` window, even if the program state remains active. Internal `can_issue_earn` and `can_confirm_redeem` helper functions are no longer directly executable by authenticated clients; their trusted SECURITY DEFINER API functions continue to call them.
+
+
+## Secure bulk QR factory
+
+- The platform admin console includes a permission-gated QR factory for active points/stamps programs. Super Admin and the `loyalty.qr.manage` permission can create batches of 1–1,000 codes with a fixed value and required expiry (maximum 365 days).
+- Codes contain 128 bits of cryptographically random entropy. SHA-256 digests are unique within the QR factory and checked against existing loyalty token digests before insertion.
+- Printable code material is stored only as AES-256 encrypted ciphertext under a private database-held key; plaintext is returned only during initial creation or an authorized, audited reprint. Private tables and key are not granted to API roles.
+- Reprinting returns the original codes and never creates new ones. Revocation changes every still-issued code in the batch to revoked. Consumed codes remain consumed.
+- `claim_admin_qr_code` is the customer-side atomic claim RPC: it locks the code row, validates batch/merchant/program/expiry, creates or locks the customer's loyalty account, credits the fixed points/stamps amount, writes ledger and audit records, and marks the code consumed in one transaction.
+- The admin UI renders QR labels in a print-ready browser page; the browser print dialog can save the layout as PDF. The admin UI and database feature are implemented, but the Flutter customer scan/claim screen still requires integration and device-level end-to-end testing before customer redemption is live.
