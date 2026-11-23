@@ -71,3 +71,9 @@ Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem con
 - Reprinting returns the original codes and never creates new ones. Revocation changes every still-issued code in the batch to revoked. Consumed codes remain consumed.
 - `claim_admin_qr_code` is the customer-side atomic claim RPC: it locks the code row, validates batch/merchant/program/expiry, creates or locks the customer's loyalty account, credits the fixed points/stamps amount, writes ledger and audit records, and marks the code consumed in one transaction.
 - The admin UI renders QR labels in a print-ready browser page; the browser print dialog can save the layout as PDF. The admin UI and database feature are implemented, but the Flutter customer scan/claim screen still requires integration and device-level end-to-end testing before customer redemption is live.
+
+
+## QR factory preview deployment
+
+- A preview build of the QR factory was deployed to Vercel for review: `https://wathaq-platform-admin-eexkq4b15-novexa14.vercel.app`.
+- The existing production alias was intentionally left unchanged until the preview is checked in a real browser session.
