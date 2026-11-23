@@ -34,6 +34,7 @@
         <nav class="nav-list" aria-label="القائمة الرئيسية">
           <button class="nav-btn active" data-view="overview"><span class="nav-icon">⌂</span>الرئيسية</button>
           <button class="nav-btn" data-view="merchants"><span class="nav-icon">▦</span>المتاجر</button>
+          <button class="nav-btn" data-view="merchant-create"><span class="nav-icon">＋</span>إنشاء متجر جديد</button>
           <button class="nav-btn" data-view="users"><span class="nav-icon">♙</span>المستخدمون</button>
           <button class="nav-btn" data-view="staff"><span class="nav-icon">♧</span>موظفو المتاجر</button>
           <button class="nav-btn" data-view="loyalty"><span class="nav-icon">◇</span>نظام الولاء</button>
@@ -109,6 +110,62 @@
       merchant.status=data.status;toast('تم تحديث حالة المتجر وتسجيل الحدث.');
       if(activeView==='overview')renderOverview();else renderMerchants();
     }));
+  }
+  async function renderMerchantCreate(){
+    const host=document.getElementById('view-content');
+    if(!isSuperAdmin){host.innerHTML='<div class="notice error">إنشاء المتاجر متاح للمدير الأعلى فقط.</div>';return;}
+    host.innerHTML='<div class="center-state">جارٍ تحميل حسابات المالكين المتاحة…</div>';
+    try{
+      const {data:profiles,error}=await sb.rpc('admin_list_user_profiles',{p_search:null,p_limit:200,p_offset:0});
+      if(error)throw error;
+      const options=(profiles||[]).map(u=>'<option value="'+esc(u.user_id)+'">'+esc(u.full_name||'مستخدم بدون اسم')+' · '+esc(u.user_id.slice(0,8))+'</option>').join('');
+      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>إنشاء متجر جديد على مستوى المنصة</h2><div class="panel-subtitle">إنشاء مركزي من المدير الأعلى وربط المالك بحساب وثاق موجود.</div></div><span class="status pending">يبدأ قيد المراجعة</span></div>'+
+        '<div class="notice">اختر مالكاً لديه حساب موجود في وثاق. لن يتم إنشاء حساب دخول أو كلمة مرور من هذه الشاشة. بعد الإنشاء تُنشأ عضوية المالك تلقائياً بواسطة قاعدة البيانات.</div>'+
+        '<form id="platform-merchant-form" class="merchant-create-form">'+
+        '<label>اسم المتجر *<input class="search-input" id="new-merchant-name" maxlength="120" required placeholder="مثال: متجر الأمل"></label>'+
+        '<label>المعرّف المختصر (Slug) *<input class="search-input" id="new-merchant-slug" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" required dir="ltr" placeholder="al-amal-store"></label>'+
+        '<label>مالك المتجر *<select class="search-input" id="new-merchant-owner" required><option value="">اختر حساب المالك الموجود</option>'+options+'</select></label>'+
+        '<label>التصنيف<input class="search-input" id="new-merchant-category" maxlength="80" placeholder="مطاعم، ملابس، إلكترونيات…"></label>'+
+        '<label>الدولة (رمز ISO)<input class="search-input" id="new-merchant-country" maxlength="2" minlength="2" value="YE" required dir="ltr"></label>'+
+        '<label>المدينة<input class="search-input" id="new-merchant-city" maxlength="100" placeholder="عدن"></label>'+
+        '<label>العنوان<input class="search-input" id="new-merchant-address" maxlength="240" placeholder="العنوان أو المنطقة"></label>'+
+        '<label>رقم التواصل<input class="search-input" id="new-merchant-phone" maxlength="40" dir="ltr" placeholder="+967…"></label>'+
+        '<label>البريد الإلكتروني<input class="search-input" id="new-merchant-email" type="email" maxlength="254" dir="ltr" placeholder="store@example.com"></label>'+
+        '<label>المنطقة الزمنية<input class="search-input" id="new-merchant-timezone" value="Asia/Aden" maxlength="80" dir="ltr" required></label>'+
+        '<label class="wide">وصف المتجر<textarea class="search-input" id="new-merchant-description" maxlength="1000" rows="3" placeholder="نبذة مختصرة عن المتجر"></textarea></label>'+
+        '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">إنشاء المتجر</button><span class="small muted">الحالة الابتدائية: قيد المراجعة · لا يتم التفعيل تلقائياً</span></div>'+
+        '</form></section>'+
+        '<section class="panel"><h2>ملاحظات الإنشاء الآمن</h2><p class="small muted">يُتحقق من صلاحية المدير الأعلى داخل قاعدة البيانات، ومن وجود حساب المالك، وصحة المعرّف وعدم تكراره. تُسجّل العملية في سجل التدقيق. لا يملك مشغّلو المنصة صلاحية إنشاء متجر من هذه الشاشة.</p></section>';
+      const nameInput=host.querySelector('#new-merchant-name'),slugInput=host.querySelector('#new-merchant-slug');
+      const slugify=value=>value.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-').slice(0,80);
+      nameInput.addEventListener('input',()=>{if(!slugInput.dataset.edited)slugInput.value=slugify(nameInput.value);});
+      slugInput.addEventListener('input',()=>{slugInput.dataset.edited='1';slugInput.value=slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/-{2,}/g,'-').replace(/^-+|-+$/g,'');});
+      host.querySelector('#platform-merchant-form').addEventListener('submit',async event=>{
+        event.preventDefault();
+        const button=event.submitter;
+        const payload={
+          p_owner_user_id:host.querySelector('#new-merchant-owner').value,
+          p_name:nameInput.value.trim(),p_slug:slugInput.value.trim(),
+          p_category:host.querySelector('#new-merchant-category').value.trim()||null,
+          p_description:host.querySelector('#new-merchant-description').value.trim()||null,
+          p_country_code:host.querySelector('#new-merchant-country').value.trim().toUpperCase(),
+          p_city:host.querySelector('#new-merchant-city').value.trim()||null,
+          p_address:host.querySelector('#new-merchant-address').value.trim()||null,
+          p_phone:host.querySelector('#new-merchant-phone').value.trim()||null,
+          p_email:host.querySelector('#new-merchant-email').value.trim()||null,
+          p_timezone:host.querySelector('#new-merchant-timezone').value.trim()
+        };
+        if(!payload.p_owner_user_id){toast('اختر مالكاً من حسابات وثاق الموجودة.',true);return;}
+        if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload.p_slug)){toast('المعرّف المختصر غير صالح.',true);return;}
+        if(!confirm('إنشاء متجر «'+payload.p_name+'» وربطه بالمالك المحدد بحالة قيد المراجعة؟'))return;
+        button.disabled=true;button.textContent='جارٍ إنشاء المتجر…';
+        const {data,error}=await sb.rpc('admin_create_merchant',payload);
+        if(error||!data?.ok){toast('تعذر إنشاء المتجر: '+(error?.message||data?.error||'unknown_error'),true);button.disabled=false;button.textContent='إنشاء المتجر';return;}
+        toast('تم إنشاء المتجر وربطه بالمالك. الحالة: قيد المراجعة.');
+        await loadMerchants();
+        showView('merchants');
+      });
+    }catch(e){host.innerHTML='<div class="notice error">تعذر تجهيز نموذج إنشاء المتجر: '+esc(e.message)+'</div>';}
   }
   async function renderUsers(){
     const host=document.getElementById('view-content');
@@ -406,7 +463,7 @@
   }
   function viewAllowed(view){
     if(view==='overview')return isSuperAdmin||currentPermissions.size>0;
-    if(view==='operators'||view==='roadmap')return isSuperAdmin;
+    if(view==='operators'||view==='roadmap'||view==='merchant-create')return isSuperAdmin;
     if(view==='analytics')return currentPermissions.has('analytics.read');
     if(view==='qr-factory')return isSuperAdmin||currentPermissions.has('loyalty.qr.manage');
     const required={merchants:'merchants.read',users:'users.read',staff:'staff.read',loyalty:'loyalty.read',audit:'audit.read'}[view];
@@ -415,9 +472,9 @@
   async function showView(view){
     if(!viewAllowed(view)){toast('ليس لديك صلاحية لفتح هذا القسم.',true);return;}
     activeView=view;root.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
-    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء','qr-factory':'مصنع الباركودات',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
+    const titles={overview:'نظرة عامة',merchants:'إدارة المتاجر','merchant-create':'إنشاء متجر جديد',users:'المستخدمون',staff:'موظفو المتاجر',loyalty:'نظام الولاء','qr-factory':'مصنع الباركودات',audit:'سجل التدقيق',analytics:'التقارير والتحليلات',operators:'مديرو المنصة',roadmap:'الإدارة المتقدمة'};
     document.getElementById('page-title').textContent=titles[view]||'إدارة وثاق';
-    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='qr-factory')await renderQrFactory();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
+    if(view==='overview')await renderOverview();else if(view==='merchants')await renderMerchants();else if(view==='merchant-create')await renderMerchantCreate();else if(view==='users')await renderUsers();else if(view==='staff')await renderStaff();else if(view==='loyalty')await renderLoyalty();else if(view==='qr-factory')await renderQrFactory();else if(view==='audit')await renderAudit();else if(view==='analytics')await renderAnalytics();else if(view==='operators')await renderOperators();else renderRoadmap();
   }
   async function boot(){
     if(!createClient||!cfg?.url||!cfg?.key){root.innerHTML='<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام. راجع app/config.js.</p></section></main>';return;}
