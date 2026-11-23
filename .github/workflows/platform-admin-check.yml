@@ -61,6 +61,9 @@ jobs:
           test -s supabase/migrations/20261123153000_permission_aware_merchant_status_guard.sql
           test -s supabase/migrations/20261123160000_enforce_loyalty_program_date_windows.sql
           test -s supabase/migrations/20261124010000_secure_bulk_qr_batches.sql
+          test -s supabase/migrations/20261124013000_qr_batch_stable_serials.sql
+          test -s supabase/migrations/20261124020000_hide_qr_claim_definer.sql
+          test -s supabase/migrations/20261124023000_grant_qr_admin_wrappers.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
