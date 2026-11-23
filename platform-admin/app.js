@@ -269,6 +269,7 @@
       host.innerHTML=
         '<section class="panel"><div class="panel-head"><div><h2>إنشاء دفعة باركودات</h2><div class="panel-subtitle">رموز QR فريدة من 128 بت، مرتبطة ببرنامج نشط وتُصرف مرة واحدة فقط.</div></div></div>'+
         '<form id="qr-batch-form" class="qr-form">'+
+        (programs.length?'':'<div class="notice warn qr-empty">لا توجد حالياً برامج ولاء نشطة تابعة لمتجر نشط. اعتمد متجراً وأنشئ برنامج ولاء وفعّله أولاً حتى تتمكن من إصدار الباركودات.</div>')+
         '<label>برنامج الولاء<select id="qr-program" class="search-input" required><option value="">اختر برنامجاً نشطاً</option>'+options+'</select></label>'+
         '<label>عدد الباركودات<input id="qr-quantity" class="search-input" type="number" min="1" max="1000" value="100" required></label>'+
         '<label>قيمة كل باركود<input id="qr-amount" class="search-input" type="number" min="1" max="1000000" placeholder="مثلاً 50" required></label>'+
