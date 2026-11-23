@@ -171,3 +171,9 @@ returns jsonb language sql security invoker set search_path=''
 as $$ select private.claim_admin_qr_code($1); $$;
 revoke all on function public.claim_admin_qr_code(text) from public,anon;
 grant execute on function public.claim_admin_qr_code(text) to authenticated;
+
+-- Public SECURITY INVOKER wrappers call these permission-checking private SECURITY DEFINER routines.
+grant execute on function private.admin_create_qr_batch(uuid,uuid,integer,integer,timestamptz) to authenticated;
+grant execute on function private.admin_list_qr_batches(integer) to authenticated;
+grant execute on function private.admin_get_qr_batch_print_data(uuid) to authenticated;
+grant execute on function private.admin_revoke_qr_batch(uuid) to authenticated;
