@@ -83,3 +83,13 @@ Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem con
 - Claim and revoke routines acquire locks in the same batch-then-code order, avoiding a claim/revoke lock inversion under concurrent use.
 
 - When there are no active merchants with active, in-window loyalty programs, the factory shows an explicit empty-state message and disables batch creation.
+
+
+## Super Admin platform merchant creation
+
+- The platform console exposes a dedicated “Create merchant” view to Super Admin only. Ordinary platform operators cannot see or open the view, and the database RPC independently enforces `private.is_platform_admin()`.
+- Creation requires an existing WATHAQ auth user as owner; the console selects from the restricted user-profile directory. It never creates auth identities or passwords.
+- New merchants are always created with `pending` status. Name, slug, ISO alpha-2 country code, timezone, owner existence, and slug uniqueness are validated server-side.
+- The existing `merchant_owner_membership` trigger creates the owner's merchant membership atomically. The RPC writes a `platform.merchant_created` audit event in the same transaction.
+- The public RPC is SECURITY INVOKER; privileged insert logic is isolated in a private SECURITY DEFINER function with an empty search_path, authenticated-user check, and Super Admin check. Direct execution of the private function is revoked from API roles.
+- Runtime verification must include a rollback-only create test and a non-Super-Admin denial test. A real merchant is not seeded as part of testing.
