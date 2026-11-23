@@ -39,6 +39,8 @@ jobs:
           grep -q "rpc('admin_list_merchants'" platform-admin/app.js
           grep -q "rpc('admin_get_loyalty_dashboard'" platform-admin/app.js
           grep -q "rpc('admin_list_platform_audit'" platform-admin/app.js
+          grep -q "rpc('admin_get_analytics_report'" platform-admin/app.js
+          grep -q "data-view=\"analytics\"" platform-admin/app.js
           grep -q "rpc('admin_list_platform_roles'" platform-admin/app.js
           grep -q "rpc('admin_get_my_permissions'" platform-admin/app.js
           grep -q 'function viewAllowed' platform-admin/app.js
@@ -49,6 +51,8 @@ jobs:
           test -s supabase/migrations/20261123120000_platform_operator_rbac_foundation.sql
           test -s supabase/migrations/20261123133100_permission_scoped_admin_operations_retry.sql
           test -s supabase/migrations/20261123140000_admin_permission_context.sql
+          test -s supabase/migrations/20261123143000_admin_status_invoker_wrapper.sql
+          test -s supabase/migrations/20261123150000_platform_analytics_report_rpc.sql
       - name: Package platform admin site
         run: |
           mkdir -p dist
