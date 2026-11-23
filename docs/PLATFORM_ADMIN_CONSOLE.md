@@ -79,3 +79,5 @@ Customer join, check-in QR issuance, redemption QR issuance, and earn/redeem con
 - The existing production alias was intentionally left unchanged until the preview is checked in a real browser session.
 
 - The QR factory loads eligible programs through its own `loyalty.qr.manage`-scoped RPC; it does not require the operator to also have the broader `merchants.read` permission.
+
+- Claim and revoke routines acquire locks in the same batch-then-code order, avoiding a claim/revoke lock inversion under concurrent use.
