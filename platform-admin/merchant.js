@@ -62,8 +62,10 @@
 
     root.querySelector('#merchant-google').addEventListener('click', async event => {
       event.currentTarget.disabled = true;
-      const redirectTo = window.location.origin + '/';
-      const {error} = await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+      // Keep the OAuth callback on the merchant route. The site-wide Site URL is the admin home.
+      const redirectTo = window.location.origin + '/merchant.html';
+      const {error} = await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo,queryParams:{prompt:'select_account'}}});
+      
       if (error) {
         toast('تعذر بدء تسجيل الدخول عبر Google: ' + error.message, true);
         event.currentTarget.disabled = false;
