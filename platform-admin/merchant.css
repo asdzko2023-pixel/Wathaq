@@ -1,0 +1,200 @@
+.merchant-app{min-height:100vh;padding:clamp(14px,3vw,34px);background:radial-gradient(ellipse at 78% 0,#1d3452 0,transparent 38%),var(--admin-bg);color:var(--admin-text)}
+.merchant-shell{width:min(1120px,100%);margin:0 auto}
+.merchant-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 auto 24px;padding:16px 18px;border:1px solid var(--admin-line);border-radius:16px;background:#0e1c2edb}
+.merchant-brand{display:flex;align-items:center;gap:12px}
+.merchant-brand .brand-mark{display:grid;place-items:center;width:46px;height:46px;margin:0;border-radius:13px;background:linear-gradient(145deg,#d9a93e,#85601f);color:#071322;font:700 25px "Reem Kufi",sans-serif}
+.merchant-brand strong{display:block;font:700 20px "Reem Kufi",sans-serif}
+.merchant-brand small{display:block;color:var(--admin-muted);font-size:11px}
+.merchant-user{display:flex;align-items:center;gap:12px;color:var(--admin-muted);font-size:12px}
+.merchant-user [dir=ltr]{direction:ltr}
+.merchant-page-title{margin:0 0 5px;font:700 clamp(23px,4vw,30px) "Reem Kufi",sans-serif}
+.merchant-subtitle{margin:0 0 20px;color:var(--admin-muted);font-size:13px}
+.merchant-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}
+.merchant-store-card{padding:20px;border:1px solid var(--admin-line);border-radius:18px;background:linear-gradient(145deg,#12243a,#0d1a2b);box-shadow:0 14px 35px #0002;min-width:0}
+.merchant-store-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.merchant-store-head h2{margin:0 0 4px;font-size:20px}
+.merchant-store-head .small{color:var(--admin-muted);font-size:11px;overflow-wrap:anywhere}
+.merchant-plan-price{color:var(--admin-gold-soft);font:700 25px "Inter",sans-serif;direction:ltr;white-space:nowrap}
+.merchant-plan-price small{font:500 11px "IBM Plex Sans Arabic",sans-serif;color:var(--admin-muted)}
+.merchant-subscription-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--admin-line);border-bottom:1px solid var(--admin-line);font-size:12px}
+.merchant-limits{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
+.merchant-limits span{padding:7px 9px;border:1px solid var(--admin-line);border-radius:9px;background:#091626;color:#dce6f3;font-size:11px}
+.merchant-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:16px 0}
+.merchant-stat{padding:12px;border:1px solid var(--admin-line);border-radius:12px;background:#0a1727}
+.merchant-stat span{display:block;color:var(--admin-muted);font-size:11px}
+.merchant-stat strong{display:block;margin-top:6px;color:#f6f1e6;font:700 22px "Inter",sans-serif;direction:ltr;text-align:right}
+.merchant-features{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 14px}
+.merchant-features span{padding:6px 8px;border:1px solid #31594f;border-radius:8px;background:#102d2a;color:#aee7d8;font-size:10px}
+.merchant-features.planned span{border-style:dashed;border-color:var(--admin-line);background:#0a1727;color:var(--admin-muted)}
+.merchant-section-label{margin:16px 0 7px;color:var(--admin-muted);font-size:11px}
+.merchant-csv-action{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:17px;padding:13px;border:1px solid #735c2a;border-radius:12px;background:#2b2415}
+.merchant-csv-action p{margin:0;color:#e5d7ad;font-size:12px;line-height:1.7}
+.merchant-csv-action .primary-btn{white-space:nowrap}
+.merchant-note{margin:16px 0 0;padding:12px 14px;border:1px solid var(--admin-line);border-radius:11px;background:#0a1727;color:var(--admin-muted);font-size:11px;line-height:1.9}
+.merchant-login-card{width:min(440px,100%);margin:8vh auto;padding:28px;border:1px solid var(--admin-line);border-radius:18px;background:#0e1c2e;box-shadow:0 24px 70px #0007}
+.merchant-login-card h1{margin:12px 0 5px;font:700 24px "Reem Kufi",sans-serif}
+.merchant-login-card p{color:var(--admin-muted);font-size:12px;line-height:1.8}
+.merchant-login-card form{display:grid;gap:12px;margin:20px 0}
+.merchant-login-card label{display:grid;gap:7px;color:var(--admin-muted);font-size:12px}
+.merchant-login-card .search-input{width:100%}
+.merchant-login-actions{display:flex;flex-wrap:wrap;gap:9px}
+.merchant-empty{padding:20px;border:1px dashed var(--admin-line);border-radius:12px;color:var(--admin-muted);font-size:13px;line-height:1.8}
+.merchant-toast{position:fixed;bottom:20px;inset-inline-start:20px;z-index:30;max-width:min(90vw,520px);padding:12px 16px;border:1px solid var(--admin-line);border-radius:12px;background:#15263b;color:var(--admin-text);box-shadow:0 12px 35px #0008;font-size:12px}
+.merchant-toast.error{border-color:#824c49;color:#ffd4ce}
+@media(max-width:600px){
+  .merchant-app{padding:12px}
+  .merchant-topbar{align-items:flex-start;padding:13px}
+  .merchant-user{align-items:flex-end;flex-direction:column;gap:7px}
+  .merchant-store-card{padding:15px}
+  .merchant-store-head{flex-direction:column}
+  .merchant-csv-action{align-items:stretch;flex-direction:column}
+  .merchant-csv-action .primary-btn{width:100%}
+}
+
+.merchant-advanced-action{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:13px;border:1px solid #526b9b;border-radius:12px;background:#14243d}
+.merchant-advanced-action p{margin:0;color:#d1def4;font-size:12px;line-height:1.8}
+.merchant-advanced-panel{margin-top:12px;padding:14px;border:1px solid var(--admin-line);border-radius:13px;background:#0a1727;overflow:hidden}
+.merchant-advanced-controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.merchant-advanced-controls label{display:grid;gap:5px;color:var(--admin-muted);font-size:11px}
+.merchant-advanced-controls .search-input{min-width:135px}
+.merchant-advanced-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin:10px 0 16px}
+.merchant-advanced-panel .table-wrap{margin:8px 0 15px;overflow:auto}
+.merchant-advanced-panel table{min-width:580px}
+.merchant-advanced-panel th,.merchant-advanced-panel td{font-size:11px;white-space:nowrap}
+.merchant-advanced-panel .merchant-section-label{margin-top:15px}
+@media(max-width:600px){
+ .merchant-advanced-action{align-items:stretch;flex-direction:column}
+ .merchant-advanced-action .primary-btn{width:100%}
+ .merchant-advanced-panel{padding:10px}
+ .merchant-advanced-controls{align-items:stretch;flex-direction:column}
+ .merchant-advanced-controls .search-input{width:100%}
+ .merchant-advanced-controls button{width:100%}
+}
+
+/* Canonical WATHAQ merchant palette. Presentation-only; no application behavior. */
+html, body {
+  min-height: 100%;
+  background: #081322 !important;
+  background-color: #081322 !important;
+  color: #f6f1e6 !important;
+  color-scheme: dark !important;
+}
+body {
+  background-image: radial-gradient(ellipse at 78% 0%, #1d3452 0%, #081322 58%) !important;
+  background-attachment: fixed !important;
+}
+#merchant-app.merchant-app {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 78% 0%, #1d3452 0%, #081322 58%) !important;
+  background-color: #081322 !important;
+  color: #f6f1e6 !important;
+}
+#merchant-app .merchant-topbar {
+  background: #132944 !important;
+  border-color: #49617f !important;
+  color: #fff8e8 !important;
+}
+#merchant-app .merchant-login-card,
+#merchant-app .merchant-store-card,
+#merchant-app .merchant-advanced-panel,
+#merchant-app .merchant-note {
+  background: #102139 !important;
+  background-image: none !important;
+  border-color: #49617f !important;
+  color: #f6f1e6 !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,.32) !important;
+}
+#merchant-app .merchant-page-title,
+#merchant-app .merchant-login-card h1,
+#merchant-app .merchant-store-head h2,
+#merchant-app .merchant-brand strong,
+#merchant-app .merchant-stat strong,
+#merchant-app .merchant-plan-price {
+  color: #f5dc98 !important;
+}
+#merchant-app .merchant-subtitle,
+#merchant-app .merchant-login-card p,
+#merchant-app .merchant-login-card label,
+#merchant-app .merchant-user,
+#merchant-app .merchant-brand small,
+#merchant-app .merchant-store-head .small,
+#merchant-app .merchant-section-label,
+#merchant-app .merchant-stat span,
+#merchant-app .merchant-note,
+#merchant-app .small,
+#merchant-app .muted {
+  color: #cbd7e6 !important;
+}
+#merchant-app .merchant-stat,
+#merchant-app .merchant-limits span,
+#merchant-app .merchant-features.planned span {
+  background: #0a192b !important;
+  border-color: #405a78 !important;
+  color: #f0f4fa !important;
+}
+#merchant-app .merchant-features:not(.planned) span {
+  background: #123b35 !important;
+  border-color: #397b70 !important;
+  color: #c5f4e9 !important;
+}
+#merchant-app .merchant-csv-action {
+  background: #382e18 !important;
+  border-color: #a88432 !important;
+}
+#merchant-app .merchant-csv-action p { color: #fff1c9 !important; }
+#merchant-app .merchant-advanced-action {
+  background: #172f50 !important;
+  border-color: #5d80b2 !important;
+}
+#merchant-app .merchant-advanced-action p { color: #e7effb !important; }
+#merchant-app input,
+#merchant-app select,
+#merchant-app textarea,
+#merchant-app .search-input {
+  background: #091729 !important;
+  color: #fff8e8 !important;
+  border: 1px solid #506987 !important;
+}
+#merchant-app input::placeholder,
+#merchant-app textarea::placeholder { color: #b5c3d6 !important; opacity: 1; }
+#merchant-app .primary-btn {
+  background: linear-gradient(135deg, #f6e3ad, #d9a93e) !important;
+  color: #101b2b !important;
+  border: 1px solid #f0d58a !important;
+  font-weight: 700 !important;
+}
+#merchant-app .ghost-btn {
+  background: #203956 !important;
+  color: #fff8e8 !important;
+  border: 1px solid #5a7696 !important;
+}
+#merchant-app .status.active {
+  background: #123f39 !important;
+  color: #c5f4e9 !important;
+}
+#merchant-app .status.pending {
+  background: #493813 !important;
+  color: #ffe8ad !important;
+}
+#merchant-app table th { color: #e3ebf5 !important; }
+#merchant-app table td { color: #fff8e8 !important; }
+#merchant-app table th,
+#merchant-app table td { border-color: #3b526e !important; }
+#merchant-app .merchant-toast {
+  background: #14263d !important;
+  color: #fff8e8 !important;
+  border-color: #55708f !important;
+}
+#merchant-app .merchant-toast.error {
+  background: #431f22 !important;
+  color: #ffe0dc !important;
+}
+#merchant-app button:focus-visible,
+#merchant-app input:focus-visible,
+#merchant-app select:focus-visible {
+  outline: 3px solid #f5dc98 !important;
+  outline-offset: 2px;
+}
+
+/* Theme mode for standalone merchant portal */
+html[data-theme="dark"] { color-scheme: dark; }
