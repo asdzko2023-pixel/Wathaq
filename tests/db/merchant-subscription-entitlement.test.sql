@@ -220,7 +220,7 @@ begin
 end $$;
 
 -- The QR usage accumulator must remain bigint when monthly totals exceed int32.
-do $
+do $qr$
 declare
   v_qr bigint;
 begin
@@ -229,6 +229,6 @@ begin
   if v_qr <> 2147485000 then
     raise exception 'QR usage bigint accumulation returned an incorrect total: %', v_qr;
   end if;
-end $
+end $qr$
 
 select 'subscription entitlement integration tests passed' as result;
