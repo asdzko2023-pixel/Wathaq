@@ -96,24 +96,39 @@ begin
     group by ll.kind
     order by count(*) desc, ll.kind::text
   ),
+  program_accounts as (
+    select
+      la.program_id,
+      count(*)::bigint as accounts_total,
+      count(*) filter (where la.joined_at >= v_start_at)::bigint as new_accounts
+    from public.loyalty_accounts la
+    where la.merchant_id = p_merchant_id
+    group by la.program_id
+  ),
+  program_ledger as (
+    select
+      ll.program_id,
+      count(*)::bigint as ledger_entries,
+      coalesce(sum(ll.points_delta) filter (where ll.kind = 'earn'),0)::bigint as points_earned,
+      coalesce(sum(-ll.points_delta) filter (where ll.kind = 'redeem'),0)::bigint as points_redeemed
+    from ledger_period ll
+    group by ll.program_id
+  ),
   program_activity as (
     select
       lp.id,
       lp.name,
       lp.kind::text as program_kind,
       lp.state::text as state,
-      count(distinct la.id)::bigint as accounts_total,
-      count(distinct la.id) filter (where la.joined_at >= v_start_at)::bigint as new_accounts,
-      count(ll.id)::bigint as ledger_entries,
-      coalesce(sum(ll.points_delta) filter (where ll.kind = 'earn'),0)::bigint as points_earned,
-      coalesce(sum(-ll.points_delta) filter (where ll.kind = 'redeem'),0)::bigint as points_redeemed
+      coalesce(pa.accounts_total,0)::bigint as accounts_total,
+      coalesce(pa.new_accounts,0)::bigint as new_accounts,
+      coalesce(pl.ledger_entries,0)::bigint as ledger_entries,
+      coalesce(pl.points_earned,0)::bigint as points_earned,
+      coalesce(pl.points_redeemed,0)::bigint as points_redeemed
     from public.loyalty_programs lp
-    left join public.loyalty_accounts la
-      on la.program_id = lp.id and la.merchant_id = p_merchant_id
-    left join ledger_period ll
-      on ll.program_id = lp.id
+    left join program_accounts pa on pa.program_id = lp.id
+    left join program_ledger pl on pl.program_id = lp.id
     where lp.merchant_id = p_merchant_id
-    group by lp.id,lp.name,lp.kind,lp.state
   ),
   summary as (
     select
