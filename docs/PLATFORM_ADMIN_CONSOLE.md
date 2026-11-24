@@ -83,7 +83,7 @@ The prices are administrative monthly reference prices. There is no payment gate
 
 ### Subscription administration and enforcement
 
-- The Super Admin can assign a plan to an existing legacy merchant, change/up-or-downgrade a plan, renew for 1–12 months, pause, reactivate an eligible paused subscription, cancel, or record manual payment/complimentary status. The database also exposes an owner-scoped `merchant_get_my_subscriptions` RPC for a future merchant account view; the merchant-facing portal UI is not yet wired to this endpoint.
+- The Super Admin can assign a plan to an existing legacy merchant, change/up-or-downgrade a plan, renew for 1–12 months, pause, reactivate an eligible paused subscription, cancel, or record manual payment/complimentary status. A separate merchant owner portal is now available at `merchant.html`, routed only after `merchant_get_my_workspace` confirms that the signed-in user owns at least one merchant. The workspace shows the owner's own merchant, subscription, quota, and aggregate loyalty activity only.
 - Each change writes both a subscription-history row and a platform audit event.
 - Direct API access to plan, subscription, and history tables is revoked from anon/authenticated clients. The console reads and mutates through Super Admin-checked RPCs.
 - Database triggers enforce active-program count, active employee-seat count (the owner membership is excluded), and monthly QR issue quantity for merchants with active subscriptions. Per-merchant advisory locks serialize capacity-consuming changes. Existing merchants without an assigned subscription are grandfathered until an administrator assigns a plan.
@@ -128,3 +128,16 @@ A rollback-only authenticated-database-role test created a temporary merchant ac
 - Preview deployment for this feature is READY at https://wathaq-platform-admin-4ldsrhcks-novexa14.vercel.app (commit f0cb21f). The production alias remains unchanged. A live browser sign-in and form submission check is still pending.
 - GitHub Actions validation passed: https://github.com/asdzko2023-pixel/Wathaq/actions/runs/45277836569.
 - Owner selection now includes a server-side search by profile name or UUID to work within the profile RPC's 100-row page limit.
+
+
+## Growth plan CSV export and merchant workspace (2026-11-24)
+
+- Added the separate Arabic merchant owner portal at `platform-admin/merchant.html`. Platform-admin sign-in now routes a non-admin to this page only when the database owner-scoped workspace RPC returns at least one merchant; it no longer trusts editable `user_metadata` as a merchant authorization signal.
+- `merchant_get_my_workspace` returns only merchants where `merchants.owner_user_id = auth.uid()`. It returns plan/expiry/quotas and aggregate counts only; it does not return customer identities, contact fields, or row-level customer records.
+- Activated `csv_export` for WATHAQ GROWTH ($19) only. The other planned Growth features (campaigns and program branding), all Business extras, and all Enterprise extras remain clearly marked as planned and are not enabled.
+- The CSV export RPC checks the authenticated owner, active merchant status, current active subscription dates, and the `csv_export` entitlement in the subscribed plan's `live_features` JSON. Changing a browser-side button or calling the RPC for a different merchant does not bypass these checks.
+- Export contains an opaque customer UUID reference, program name/type, current and lifetime points/stamps balances, and join/last-activity timestamps. It deliberately excludes customer name, email, and phone.
+- Export is paginated in stable `joined_at, account_id` order using a snapshot timestamp. Each non-empty page writes an audit event containing only the merchant, count, page size, and snapshot metadata. Page size is capped at 1,000 and the browser caps a single file at 50,000 rows.
+- Both public RPCs are SECURITY INVOKER wrappers around private SECURITY DEFINER implementations with an empty `search_path`, explicit owner checks, and authenticated-only execute grants. Direct access to subscription/plan tables remains revoked.
+- Rollback-only SQL tests passed for owner-scoped workspace, Growth CSV pagination, two-page audit logging, non-owner denial, Starter-plan denial, and paused-subscription denial. All temporary subscription/program/account/audit rows were rolled back.
+- GitHub Actions validates both JavaScript files, portal asset presence, RPC wiring, and migration presence. A real merchant-inbox login and browser download check remain outstanding; production alias is unchanged.
