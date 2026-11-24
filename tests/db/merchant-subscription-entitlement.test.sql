@@ -219,6 +219,36 @@ begin
   end if;
 end $$;
 
+-- Reassigning an active staff member must not bypass the destination merchant's quota.
+insert into public.merchants values
+('10000000-0000-0000-0000-000000000006','20000000-0000-0000-0000-000000000006');
+insert into public.merchant_subscriptions
+(id, merchant_id, plan_key, status, starts_at, ends_at)
+values
+('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000006','starter_9','active',now()-interval '1 day',now()+interval '1 month');
+insert into public.merchant_members values
+('10000000-0000-0000-0000-000000000006','40000000-0000-0000-0000-000000000007',true),
+('10000000-0000-0000-0000-000000000006','40000000-0000-0000-0000-000000000008',true);
+
+do $reassign$
+begin
+  begin
+    update public.merchant_members
+       set merchant_id='10000000-0000-0000-0000-000000000006'
+     where merchant_id='10000000-0000-0000-0000-000000000004'
+       and user_id='40000000-0000-0000-0000-000000000004';
+    raise exception 'staff reassignment bypassed the destination quota' using errcode = 'P0002';
+  exception when sqlstate 'P0001' then null;
+  end;
+  if exists (
+    select 1 from public.merchant_members
+     where merchant_id='10000000-0000-0000-0000-000000000006'
+       and user_id='40000000-0000-0000-0000-000000000004'
+  ) then
+    raise exception 'failed staff reassignment changed the member merchant';
+  end if;
+end $reassign$;
+
 -- The QR usage accumulator must remain bigint when monthly totals exceed int32.
 do $qr$
 declare
