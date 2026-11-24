@@ -11,7 +11,17 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./tokens.css">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./merchant.css?v=wathaq-merchant-contrast-3">
+  <link rel="stylesheet" href="./merchant.css?v=merchant-palette-4">
+<style id="merchant-theme-fallback">
+    html, body { background:#081322 !important; background-color:#081322 !important; color:#f6f1e6 !important; color-scheme:dark !important; }
+    body { background-image:radial-gradient(ellipse at 78% 0%,#1d3452 0%,#081322 58%) !important; background-attachment:fixed !important; }
+    #merchant-app.merchant-app { min-height:100vh; background:radial-gradient(ellipse at 78% 0%,#1d3452 0%,#081322 58%) !important; background-color:#081322 !important; color:#f6f1e6 !important; }
+    #merchant-app .merchant-login-card, #merchant-app .merchant-store-card, #merchant-app .merchant-advanced-panel, #merchant-app .merchant-note { background:#102139 !important; color:#f6f1e6 !important; border-color:#49617f !important; }
+    #merchant-app h1, #merchant-app h2, #merchant-app .merchant-brand strong, #merchant-app .merchant-plan-price, #merchant-app .merchant-stat strong { color:#f5dc98 !important; }
+    #merchant-app p, #merchant-app label, #merchant-app small, #merchant-app .small, #merchant-app .muted, #merchant-app .merchant-section-label { color:#cbd7e6 !important; }
+    #merchant-app .primary-btn { background:linear-gradient(135deg,#f6e3ad,#d9a93e) !important; color:#101b2b !important; }
+    #merchant-app .ghost-btn { background:#203956 !important; color:#fff8e8 !important; border:1px solid #5a7696 !important; }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script defer src="./merchant.js"></script>
