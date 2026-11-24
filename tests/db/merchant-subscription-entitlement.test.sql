@@ -259,6 +259,6 @@ begin
   if v_qr <> 2147485000 then
     raise exception 'QR usage bigint accumulation returned an incorrect total: %', v_qr;
   end if;
-end $qr$
+end $qr$;
 
 select 'subscription entitlement integration tests passed' as result;
