@@ -1,0 +1,52 @@
+.merchant-app{min-height:100vh;padding:clamp(14px,3vw,34px);background:radial-gradient(ellipse at 78% 0,#1d3452 0,transparent 38%),var(--admin-bg);color:var(--admin-text)}
+.merchant-shell{width:min(1120px,100%);margin:0 auto}
+.merchant-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 auto 24px;padding:16px 18px;border:1px solid var(--admin-line);border-radius:16px;background:#0e1c2edb}
+.merchant-brand{display:flex;align-items:center;gap:12px}
+.merchant-brand .brand-mark{display:grid;place-items:center;width:46px;height:46px;margin:0;border-radius:13px;background:linear-gradient(145deg,#d9a93e,#85601f);color:#071322;font:700 25px "Reem Kufi",sans-serif}
+.merchant-brand strong{display:block;font:700 20px "Reem Kufi",sans-serif}
+.merchant-brand small{display:block;color:var(--admin-muted);font-size:11px}
+.merchant-user{display:flex;align-items:center;gap:12px;color:var(--admin-muted);font-size:12px}
+.merchant-user [dir=ltr]{direction:ltr}
+.merchant-page-title{margin:0 0 5px;font:700 clamp(23px,4vw,30px) "Reem Kufi",sans-serif}
+.merchant-subtitle{margin:0 0 20px;color:var(--admin-muted);font-size:13px}
+.merchant-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}
+.merchant-store-card{padding:20px;border:1px solid var(--admin-line);border-radius:18px;background:linear-gradient(145deg,#12243a,#0d1a2b);box-shadow:0 14px 35px #0002;min-width:0}
+.merchant-store-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.merchant-store-head h2{margin:0 0 4px;font-size:20px}
+.merchant-store-head .small{color:var(--admin-muted);font-size:11px;overflow-wrap:anywhere}
+.merchant-plan-price{color:var(--admin-gold-soft);font:700 25px "Inter",sans-serif;direction:ltr;white-space:nowrap}
+.merchant-plan-price small{font:500 11px "IBM Plex Sans Arabic",sans-serif;color:var(--admin-muted)}
+.merchant-subscription-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--admin-line);border-bottom:1px solid var(--admin-line);font-size:12px}
+.merchant-limits{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
+.merchant-limits span{padding:7px 9px;border:1px solid var(--admin-line);border-radius:9px;background:#091626;color:#dce6f3;font-size:11px}
+.merchant-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:16px 0}
+.merchant-stat{padding:12px;border:1px solid var(--admin-line);border-radius:12px;background:#0a1727}
+.merchant-stat span{display:block;color:var(--admin-muted);font-size:11px}
+.merchant-stat strong{display:block;margin-top:6px;color:#f6f1e6;font:700 22px "Inter",sans-serif;direction:ltr;text-align:right}
+.merchant-features{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 14px}
+.merchant-features span{padding:6px 8px;border:1px solid #31594f;border-radius:8px;background:#102d2a;color:#aee7d8;font-size:10px}
+.merchant-features.planned span{border-style:dashed;border-color:var(--admin-line);background:#0a1727;color:var(--admin-muted)}
+.merchant-section-label{margin:16px 0 7px;color:var(--admin-muted);font-size:11px}
+.merchant-csv-action{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:17px;padding:13px;border:1px solid #735c2a;border-radius:12px;background:#2b2415}
+.merchant-csv-action p{margin:0;color:#e5d7ad;font-size:12px;line-height:1.7}
+.merchant-csv-action .primary-btn{white-space:nowrap}
+.merchant-note{margin:16px 0 0;padding:12px 14px;border:1px solid var(--admin-line);border-radius:11px;background:#0a1727;color:var(--admin-muted);font-size:11px;line-height:1.9}
+.merchant-login-card{width:min(440px,100%);margin:8vh auto;padding:28px;border:1px solid var(--admin-line);border-radius:18px;background:#0e1c2e;box-shadow:0 24px 70px #0007}
+.merchant-login-card h1{margin:12px 0 5px;font:700 24px "Reem Kufi",sans-serif}
+.merchant-login-card p{color:var(--admin-muted);font-size:12px;line-height:1.8}
+.merchant-login-card form{display:grid;gap:12px;margin:20px 0}
+.merchant-login-card label{display:grid;gap:7px;color:var(--admin-muted);font-size:12px}
+.merchant-login-card .search-input{width:100%}
+.merchant-login-actions{display:flex;flex-wrap:wrap;gap:9px}
+.merchant-empty{padding:20px;border:1px dashed var(--admin-line);border-radius:12px;color:var(--admin-muted);font-size:13px;line-height:1.8}
+.merchant-toast{position:fixed;bottom:20px;inset-inline-start:20px;z-index:30;max-width:min(90vw,520px);padding:12px 16px;border:1px solid var(--admin-line);border-radius:12px;background:#15263b;color:var(--admin-text);box-shadow:0 12px 35px #0008;font-size:12px}
+.merchant-toast.error{border-color:#824c49;color:#ffd4ce}
+@media(max-width:600px){
+  .merchant-app{padding:12px}
+  .merchant-topbar{align-items:flex-start;padding:13px}
+  .merchant-user{align-items:flex-end;flex-direction:column;gap:7px}
+  .merchant-store-card{padding:15px}
+  .merchant-store-head{flex-direction:column}
+  .merchant-csv-action{align-items:stretch;flex-direction:column}
+  .merchant-csv-action .primary-btn{width:100%}
+}
