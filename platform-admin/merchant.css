@@ -190,3 +190,142 @@ html:has(#merchant-app), body:has(#merchant-app) {
   outline: 3px solid #f0d58a !important;
   outline-offset: 2px;
 }
+
+
+/* WATHAQ merchant portal — enforced high-contrast palette.
+   This page is standalone; scope visual tokens and components to its root. */
+:root {
+  color-scheme: dark !important;
+  --admin-bg: #081322 !important;
+  --admin-panel: #102139 !important;
+  --admin-panel-2: #172d48 !important;
+  --admin-line: #38516f !important;
+  --admin-text: #f8f5ed !important;
+  --admin-muted: #c2cfdf !important;
+  --admin-gold: #d9a93e !important;
+  --admin-gold-soft: #f5dc98 !important;
+  --color-bg: #081322 !important;
+  --color-surface: #102139 !important;
+  --color-surface-muted: #172d48 !important;
+  --color-text: #f8f5ed !important;
+  --color-text-muted: #c2cfdf !important;
+}
+html, body {
+  min-height: 100%;
+  background: #081322 !important;
+  background-color: #081322 !important;
+  color: #f8f5ed !important;
+  color-scheme: dark !important;
+}
+body {
+  background-image: radial-gradient(ellipse at 78% 0%, #203c5e 0%, #081322 55%) !important;
+  background-attachment: fixed !important;
+}
+#merchant-app.merchant-app {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 78% 0%, #203c5e 0%, #081322 58%) !important;
+  color: #f8f5ed !important;
+}
+#merchant-app .merchant-topbar,
+#merchant-app .merchant-store-card,
+#merchant-app .merchant-login-card,
+#merchant-app .merchant-note,
+#merchant-app .merchant-advanced-panel {
+  background: #102139 !important;
+  border: 1px solid #38516f !important;
+  color: #f8f5ed !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,.32) !important;
+}
+#merchant-app .merchant-topbar { background: #132944 !important; }
+#merchant-app h1,
+#merchant-app h2,
+#merchant-app h3,
+#merchant-app strong,
+#merchant-app b { color: #fff8e8 !important; }
+#merchant-app p,
+#merchant-app label,
+#merchant-app .small,
+#merchant-app .muted,
+#merchant-app .merchant-subtitle,
+#merchant-app .merchant-section-label,
+#merchant-app .merchant-user,
+#merchant-app .merchant-store-head .small,
+#merchant-app .merchant-login-card p { color: #cbd7e6 !important; }
+#merchant-app .merchant-plan-price,
+#merchant-app .merchant-stat strong { color: #f5dc98 !important; }
+#merchant-app .merchant-limits span,
+#merchant-app .merchant-stat,
+#merchant-app .merchant-features.planned span {
+  background: #0a192b !important;
+  border: 1px solid #3b5472 !important;
+  color: #eef4fb !important;
+}
+#merchant-app .merchant-features span {
+  background: #123b35 !important;
+  border-color: #397b70 !important;
+  color: #c5f4e9 !important;
+}
+#merchant-app .merchant-csv-action {
+  background: #382e18 !important;
+  border-color: #a88432 !important;
+}
+#merchant-app .merchant-csv-action p { color: #fff1c9 !important; }
+#merchant-app .merchant-advanced-action {
+  background: #172f50 !important;
+  border-color: #5d80b2 !important;
+}
+#merchant-app .merchant-advanced-action p { color: #e7effb !important; }
+#merchant-app input,
+#merchant-app select,
+#merchant-app textarea,
+#merchant-app .search-input {
+  background: #091729 !important;
+  color: #fff8e8 !important;
+  border: 1px solid #506987 !important;
+}
+#merchant-app input::placeholder,
+#merchant-app textarea::placeholder { color: #b5c3d6 !important; opacity: 1; }
+#merchant-app .primary-btn {
+  background: linear-gradient(135deg, #f6e3ad 0%, #d9a93e 100%) !important;
+  color: #101b2b !important;
+  border: 1px solid #f0d58a !important;
+  font-weight: 700 !important;
+}
+#merchant-app .ghost-btn {
+  background: #203956 !important;
+  color: #fff8e8 !important;
+  border: 1px solid #5a7696 !important;
+}
+#merchant-app .status.active {
+  background: #123f39 !important;
+  color: #c5f4e9 !important;
+}
+#merchant-app .status.pending {
+  background: #493813 !important;
+  color: #ffe8ad !important;
+}
+#merchant-app .merchant-toast {
+  background: #14263d !important;
+  color: #fff8e8 !important;
+  border-color: #55708f !important;
+}
+#merchant-app .merchant-toast.error {
+  background: #431f22 !important;
+  color: #ffe0dc !important;
+}
+#merchant-app table th { color: #e3ebf5 !important; }
+#merchant-app table td { color: #fff8e8 !important; }
+#merchant-app table th,
+#merchant-app table td { border-color: #3b526e !important; }
+#merchant-app button:focus-visible,
+#merchant-app input:focus-visible,
+#merchant-app select:focus-visible {
+  outline: 3px solid #f5dc98 !important;
+  outline-offset: 2px;
+}
+@media (prefers-color-scheme: light) {
+  html, body, #merchant-app.merchant-app {
+    background-color: #081322 !important;
+    color: #f8f5ed !important;
+  }
+}
