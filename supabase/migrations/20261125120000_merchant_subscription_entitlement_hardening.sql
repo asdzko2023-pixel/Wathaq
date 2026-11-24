@@ -87,7 +87,7 @@ begin
     end if;
   elsif tg_table_schema = 'private' and tg_table_name = 'wathaq_qr_batches' then
     v_period_start := pg_catalog.date_trunc('month', now() at time zone 'UTC') at time zone 'UTC';
-    select coalesce(sum(b.quantity),0)::integer into v_used
+    select coalesce(sum(b.quantity),0)::bigint into v_used
       from private.wathaq_qr_batches b
      where b.merchant_id = new.merchant_id
        and b.created_at >= v_period_start;
