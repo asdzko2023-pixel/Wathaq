@@ -1,0 +1,44 @@
+name: WATHAQ Subscription Entitlement SQL Tests
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261125120000_merchant_subscription_entitlement_hardening.sql'
+      - 'tests/db/merchant-subscription-entitlement.test.sql'
+      - '.github/workflows/subscription-entitlement-sql-test.yml'
+  push:
+    branches: [fix/merchant-subscription-entitlements]
+    paths:
+      - 'supabase/migrations/20261125120000_merchant_subscription_entitlement_hardening.sql'
+      - 'tests/db/merchant-subscription-entitlement.test.sql'
+      - '.github/workflows/subscription-entitlement-sql-test.yml'
+jobs:
+  postgres-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wathaq_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d wathaq_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Run migration and entitlement integration tests
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: wathaq_test
+        run: psql -v ON_ERROR_STOP=1 -f tests/db/merchant-subscription-entitlement.test.sql
