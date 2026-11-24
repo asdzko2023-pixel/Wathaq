@@ -141,3 +141,13 @@ A rollback-only authenticated-database-role test created a temporary merchant ac
 - Both public RPCs are SECURITY INVOKER wrappers around private SECURITY DEFINER implementations with an empty `search_path`, explicit owner checks, and authenticated-only execute grants. Direct access to subscription/plan tables remains revoked.
 - Rollback-only SQL tests passed for owner-scoped workspace, Growth CSV pagination, two-page audit logging, non-owner denial, Starter-plan denial, and paused-subscription denial. All temporary subscription/program/account/audit rows were rolled back.
 - GitHub Actions validates both JavaScript files, portal asset presence, RPC wiring, and migration presence. A real merchant-inbox login and browser download check remain outstanding; production alias is unchanged.
+
+
+## Business plan advanced analytics (2026-11-24)
+
+- Activated `advanced_analytics` in the live entitlement list for WATHAQ BUSINESS ($39) only. Growth, Starter, and Enterprise entitlement sets were not changed by this feature release; customer segments and multi-branch reports remain planned for Business.
+- Added the owner-scoped `merchant_get_advanced_analytics` RPC. It requires merchant ownership, active merchant status, an active and current subscription, and `advanced_analytics` in the assigned plan's database-backed live feature list.
+- Supports 7–90-day reporting in the merchant's configured timezone. It returns daily ledger trends, earned/redeemed point totals, new/active account counts, ledger totals by kind, and the top 10 loyalty programs by aggregated activity.
+- The RPC returns aggregates only; no customer names, emails, phone numbers, customer UUIDs, or account-level records are exposed. A report-view audit event is written with the selected reporting period.
+- Account totals and ledger totals are pre-aggregated separately per program to avoid row multiplication when multiple loyalty accounts and ledger events exist in the same program.
+- A rollback-only authenticated-role test passed with two accounts and three ledger events, verifying correct non-multiplied totals, 30 daily trend rows, top-program aggregation, non-owner denial, Growth-plan denial, paused-subscription denial, and audit logging. All fixture data and audit events were rolled back.
