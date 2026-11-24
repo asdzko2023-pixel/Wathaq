@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 const PROJECT_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const ADMIN_REDIRECT = "https://wathaq-platform-admin.vercel.app/";
+const ADMIN_REDIRECT = "https://wathaq-platform-admin-3saqh7m6u-novexa14.vercel.app/merchant.html";
 const MAX_BODY_BYTES = 16_384;
 
 const corsHeaders = (origin: string) => ({
