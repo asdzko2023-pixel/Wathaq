@@ -50,3 +50,23 @@
   .merchant-csv-action{align-items:stretch;flex-direction:column}
   .merchant-csv-action .primary-btn{width:100%}
 }
+
+.merchant-advanced-action{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:13px;border:1px solid #526b9b;border-radius:12px;background:#14243d}
+.merchant-advanced-action p{margin:0;color:#d1def4;font-size:12px;line-height:1.8}
+.merchant-advanced-panel{margin-top:12px;padding:14px;border:1px solid var(--admin-line);border-radius:13px;background:#0a1727;overflow:hidden}
+.merchant-advanced-controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.merchant-advanced-controls label{display:grid;gap:5px;color:var(--admin-muted);font-size:11px}
+.merchant-advanced-controls .search-input{min-width:135px}
+.merchant-advanced-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin:10px 0 16px}
+.merchant-advanced-panel .table-wrap{margin:8px 0 15px;overflow:auto}
+.merchant-advanced-panel table{min-width:580px}
+.merchant-advanced-panel th,.merchant-advanced-panel td{font-size:11px;white-space:nowrap}
+.merchant-advanced-panel .merchant-section-label{margin-top:15px}
+@media(max-width:600px){
+ .merchant-advanced-action{align-items:stretch;flex-direction:column}
+ .merchant-advanced-action .primary-btn{width:100%}
+ .merchant-advanced-panel{padding:10px}
+ .merchant-advanced-controls{align-items:stretch;flex-direction:column}
+ .merchant-advanced-controls .search-input{width:100%}
+ .merchant-advanced-controls button{width:100%}
+}
