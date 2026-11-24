@@ -52,6 +52,7 @@ jobs:
           grep -q "rpc('admin_list_subscription_history'" platform-admin/app.js
           grep -q "rpc('merchant_get_my_workspace'" platform-admin/app.js
           grep -q "merchant_export_loyalty_accounts" platform-admin/merchant.js
+          grep -q "merchant_get_advanced_analytics" platform-admin/merchant.js
           grep -q "csv_export" platform-admin/merchant.js
           grep -q 'data-view="merchant-create"' platform-admin/app.js
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
@@ -96,6 +97,7 @@ jobs:
           test -s supabase/migrations/20261124070000_exclude_owner_from_staff_seat_limit.sql
           test -s supabase/migrations/20261124080000_merchant_owner_subscription_read_rpc.sql
           test -s supabase/migrations/20261124090000_growth_csv_export_and_merchant_workspace.sql
+          test -s supabase/migrations/20261124100000_business_advanced_merchant_analytics.sql
           test -s supabase/functions/platform-create-merchant-account/deno.json
           test -s supabase/functions/platform-create-merchant-account/index.ts
           grep -q "auth.admin.inviteUserByEmail" supabase/functions/platform-create-merchant-account/index.ts
