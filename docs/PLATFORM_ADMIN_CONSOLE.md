@@ -145,9 +145,10 @@ A rollback-only authenticated-database-role test created a temporary merchant ac
 
 ## Business plan advanced analytics (2026-11-24)
 
-- Activated `advanced_analytics` in the live entitlement list for WATHAQ BUSINESS ($39) only. Growth, Starter, and Enterprise entitlement sets were not changed by this feature release; customer segments and multi-branch reports remain planned for Business.
+- Activated `advanced_analytics` and aggregate `customer_segments` insights in the live entitlement list for WATHAQ BUSINESS ($39) only. Growth, Starter, and Enterprise entitlement sets were not changed by this feature release; multi-branch reports remain planned for Business.
 - Added the owner-scoped `merchant_get_advanced_analytics` RPC. It requires merchant ownership, active merchant status, an active and current subscription, and `advanced_analytics` in the assigned plan's database-backed live feature list.
 - Supports 7–90-day reporting in the merchant's configured timezone. It returns daily ledger trends, earned/redeemed point totals, new/active account counts, ledger totals by kind, and the top 10 loyalty programs by aggregated activity.
 - The RPC returns aggregates only; no customer names, emails, phone numbers, customer UUIDs, or account-level records are exposed. A report-view audit event is written with the selected reporting period.
+- Added dynamic customer cohort insights: new joins during the selected period, recently active, at-risk (activity in the 30 days before the selected period), dormant, and the top lifetime-points decile. The cohorts may overlap; the top-decile threshold includes ties. They are aggregate analytics only, not saved customer lists, campaign targets, or messaging audiences.
 - Account totals and ledger totals are pre-aggregated separately per program to avoid row multiplication when multiple loyalty accounts and ledger events exist in the same program.
-- A rollback-only authenticated-role test passed with two accounts and three ledger events, verifying correct non-multiplied totals, 30 daily trend rows, top-program aggregation, non-owner denial, Growth-plan denial, paused-subscription denial, and audit logging. All fixture data and audit events were rolled back.
+- A rollback-only authenticated-role test passed with two accounts and three ledger events, verifying correct non-multiplied totals, 30 daily trend rows, top-program aggregation, customer segment counts, non-owner denial, Growth-plan denial, paused-subscription denial, and audit logging. All fixture data and audit events were rolled back.
