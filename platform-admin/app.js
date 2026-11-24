@@ -654,7 +654,12 @@
     const {data:permissions,error:permissionError}=await sb.rpc('admin_get_my_permissions');
     if(permissionError){renderLogin('تعذر تحميل صلاحيات الحساب. '+permissionError.message);return;}
     currentPermissions=new Set(permissions||[]);
-    if(!isSuperAdmin&&currentPermissions.size===0){if(currentUser.user_metadata?.wathaq_merchant_account===true){renderMerchantWelcome();return;}renderDenied();return;}
+    if(!isSuperAdmin&&currentPermissions.size===0){
+      const {data:merchantStores,error:merchantStoreError}=await sb.rpc('merchant_get_my_workspace');
+      if(merchantStoreError){renderLogin('تعذر التحقق من ملكية المتجر. '+merchantStoreError.message);return;}
+      if(Array.isArray(merchantStores)&&merchantStores.length>0){window.location.replace('./merchant.html');return;}
+      renderDenied();return;
+    }
     shell();
   }
   boot().catch(e=>{root.innerHTML='<main class="center-state"><section class="denied-card"><h1>تعذر فتح لوحة الإدارة</h1><p>'+esc(e.message)+'</p></section></main>';});
