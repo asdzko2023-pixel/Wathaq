@@ -65,6 +65,28 @@ create table private.wathaq_qr_batches (
   created_at timestamptz not null default now()
 );
 
+-- Recreate the three pre-existing production triggers before replacing their function.
+create function private.enforce_merchant_subscription_capacity()
+returns trigger
+language plpgsql
+as $stub$
+begin
+  return new;
+end;
+$stub$;
+
+create trigger loyalty_program_subscription_capacity
+before insert or update on public.loyalty_programs
+for each row execute function private.enforce_merchant_subscription_capacity();
+
+create trigger merchant_member_subscription_capacity
+before insert or update of is_active on public.merchant_members
+for each row execute function private.enforce_merchant_subscription_capacity();
+
+create trigger qr_batch_subscription_capacity
+before insert on private.wathaq_qr_batches
+for each row execute function private.enforce_merchant_subscription_capacity();
+
 \i supabase/migrations/20261125120000_merchant_subscription_entitlement_hardening.sql
 
 -- Missing, paused, and expired subscriptions must block all three resource types.
