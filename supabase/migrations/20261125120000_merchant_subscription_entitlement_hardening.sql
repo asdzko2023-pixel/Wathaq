@@ -171,6 +171,14 @@ $function$;
 
 revoke all on function private.enforce_subscription_plan_capacity() from public, anon, authenticated;
 
+-- The existing trigger must also fire if an active staff row is reassigned.
+drop trigger if exists merchant_member_subscription_capacity on public.merchant_members;
+create trigger merchant_member_subscription_capacity
+before insert or update of is_active, merchant_id, user_id
+on public.merchant_members
+for each row
+execute function private.enforce_merchant_subscription_capacity();
+
 drop trigger if exists merchant_subscription_plan_capacity on public.merchant_subscriptions;
 create trigger merchant_subscription_plan_capacity
 before insert or update of plan_key, status
