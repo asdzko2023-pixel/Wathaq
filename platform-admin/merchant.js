@@ -197,6 +197,17 @@
       const summaryHtml = '<div class="merchant-advanced-stats">' + summary.map(item =>
         '<div class="merchant-stat"><span>' + esc(item[0]) + '</span><strong>' + fmt(item[1]) + '</strong></div>'
       ).join('') + '</div>';
+      const segments = d.customer_segments || {};
+      const segmentCards = [
+        ['عملاء انضموا في الفترة',segments.new_joined],
+        ['عملاء نشطون في الفترة',segments.active],
+        ['عملاء بحاجة إلى إعادة تفاعل',segments.at_risk],
+        ['عملاء غير نشطين',segments.dormant],
+        ['الشريحة الأعلى قيمة · أعلى 10%',segments.high_value_top_decile]
+      ];
+      const segmentHtml = '<div class="merchant-section-label">شرائح العملاء الديناميكية</div><div class="merchant-advanced-stats">' +
+        segmentCards.map(item => '<div class="merchant-stat"><span>' + esc(item[0]) + '</span><strong>' + fmt(item[1]) + '</strong></div>').join('') +
+        '</div><p class="small muted">شرائح تحليلية مجمّعة وقد تتداخل؛ حد الشريحة الأعلى قيمة هو ' + fmt(segments.vip_lifetime_points_threshold) + ' نقطة من إجمالي النقاط مدى الحياة. لا تُستخدم هذه الأرقام وحدها كقوائم إرسال أو استهداف تسويقي.</p>';
       const trend = (d.trend || []).map(row =>
         '<tr><td>' + esc(row.day) + '</td><td>' + fmt(row.ledger_entries) + '</td><td>' + fmt(row.points_earned) + '</td><td>' + fmt(row.points_redeemed) + '</td></tr>'
       ).join('') || '<tr><td colspan="4">لا توجد حركة في هذه الفترة.</td></tr>';
@@ -206,7 +217,7 @@
       const programs = (d.top_programs || []).map(row =>
         '<tr><td><b>' + esc(row.name) + '</b></td><td>' + esc(row.program_kind) + '</td><td>' + esc(row.state) + '</td><td>' + fmt(row.accounts_total) + '</td><td>' + fmt(row.new_accounts) + '</td><td>' + fmt(row.ledger_entries) + '</td><td>' + fmt(row.points_earned) + '</td><td>' + fmt(row.points_redeemed) + '</td></tr>'
       ).join('') || '<tr><td colspan="8">لا توجد برامج مسجلة.</td></tr>';
-      result.innerHTML = summaryHtml +
+      result.innerHTML = summaryHtml + segmentHtml +
         '<div class="merchant-section-label">الحركة اليومية · ' + fmt(d.period_days) + ' يوماً · التوقيت ' + esc(d.timezone || '') + '</div>' +
         '<div class="table-wrap"><table><thead><tr><th>اليوم</th><th>الحركات</th><th>نقاط مكتسبة</th><th>نقاط مستبدلة</th></tr></thead><tbody>' + trend + '</tbody></table></div>' +
         '<div class="merchant-section-label">الحركة حسب النوع</div>' +
