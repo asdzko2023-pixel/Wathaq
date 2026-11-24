@@ -77,17 +77,17 @@ do $$
 begin
   begin
     insert into public.loyalty_programs values ('30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','active');
-    raise exception 'missing subscription unexpectedly allowed a program';
+    raise exception 'missing subscription unexpectedly allowed a program' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
   begin
     insert into public.merchant_members values ('10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001',true);
-    raise exception 'missing subscription unexpectedly allowed staff';
+    raise exception 'missing subscription unexpectedly allowed staff' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
   begin
     insert into private.wathaq_qr_batches values ('50000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',1,now());
-    raise exception 'missing subscription unexpectedly allowed QR batch';
+    raise exception 'missing subscription unexpectedly allowed QR batch' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
 end $$;
@@ -102,12 +102,12 @@ do $$
 begin
   begin
     insert into public.loyalty_programs values ('30000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000002','active');
-    raise exception 'paused subscription unexpectedly allowed a program';
+    raise exception 'paused subscription unexpectedly allowed a program' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
   begin
     insert into public.loyalty_programs values ('30000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000003','active');
-    raise exception 'expired subscription unexpectedly allowed a program';
+    raise exception 'expired subscription unexpectedly allowed a program' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
 end $$;
@@ -127,7 +127,7 @@ do $$
 begin
   begin
     insert into public.loyalty_programs values ('30000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000004','active');
-    raise exception 'program quota was not enforced';
+    raise exception 'program quota was not enforced' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
 end $$;
@@ -141,7 +141,7 @@ do $$
 begin
   begin
     insert into public.merchant_members values ('10000000-0000-0000-0000-000000000004','40000000-0000-0000-0000-000000000006',true);
-    raise exception 'staff quota was not enforced';
+    raise exception 'staff quota was not enforced' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
 end $$;
@@ -153,7 +153,7 @@ do $$
 begin
   begin
     insert into private.wathaq_qr_batches values ('50000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000004',1,now());
-    raise exception 'monthly QR quota was not enforced';
+    raise exception 'monthly QR quota was not enforced' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
 end $$;
@@ -173,7 +173,7 @@ do $$
 begin
   begin
     update public.merchant_subscriptions set plan_key='starter_9' where merchant_id='10000000-0000-0000-0000-000000000005';
-    raise exception 'downgrade unexpectedly allowed above target quota';
+    raise exception 'downgrade unexpectedly allowed above target quota' using errcode = 'P0002';
   exception when sqlstate 'P0001' then null;
   end;
   if (select plan_key from public.merchant_subscriptions where merchant_id='10000000-0000-0000-0000-000000000005') <> 'growth_19' then
