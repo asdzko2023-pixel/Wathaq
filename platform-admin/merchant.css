@@ -71,196 +71,68 @@
  .merchant-advanced-controls button{width:100%}
 }
 
-
-/* Merchant portal contrast repair — scoped to this page */
-html:has(#merchant-app), body:has(#merchant-app) {
-  color-scheme: dark !important;
-  background: #081322 !important;
-  color: #f6f1e6 !important;
-}
-#merchant-app.merchant-app {
-  min-height: 100vh;
-  background: radial-gradient(ellipse at 78% 0%, #1d3452 0%, transparent 38%), #081322 !important;
-  color: #f6f1e6 !important;
-  isolation: isolate;
-}
-#merchant-app .merchant-login-card,
-#merchant-app .merchant-store-card,
-#merchant-app .merchant-advanced-panel {
-  background: linear-gradient(145deg, #14263d 0%, #0e1b2d 100%) !important;
-  border-color: #38516f !important;
-  color: #f6f1e6 !important;
-  box-shadow: 0 18px 48px rgba(0,0,0,.38) !important;
-}
-#merchant-app .merchant-topbar {
-  background: #102138 !important;
-  border-color: #38516f !important;
-  color: #f6f1e6 !important;
-}
-#merchant-app h1,
-#merchant-app h2,
-#merchant-app h3,
-#merchant-app strong,
-#merchant-app b {
-  color: #fff8e8 !important;
-}
-#merchant-app p,
-#merchant-app label,
-#merchant-app .merchant-section-label,
-#merchant-app .merchant-user,
-#merchant-app .merchant-subtitle,
-#merchant-app .merchant-store-head .small,
-#merchant-app .small,
-#merchant-app .muted,
-#merchant-app .merchant-login-card p {
-  color: #c5d1e2 !important;
-}
-#merchant-app .merchant-plan-price,
-#merchant-app .merchant-stat strong {
-  color: #f0d58a !important;
-}
-#merchant-app .merchant-limits span,
-#merchant-app .merchant-stat,
-#merchant-app .merchant-features.planned span,
-#merchant-app .merchant-note {
-  background: #0a192b !important;
-  border-color: #38516f !important;
-  color: #e7eef8 !important;
-}
-#merchant-app .merchant-features span {
-  background: #123a35 !important;
-  border-color: #32766b !important;
-  color: #baf3e5 !important;
-}
-#merchant-app .merchant-csv-action {
-  background: #352b16 !important;
-  border-color: #9b7830 !important;
-}
-#merchant-app .merchant-csv-action p { color: #fff0c2 !important; }
-#merchant-app .merchant-advanced-action {
-  background: #142b49 !important;
-  border-color: #5578ad !important;
-}
-#merchant-app .merchant-advanced-action p { color: #e1ebfb !important; }
-#merchant-app input,
-#merchant-app select,
-#merchant-app textarea,
-#merchant-app .search-input {
-  color: #f6f1e6 !important;
-  background: #091729 !important;
-  border: 1px solid #49617f !important;
-  caret-color: #f0d58a;
-}
-#merchant-app input::placeholder,
-#merchant-app textarea::placeholder { color: #aebbd0 !important; opacity: 1; }
-#merchant-app .primary-btn {
-  background: linear-gradient(135deg, #f6df9f, #d9a93e) !important;
-  color: #101b2b !important;
-  border: 1px solid #f0d58a !important;
-  font-weight: 700 !important;
-}
-#merchant-app .ghost-btn {
-  background: #203956 !important;
-  color: #f6f1e6 !important;
-  border: 1px solid #55708f !important;
-}
-#merchant-app .status.active {
-  background: #123f39 !important;
-  color: #baf3e5 !important;
-}
-#merchant-app .status.pending {
-  background: #493813 !important;
-  color: #ffe5a3 !important;
-}
-#merchant-app .merchant-toast {
-  background: #14263d !important;
-  color: #fff8e8 !important;
-  border-color: #55708f !important;
-}
-#merchant-app .merchant-toast.error {
-  background: #431f22 !important;
-  color: #ffe0dc !important;
-}
-#merchant-app table th { color: #d5dfed !important; }
-#merchant-app table td { color: #f6f1e6 !important; }
-#merchant-app table th, #merchant-app table td { border-color: #354b66 !important; }
-#merchant-app button:focus-visible,
-#merchant-app input:focus-visible,
-#merchant-app select:focus-visible {
-  outline: 3px solid #f0d58a !important;
-  outline-offset: 2px;
-}
-
-
-/* WATHAQ merchant portal — enforced high-contrast palette.
-   This page is standalone; scope visual tokens and components to its root. */
-:root {
-  color-scheme: dark !important;
-  --admin-bg: #081322 !important;
-  --admin-panel: #102139 !important;
-  --admin-panel-2: #172d48 !important;
-  --admin-line: #38516f !important;
-  --admin-text: #f8f5ed !important;
-  --admin-muted: #c2cfdf !important;
-  --admin-gold: #d9a93e !important;
-  --admin-gold-soft: #f5dc98 !important;
-  --color-bg: #081322 !important;
-  --color-surface: #102139 !important;
-  --color-surface-muted: #172d48 !important;
-  --color-text: #f8f5ed !important;
-  --color-text-muted: #c2cfdf !important;
-}
+/* Canonical WATHAQ merchant palette. Presentation-only; no application behavior. */
 html, body {
   min-height: 100%;
   background: #081322 !important;
   background-color: #081322 !important;
-  color: #f8f5ed !important;
+  color: #f6f1e6 !important;
   color-scheme: dark !important;
 }
 body {
-  background-image: radial-gradient(ellipse at 78% 0%, #203c5e 0%, #081322 55%) !important;
+  background-image: radial-gradient(ellipse at 78% 0%, #1d3452 0%, #081322 58%) !important;
   background-attachment: fixed !important;
 }
 #merchant-app.merchant-app {
   min-height: 100vh;
-  background: radial-gradient(ellipse at 78% 0%, #203c5e 0%, #081322 58%) !important;
-  color: #f8f5ed !important;
+  background: radial-gradient(ellipse at 78% 0%, #1d3452 0%, #081322 58%) !important;
+  background-color: #081322 !important;
+  color: #f6f1e6 !important;
 }
-#merchant-app .merchant-topbar,
-#merchant-app .merchant-store-card,
+#merchant-app .merchant-topbar {
+  background: #132944 !important;
+  border-color: #49617f !important;
+  color: #fff8e8 !important;
+}
 #merchant-app .merchant-login-card,
-#merchant-app .merchant-note,
-#merchant-app .merchant-advanced-panel {
+#merchant-app .merchant-store-card,
+#merchant-app .merchant-advanced-panel,
+#merchant-app .merchant-note {
   background: #102139 !important;
-  border: 1px solid #38516f !important;
-  color: #f8f5ed !important;
+  background-image: none !important;
+  border-color: #49617f !important;
+  color: #f6f1e6 !important;
   box-shadow: 0 16px 36px rgba(0,0,0,.32) !important;
 }
-#merchant-app .merchant-topbar { background: #132944 !important; }
-#merchant-app h1,
-#merchant-app h2,
-#merchant-app h3,
-#merchant-app strong,
-#merchant-app b { color: #fff8e8 !important; }
-#merchant-app p,
-#merchant-app label,
-#merchant-app .small,
-#merchant-app .muted,
+#merchant-app .merchant-page-title,
+#merchant-app .merchant-login-card h1,
+#merchant-app .merchant-store-head h2,
+#merchant-app .merchant-brand strong,
+#merchant-app .merchant-stat strong,
+#merchant-app .merchant-plan-price {
+  color: #f5dc98 !important;
+}
 #merchant-app .merchant-subtitle,
-#merchant-app .merchant-section-label,
+#merchant-app .merchant-login-card p,
+#merchant-app .merchant-login-card label,
 #merchant-app .merchant-user,
+#merchant-app .merchant-brand small,
 #merchant-app .merchant-store-head .small,
-#merchant-app .merchant-login-card p { color: #cbd7e6 !important; }
-#merchant-app .merchant-plan-price,
-#merchant-app .merchant-stat strong { color: #f5dc98 !important; }
-#merchant-app .merchant-limits span,
+#merchant-app .merchant-section-label,
+#merchant-app .merchant-stat span,
+#merchant-app .merchant-note,
+#merchant-app .small,
+#merchant-app .muted {
+  color: #cbd7e6 !important;
+}
 #merchant-app .merchant-stat,
+#merchant-app .merchant-limits span,
 #merchant-app .merchant-features.planned span {
   background: #0a192b !important;
-  border: 1px solid #3b5472 !important;
-  color: #eef4fb !important;
+  border-color: #405a78 !important;
+  color: #f0f4fa !important;
 }
-#merchant-app .merchant-features span {
+#merchant-app .merchant-features:not(.planned) span {
   background: #123b35 !important;
   border-color: #397b70 !important;
   color: #c5f4e9 !important;
@@ -286,7 +158,7 @@ body {
 #merchant-app input::placeholder,
 #merchant-app textarea::placeholder { color: #b5c3d6 !important; opacity: 1; }
 #merchant-app .primary-btn {
-  background: linear-gradient(135deg, #f6e3ad 0%, #d9a93e 100%) !important;
+  background: linear-gradient(135deg, #f6e3ad, #d9a93e) !important;
   color: #101b2b !important;
   border: 1px solid #f0d58a !important;
   font-weight: 700 !important;
@@ -304,6 +176,10 @@ body {
   background: #493813 !important;
   color: #ffe8ad !important;
 }
+#merchant-app table th { color: #e3ebf5 !important; }
+#merchant-app table td { color: #fff8e8 !important; }
+#merchant-app table th,
+#merchant-app table td { border-color: #3b526e !important; }
 #merchant-app .merchant-toast {
   background: #14263d !important;
   color: #fff8e8 !important;
@@ -313,19 +189,9 @@ body {
   background: #431f22 !important;
   color: #ffe0dc !important;
 }
-#merchant-app table th { color: #e3ebf5 !important; }
-#merchant-app table td { color: #fff8e8 !important; }
-#merchant-app table th,
-#merchant-app table td { border-color: #3b526e !important; }
 #merchant-app button:focus-visible,
 #merchant-app input:focus-visible,
 #merchant-app select:focus-visible {
   outline: 3px solid #f5dc98 !important;
   outline-offset: 2px;
-}
-@media (prefers-color-scheme: light) {
-  html, body, #merchant-app.merchant-app {
-    background-color: #081322 !important;
-    color: #f8f5ed !important;
-  }
 }
