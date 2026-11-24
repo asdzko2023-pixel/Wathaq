@@ -89,6 +89,7 @@
       (!store.starts_at || new Date(store.starts_at).getTime() <= now) &&
       !!store.ends_at && new Date(store.ends_at).getTime() > now;
     const exportAllowed = store.merchant_status === 'active' && validSubscription && features.includes('csv_export');
+    const advancedAnalyticsAllowed = store.merchant_status === 'active' && validSubscription && features.includes('advanced_analytics');
     const planActive = store.plan_key && validSubscription;
     const planLine = store.plan_name
       ? '<div><b>' + esc(store.plan_name) + '</b><div class="small muted">' + esc(store.plan_key) + '</div></div>'
@@ -124,6 +125,9 @@
       '<div class="merchant-section-label">المزايا المتاحة في خطتك</div><div class="merchant-features">' + featureTags(features) + '</div>' +
       (planned.length ? '<div class="merchant-section-label">مزايا قيد التطوير وليست مفعّلة</div><div class="merchant-features planned">' + featureTags(planned,true) + '</div>' : '') +
       '<div class="merchant-section-label">تاريخ نهاية الاشتراك</div><div class="small muted">' + date(store.ends_at) + '</div>' +
+      (advancedAnalyticsAllowed
+        ? '<div class="merchant-advanced-action"><p><b>التحليلات المتقدمة</b><br>اتجاهات الولاء اليومية، النشاط حسب النوع، والبرامج الأكثر نشاطاً — دون عرض بيانات العملاء الشخصية.</p><button class="primary-btn" data-advanced-open="' + esc(store.merchant_id) + '">عرض التحليلات المتقدمة</button></div><section class="merchant-advanced-panel" data-advanced-panel="' + esc(store.merchant_id) + '" hidden><div class="merchant-advanced-controls"><label>الفترة<select class="search-input" data-advanced-days><option value="30">30 يوماً</option><option value="7">7 أيام</option><option value="60">60 يوماً</option><option value="90">90 يوماً</option></select></label><button class="ghost-btn" data-advanced-refresh>تحديث التقرير</button></div><div data-advanced-result></div></section>'
+        : (features.includes('advanced_analytics') ? '<div class="merchant-note">التحليلات المتقدمة متاحة في باقة Business، لكن حالة المتجر أو الاشتراك لا تسمح بفتحها حالياً.</div>' : '')) +
       (exportAllowed
         ? '<div class="merchant-csv-action"><p><b>تصدير بيانات الولاء CSV</b><br>يشمل معرّفاً مرجعياً للعميل، البرنامج، الأرصدة، وتواريخ النشاط. لا يتضمن أسماء العملاء أو بريدهم أو أرقام هواتفهم.</p><button class="primary-btn" data-export="' + esc(store.merchant_id) + '">تصدير ملف CSV</button></div>'
         : (features.includes('csv_export')
@@ -149,6 +153,76 @@
     root.querySelectorAll('[data-export]').forEach(button => {
       button.addEventListener('click', () => exportCsv(button.dataset.export, button));
     });
+    root.querySelectorAll('[data-advanced-open]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const panel = Array.from(root.querySelectorAll('[data-advanced-panel]')).find(node => node.dataset.advancedPanel === button.dataset.advancedOpen);
+        if (!panel) return;
+        panel.hidden = !panel.hidden;
+        if (!panel.hidden && panel.dataset.loaded !== 'true') {
+          await loadAdvancedAnalytics(button.dataset.advancedOpen, panel, button);
+        }
+        button.textContent = panel.hidden ? 'عرض التحليلات المتقدمة' : 'إخفاء التحليلات المتقدمة';
+      });
+    });
+    root.querySelectorAll('[data-advanced-panel]').forEach(panel => {
+      panel.querySelector('[data-advanced-refresh]').addEventListener('click', async event => {
+        const storeId = panel.dataset.advancedPanel;
+        const openButton = root.querySelector('[data-advanced-open="' + storeId + '"]');
+        await loadAdvancedAnalytics(storeId, panel, event.currentTarget, openButton);
+      });
+    });
+  }
+
+  async function loadAdvancedAnalytics(merchantId, panel, actionButton, openButton=null) {
+    const result = panel.querySelector('[data-advanced-result]');
+    const days = Number(panel.querySelector('[data-advanced-days]').value || 30);
+    const originalText = actionButton.textContent;
+    actionButton.disabled = true;
+    actionButton.textContent = 'جارٍ تحميل التحليلات…';
+    result.innerHTML = '<div class="merchant-empty">جارٍ تجهيز التقرير المجمع…</div>';
+    try {
+      const {data,error} = await sb.rpc('merchant_get_advanced_analytics',{
+        p_merchant_id:merchantId,
+        p_days:days
+      });
+      if (error) throw error;
+      const d = data || {};
+      const summary = [
+        ['إجمالي الحركات',d.ledger_entries],
+        ['النقاط المكتسبة',d.points_earned],
+        ['النقاط المستبدلة',d.points_redeemed],
+        ['حسابات جديدة',d.new_accounts],
+        ['حسابات نشطة',d.active_accounts]
+      ];
+      const summaryHtml = '<div class="merchant-advanced-stats">' + summary.map(item =>
+        '<div class="merchant-stat"><span>' + esc(item[0]) + '</span><strong>' + fmt(item[1]) + '</strong></div>'
+      ).join('') + '</div>';
+      const trend = (d.trend || []).map(row =>
+        '<tr><td>' + esc(row.day) + '</td><td>' + fmt(row.ledger_entries) + '</td><td>' + fmt(row.points_earned) + '</td><td>' + fmt(row.points_redeemed) + '</td></tr>'
+      ).join('') || '<tr><td colspan="4">لا توجد حركة في هذه الفترة.</td></tr>';
+      const kinds = (d.ledger_by_kind || []).map(row =>
+        '<tr><td>' + esc(row.kind) + '</td><td>' + fmt(row.entries) + '</td><td>' + fmt(row.points_earned) + '</td><td>' + fmt(row.points_redeemed) + '</td></tr>'
+      ).join('') || '<tr><td colspan="4">لا توجد بيانات.</td></tr>';
+      const programs = (d.top_programs || []).map(row =>
+        '<tr><td><b>' + esc(row.name) + '</b></td><td>' + esc(row.program_kind) + '</td><td>' + esc(row.state) + '</td><td>' + fmt(row.accounts_total) + '</td><td>' + fmt(row.new_accounts) + '</td><td>' + fmt(row.ledger_entries) + '</td><td>' + fmt(row.points_earned) + '</td><td>' + fmt(row.points_redeemed) + '</td></tr>'
+      ).join('') || '<tr><td colspan="8">لا توجد برامج مسجلة.</td></tr>';
+      result.innerHTML = summaryHtml +
+        '<div class="merchant-section-label">الحركة اليومية · ' + fmt(d.period_days) + ' يوماً · التوقيت ' + esc(d.timezone || '') + '</div>' +
+        '<div class="table-wrap"><table><thead><tr><th>اليوم</th><th>الحركات</th><th>نقاط مكتسبة</th><th>نقاط مستبدلة</th></tr></thead><tbody>' + trend + '</tbody></table></div>' +
+        '<div class="merchant-section-label">الحركة حسب النوع</div>' +
+        '<div class="table-wrap"><table><thead><tr><th>النوع</th><th>الحركات</th><th>نقاط مكتسبة</th><th>نقاط مستبدلة</th></tr></thead><tbody>' + kinds + '</tbody></table></div>' +
+        '<div class="merchant-section-label">أكثر برامج الولاء نشاطاً · أعلى 10</div>' +
+        '<div class="table-wrap"><table><thead><tr><th>البرنامج</th><th>النوع</th><th>الحالة</th><th>الحسابات</th><th>الجديدة</th><th>الحركات</th><th>نقاط مكتسبة</th><th>نقاط مستبدلة</th></tr></thead><tbody>' + programs + '</tbody></table></div>' +
+        '<p class="small muted">التقرير مجمّع ولا يكشف أسماء العملاء أو عناوينهم أو معرّفات حساباتهم. تم تسجيل فتح التقرير في سجل التدقيق.</p>';
+      panel.dataset.loaded = 'true';
+    } catch (error) {
+      result.innerHTML = '<div class="merchant-note">تعذر تحميل التحليلات المتقدمة: ' + esc(error?.message || 'خطأ غير معروف') + '</div>';
+      panel.dataset.loaded = 'false';
+    } finally {
+      actionButton.disabled = false;
+      actionButton.textContent = originalText;
+      if (openButton) openButton.textContent = 'إخفاء التحليلات المتقدمة';
+    }
   }
 
   function csvCell(value) {
