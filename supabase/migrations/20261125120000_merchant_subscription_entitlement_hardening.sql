@@ -11,15 +11,24 @@ as $function$
 declare
   v_sub public.merchant_subscriptions%rowtype;
   v_plan public.subscription_plans%rowtype;
-  v_used integer;
+  v_used bigint;
   v_period_start timestamptz;
 begin
   if tg_table_schema = 'public' and tg_table_name = 'loyalty_programs' then
     if new.state::text <> 'active' then return new; end if;
-    if tg_op = 'UPDATE' and old.state::text = 'active' then return new; end if;
+    if tg_op = 'UPDATE'
+       and old.state::text = 'active'
+       and old.merchant_id = new.merchant_id then
+      return new;
+    end if;
   elsif tg_table_schema = 'public' and tg_table_name = 'merchant_members' then
     if not new.is_active then return new; end if;
-    if tg_op = 'UPDATE' and old.is_active then return new; end if;
+    if tg_op = 'UPDATE'
+       and old.is_active
+       and old.merchant_id = new.merchant_id
+       and old.user_id = new.user_id then
+      return new;
+    end if;
   end if;
 
   perform pg_catalog.pg_advisory_xact_lock(
