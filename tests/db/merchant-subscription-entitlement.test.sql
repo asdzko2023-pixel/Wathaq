@@ -219,4 +219,16 @@ begin
   end if;
 end $$;
 
+-- The QR usage accumulator must remain bigint when monthly totals exceed int32.
+do $
+declare
+  v_qr bigint;
+begin
+  select coalesce(sum(1000),0)::bigint into v_qr
+    from generate_series(1, 2147485);
+  if v_qr <> 2147485000 then
+    raise exception 'QR usage bigint accumulation returned an incorrect total: %', v_qr;
+  end if;
+end $;
+
 select 'subscription entitlement integration tests passed' as result;
