@@ -28,8 +28,10 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Check platform admin JavaScript syntax
-        run: node --check platform-admin/app.js
+      - name: Check platform admin and merchant portal JavaScript syntax
+        run: |
+          node --check platform-admin/app.js
+          node --check platform-admin/merchant.js
       - name: Type-check secure merchant invitation function
         run: deno check --no-lock --config supabase/functions/platform-create-merchant-account/deno.json supabase/functions/platform-create-merchant-account/index.ts
       - name: Validate standalone console assets
@@ -37,6 +39,9 @@ jobs:
           test -s platform-admin/index.html
           test -s platform-admin/styles.css
           test -s platform-admin/app.js
+          test -s platform-admin/merchant.html
+          test -s platform-admin/merchant.css
+          test -s platform-admin/merchant.js
           test -s app/config.js
           test -s packages/design-tokens/tokens.css
           grep -q "rpc('admin_set_merchant_status'" platform-admin/app.js
@@ -45,6 +50,9 @@ jobs:
           grep -q "rpc('admin_list_merchant_subscriptions'" platform-admin/app.js
           grep -q "rpc('admin_manage_merchant_subscription'" platform-admin/app.js
           grep -q "rpc('admin_list_subscription_history'" platform-admin/app.js
+          grep -q "rpc('merchant_get_my_workspace'" platform-admin/app.js
+          grep -q "merchant_export_loyalty_accounts" platform-admin/merchant.js
+          grep -q "csv_export" platform-admin/merchant.js
           grep -q 'data-view="merchant-create"' platform-admin/app.js
           grep -q "rpc('admin_list_user_profiles'" platform-admin/app.js
           grep -q "rpc('admin_list_merchant_staff'" platform-admin/app.js
@@ -87,6 +95,7 @@ jobs:
           test -s supabase/migrations/20261124063000_subscription_fk_indexes.sql
           test -s supabase/migrations/20261124070000_exclude_owner_from_staff_seat_limit.sql
           test -s supabase/migrations/20261124080000_merchant_owner_subscription_read_rpc.sql
+          test -s supabase/migrations/20261124090000_growth_csv_export_and_merchant_workspace.sql
           test -s supabase/functions/platform-create-merchant-account/deno.json
           test -s supabase/functions/platform-create-merchant-account/index.ts
           grep -q "auth.admin.inviteUserByEmail" supabase/functions/platform-create-merchant-account/index.ts
