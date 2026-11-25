@@ -329,7 +329,21 @@
       root.innerHTML = '<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام.</p></section></main>';
       return;
     }
-    sb = createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,flowType:'pkce'}});
+    // OAuth PKCE callback: exchange the returned authorization code explicitly before reading the session.
+    // Disable automatic URL detection to avoid a race with the manual exchange.
+    sb = createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,flowType:'pkce',detectSessionInUrl:false}});
+    const callbackUrl = new URL(window.location.href);
+    const authCode = callbackUrl.searchParams.get('code');
+    if (authCode) {
+      const {data:exchangeData,error:exchangeError} = await sb.auth.exchangeCodeForSession(authCode);
+      callbackUrl.searchParams.delete('code');
+      callbackUrl.searchParams.delete('state');
+      window.history.replaceState({},document.title,callbackUrl.pathname + callbackUrl.search + callbackUrl.hash);
+      if (exchangeError || !exchangeData?.session) {
+        renderLogin('تم الرجوع من Google لكن تعذر إكمال تبادل رمز تسجيل الدخول: ' + (exchangeError?.message || 'لم يتم إنشاء جلسة. حاول مرة أخرى.'));
+        return;
+      }
+    }
     const {data,error} = await sb.auth.getSession();
     if (error) { renderLogin('تعذر استعادة جلسة الدخول: ' + error.message); return; }
     currentUser = data.session?.user;
