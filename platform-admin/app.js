@@ -121,42 +121,92 @@
       if(error)throw error;
       const activePlans=(plans||[]).filter(p=>p.is_active);
       if(!activePlans.length)throw new Error('لا توجد باقات اشتراك فعالة.');
-      const planOptions=activePlans.map(p=>'<option value="'+esc(p.plan_key)+'">'+esc(p.display_name)+' · $'+Number(p.price_usd).toFixed(0)+'/شهر</option>').join('');
-      host.innerHTML='<section class="panel"><div class="panel-head"><div><h2>إنشاء حساب تاجر جديد</h2><div class="panel-subtitle">تُنشئ المنصة دعوة آمنة للبريد الإلكتروني، وتربط المتجر والاشتراك في معاملة واحدة.</div></div><span class="status pending">دعوة مالك المتجر</span></div>'+
-        '<div class="notice">سيصل إلى المالك بريد دعوة من وثاق لإكمال حسابه. لا تُنشأ كلمة مرور من لوحة الإدارة. يمكن استخدام حساب موجود وموثّق أيضاً. يبدأ المتجر بحالة قيد المراجعة، ولا يعني تعيين الخطة أن الدفع الإلكتروني قد تم.</div>'+
-        '<form id="platform-merchant-form" class="merchant-create-form">'+
-        '<label>اسم مالك المتجر *<input class="search-input" id="new-owner-name" maxlength="120" required placeholder="الاسم الكامل"></label>'+
-        '<label>البريد الإلكتروني للمالك *<input class="search-input" id="new-owner-email" type="email" maxlength="254" required dir="ltr" placeholder="owner@example.com"></label>'+
-        '<label>اسم المتجر *<input class="search-input" id="new-merchant-name" maxlength="120" required placeholder="مثال: متجر الأمل"></label>'+
-        '<label>المعرّف المختصر (Slug) *<input class="search-input" id="new-merchant-slug" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" required dir="ltr" placeholder="al-amal-store"></label>'+
-        '<label>خطة الاشتراك *<select class="search-input" id="new-merchant-plan" required>'+planOptions+'</select></label>'+
-        '<label>مدة الاشتراك بالشهور *<select class="search-input" id="new-merchant-duration" required><option value="1">شهر واحد</option><option value="3">3 أشهر</option><option value="6">6 أشهر</option><option value="12">12 شهراً</option></select></label>'+
-        '<label>حالة الدفع الأولية<select class="search-input" id="new-merchant-billing"><option value="admin_assigned">تعيين إداري — الدفع غير مؤكد</option><option value="manual_paid">تم التحقق من الدفع يدوياً</option><option value="complimentary">اشتراك مجاني / ترويجي</option></select></label>'+
-        '<label>التصنيف<input class="search-input" id="new-merchant-category" maxlength="80" placeholder="مطاعم، ملابس، إلكترونيات…"></label>'+
-        '<label>الدولة (رمز ISO)<input class="search-input" id="new-merchant-country" maxlength="2" minlength="2" value="YE" required dir="ltr"></label>'+
-        '<label>المدينة<input class="search-input" id="new-merchant-city" maxlength="100" placeholder="عدن"></label>'+
-        '<label>العنوان<input class="search-input" id="new-merchant-address" maxlength="240" placeholder="العنوان أو المنطقة"></label>'+
-        '<label>رقم التواصل<input class="search-input" id="new-merchant-phone" maxlength="40" dir="ltr" placeholder="+967…"></label>'+
-        '<label>بريد التواصل الخاص بالمتجر<input class="search-input" id="new-merchant-email" type="email" maxlength="254" dir="ltr" placeholder="store@example.com"></label>'+
-        '<label>المنطقة الزمنية<input class="search-input" id="new-merchant-timezone" value="Asia/Aden" maxlength="80" dir="ltr" required></label>'+
-        '<label class="wide">وصف المتجر<textarea class="search-input" id="new-merchant-description" maxlength="1000" rows="3" placeholder="نبذة مختصرة عن المتجر"></textarea></label>'+
-        '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">إنشاء حساب التاجر وإرسال الدعوة</button><span class="small muted">المتجر يبدأ قيد المراجعة · الاشتراك يبدأ فور الإنشاء</span></div>'+
-        '</form></section>'+
-        '<section class="panel"><h2>قبل إنشاء الحساب</h2><p class="small muted">إذا كان البريد مسجلاً في وثاق، يجب أن يكون موثقاً. إذا لم يكن موجوداً، ترسل المنصة دعوة آمنة. الحسابات المدعوة غير المكتملة لا تُمنح صلاحية مدير منصة. ويمكن تعديل خطة الاشتراك لاحقاً من قسم إدارة الاشتراكات.</p></section>';
-      const nameInput=host.querySelector('#new-merchant-name'),slugInput=host.querySelector('#new-merchant-slug');
+      const planOptions=activePlans.map(p=>{
+        const price=Number(p.price_usd);
+        if(!Number.isFinite(price)||price<0)throw new Error('توجد باقة بسعر غير صالح.');
+        return '<option value="'+esc(p.plan_key)+'" data-price="'+price.toFixed(2)+'">'+esc(p.display_name)+' · $'+price.toFixed(2)+'/شهر</option>';
+      }).join('');
+      host.innerHTML=[
+        '<section class="panel"><div class="panel-head"><div><h2>إنشاء حساب تاجر جديد</h2><div class="panel-subtitle">إنشاء المتجر وربط مالكه وخطة اشتراكه من نموذج واحد.</div></div><span class="status pending">إعداد حساب التاجر</span></div>',
+        '<div class="notice">إذا كان البريد مسجلاً في وثاق، يجب أن يكون موثقاً. تعيين الخطة لا يعني أن الدفع قد تم تلقائياً.</div>',
+        '<form id="platform-merchant-form" class="merchant-create-form">',
+        '<label>اسم مالك المتجر *<input class="search-input" id="new-owner-name" maxlength="120" required placeholder="الاسم الكامل"></label>',
+        '<label>البريد الإلكتروني للمالك *<input class="search-input" id="new-owner-email" type="email" maxlength="254" required dir="ltr" placeholder="owner@example.com"></label>',
+        '<label>اسم المتجر *<input class="search-input" id="new-merchant-name" maxlength="120" required placeholder="مثال: متجر الأمل"></label>',
+        '<label>المعرّف المختصر (Slug) *<input class="search-input" id="new-merchant-slug" maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" required dir="ltr" placeholder="al-amal-store"></label>',
+        '<label>خطة الاشتراك *<select class="search-input" id="new-merchant-plan" required>'+planOptions+'</select></label>',
+        '<label>مدة الاشتراك *<select class="search-input" id="new-merchant-duration" required><option value="1">شهر واحد</option><option value="3">3 أشهر</option><option value="6">6 أشهر</option><option value="12">12 شهراً</option><option value="custom">مدة مخصصة</option></select></label>',
+        '<label id="custom-duration-wrap" hidden>المدة المخصصة (1–12 شهراً)<input class="search-input" id="new-merchant-custom-duration" type="number" min="1" max="12" step="1" value="2"></label>',
+        '<section class="wide panel subscription-preview" id="subscription-preview" aria-live="polite"><h3>ملخص الاشتراك قبل الإنشاء</h3><div class="grid-stats">',
+        '<article class="stat-card"><div class="label">السعر الشهري</div><div class="value" id="preview-monthly">—</div></article>',
+        '<article class="stat-card"><div class="label">مدة الاشتراك</div><div class="value" id="preview-duration">—</div></article>',
+        '<article class="stat-card"><div class="label">إجمالي قيمة الخطة</div><div class="value" id="preview-total">—</div></article>',
+        '<article class="stat-card"><div class="label">تاريخ البداية المتوقع</div><div class="value" id="preview-start">—</div></article>',
+        '<article class="stat-card"><div class="label">تاريخ الانتهاء المتوقع</div><div class="value" id="preview-end">—</div></article>',
+        '</div><p class="small muted">التواريخ تقديرية، ويبدأ الاشتراك فعلياً عند نجاح عملية الإنشاء.</p></section>',
+        '<label>حالة الدفع الأولية *<select class="search-input" id="new-merchant-billing" required><option value="admin_assigned">تعيين إداري — الدفع غير مؤكد</option><option value="manual_paid">تم التحقق من الدفع يدوياً</option><option value="complimentary">اشتراك مجاني / ترويجي</option></select></label>',
+        '<label>التصنيف<input class="search-input" id="new-merchant-category" maxlength="80" placeholder="مطاعم، ملابس، إلكترونيات…"></label>',
+        '<label>الدولة (رمز ISO) *<input class="search-input" id="new-merchant-country" maxlength="2" minlength="2" value="YE" required dir="ltr"></label>',
+        '<label>المدينة<input class="search-input" id="new-merchant-city" maxlength="100" placeholder="عدن"></label>',
+        '<label>العنوان<input class="search-input" id="new-merchant-address" maxlength="240" placeholder="العنوان أو المنطقة"></label>',
+        '<label>رقم التواصل<input class="search-input" id="new-merchant-phone" maxlength="40" dir="ltr" placeholder="+967…"></label>',
+        '<label>بريد التواصل الخاص بالمتجر<input class="search-input" id="new-merchant-email" type="email" maxlength="254" dir="ltr" placeholder="store@example.com"></label>',
+        '<label>المنطقة الزمنية *<input class="search-input" id="new-merchant-timezone" value="Asia/Aden" maxlength="80" dir="ltr" required></label>',
+        '<label class="wide">وصف المتجر<textarea class="search-input" id="new-merchant-description" maxlength="1000" rows="3" placeholder="نبذة مختصرة عن المتجر"></textarea></label>',
+        '<div class="wide merchant-create-actions"><button class="primary-btn" type="submit">إنشاء حساب التاجر وإرسال الدعوة</button><span class="small muted">سيبدأ المتجر قيد المراجعة حسب آلية المنصة.</span></div>',
+        '</form></section>',
+        '<section class="panel"><h2>ملاحظات</h2><p class="small muted">لا يتم إنشاء كلمة مرور من لوحة الإدارة. الحسابات المدعوة غير المكتملة لا تحصل على صلاحيات إدارة المنصة. يمكن تعديل الاشتراك لاحقاً من قسم إدارة الاشتراكات.</p></section>'
+      ].join('');
+
+      const form=host.querySelector('#platform-merchant-form');
+      const nameInput=host.querySelector('#new-merchant-name');
+      const slugInput=host.querySelector('#new-merchant-slug');
+      const planSelect=host.querySelector('#new-merchant-plan');
+      const durationSelect=host.querySelector('#new-merchant-duration');
+      const customDurationWrap=host.querySelector('#custom-duration-wrap');
+      const customDurationInput=host.querySelector('#new-merchant-custom-duration');
+      const selectedDuration=()=>durationSelect.value==='custom'?Number(customDurationInput.value):Number(durationSelect.value);
+      const previewDate=months=>{
+        const start=new Date();
+        const target=new Date(start);
+        const day=target.getDate();
+        target.setDate(1);
+        target.setMonth(target.getMonth()+months);
+        const lastDay=new Date(target.getFullYear(),target.getMonth()+1,0).getDate();
+        target.setDate(Math.min(day,lastDay));
+        return {start,target};
+      };
+      const updateSubscriptionPreview=()=>{
+        const price=Number(planSelect.selectedOptions[0]?.dataset.price||0);
+        const months=selectedDuration();
+        const valid=Number.isInteger(months)&&months>=1&&months<=12;
+        customDurationWrap.hidden=durationSelect.value!=='custom';
+        customDurationInput.required=durationSelect.value==='custom';
+        host.querySelector('#preview-monthly').textContent=price.toLocaleString('en-US',{style:'currency',currency:'USD'});
+        host.querySelector('#preview-duration').textContent=valid?months+' شهر':'مدة غير صالحة';
+        host.querySelector('#preview-total').textContent=valid?(price*months).toLocaleString('en-US',{style:'currency',currency:'USD'}):'—';
+        const dates=valid?previewDate(months):null;
+        host.querySelector('#preview-start').textContent=dates?date(dates.start.toISOString()):'—';
+        host.querySelector('#preview-end').textContent=dates?date(dates.target.toISOString()):'—';
+      };
+      planSelect.addEventListener('change',updateSubscriptionPreview);
+      durationSelect.addEventListener('change',updateSubscriptionPreview);
+      customDurationInput.addEventListener('input',updateSubscriptionPreview);
+      updateSubscriptionPreview();
+
       const arabicSlugMap={'ا':'a','أ':'a','إ':'i','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'h','و':'w','ي':'y','ى':'a','ؤ':'w','ئ':'y','ء':''};
       const slugify=value=>Array.from(value.normalize('NFKD').toLowerCase()).map(ch=>arabicSlugMap[ch]??ch).join('').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-').slice(0,80);
       nameInput.addEventListener('input',()=>{if(!slugInput.dataset.edited)slugInput.value=slugify(nameInput.value);});
       slugInput.addEventListener('input',()=>{slugInput.dataset.edited='1';slugInput.value=slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g,'').replace(/-{2,}/g,'-').replace(/^-+|-+$/g,'');});
-      host.querySelector('#platform-merchant-form').addEventListener('submit',async event=>{
+
+      form.addEventListener('submit',async event=>{
         event.preventDefault();
-        const button=event.submitter;
+        const button=event.submitter||form.querySelector('button[type="submit"]');
         const payload={
           owner_name:host.querySelector('#new-owner-name').value.trim(),
           owner_email:host.querySelector('#new-owner-email').value.trim().toLowerCase(),
           name:nameInput.value.trim(),slug:slugInput.value.trim(),
-          plan_key:host.querySelector('#new-merchant-plan').value,
-          duration_months:Number(host.querySelector('#new-merchant-duration').value),
+          plan_key:planSelect.value,duration_months:selectedDuration(),
           billing_status:host.querySelector('#new-merchant-billing').value,
           category:host.querySelector('#new-merchant-category').value.trim()||null,
           description:host.querySelector('#new-merchant-description').value.trim()||null,
@@ -169,21 +219,31 @@
         };
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.owner_email)){toast('أدخل بريداً إلكترونياً صحيحاً للمالك.',true);return;}
         if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload.slug)){toast('المعرّف المختصر غير صالح.',true);return;}
-        if(!confirm('إنشاء حساب «'+payload.owner_name+'» لمتجر «'+payload.name+'» على باقة '+payload.plan_key+' وإرسال دعوة إلى '+payload.owner_email+'؟'))return;
-        button.disabled=true;button.textContent='جارٍ إنشاء الحساب وإرسال الدعوة…';
-        const {data,error}=await sb.functions.invoke('platform-create-merchant-account',{body:payload});
-        if(error||!data?.ok){
-          const message=data?.message||data?.error||error?.message||'تعذر تنفيذ العملية';
-          toast('لم يتم إنشاء حساب التاجر: '+message,true);
-          if(data?.pending_invite_kept)toast('تم الاحتفاظ بدعوة معلّقة؛ صحح سبب الخطأ ثم أعد المحاولة بنفس البريد.',true);
-          button.disabled=false;button.textContent='إنشاء حساب التاجر وإرسال الدعوة';return;
+        if(!Number.isInteger(payload.duration_months)||payload.duration_months<1||payload.duration_months>12){toast('مدة الاشتراك يجب أن تكون من شهر إلى 12 شهراً.',true);return;}
+        if(!payload.timezone){toast('أدخل المنطقة الزمنية.',true);return;}
+        if(!confirm('إنشاء متجر «'+payload.name+'» للمالك '+payload.owner_email+' على الخطة '+payload.plan_key+' لمدة '+payload.duration_months+' شهر، وحالة الدفع: '+payload.billing_status+'؟'))return;
+        button.disabled=true;
+        button.textContent='جارٍ إنشاء حساب التاجر…';
+        try{
+          const {data,error}=await sb.functions.invoke('platform-create-merchant-account',{body:payload});
+          if(error||!data?.ok){
+            const message=data?.message||data?.error||error?.message||'تعذر تنفيذ العملية';
+            toast('لم يتم إنشاء حساب التاجر: '+message,true);
+            if(data?.pending_invite_kept)toast('توجد دعوة معلّقة لم تكتمل؛ راجع الحالة قبل إعادة المحاولة.',true);
+            return;
+          }
+          toast(data.invitation_sent?'تم إنشاء المتجر والاشتراك وإرسال دعوة التفعيل إلى '+payload.owner_email+'.':'تم ربط الحساب الموجود وإنشاء المتجر والاشتراك بنجاح.');
+          if(data.metadata_warning)toast(data.metadata_warning,true);
+          await showView('subscriptions');
+        }catch(submitError){
+          toast('تعذر الاتصال بخدمة إنشاء التاجر: '+submitError.message,true);
+        }finally{
+          if(button.isConnected){button.disabled=false;button.textContent='إنشاء حساب التاجر وإرسال الدعوة';}
         }
-        const note=data.invitation_sent?'تم إنشاء المتجر والاشتراك وإرسال دعوة التفعيل إلى '+payload.owner_email+'.':'تم ربط الحساب الموجود وإنشاء المتجر والاشتراك بنجاح.';
-        toast(note);
-        if(data.metadata_warning)toast(data.metadata_warning,true);
-        await showView('subscriptions');
       });
-    }catch(e){host.innerHTML='<div class="notice error">تعذر تجهيز نموذج إنشاء حساب التاجر: '+esc(e.message)+'</div>'; }
+    }catch(e){
+      host.innerHTML='<div class="notice error">تعذر تجهيز نموذج إنشاء حساب التاجر: '+esc(e.message)+'</div>';
+    }
   }
 
   function subscriptionFeatureName(key){

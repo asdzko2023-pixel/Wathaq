@@ -62,8 +62,9 @@
 
     root.querySelector('#merchant-google').addEventListener('click', async event => {
       event.currentTarget.disabled = true;
-      // Keep the OAuth callback on the merchant route. The site-wide Site URL is the admin home.
-      const redirectTo = window.location.origin + '/merchant.html';
+      // Use the official merchant callback explicitly. A preview origin may not be on Supabase's redirect allowlist,
+      // in which case Supabase falls back to Site URL (admin root) and lands the merchant in the admin page.
+      const redirectTo = 'https://wathaq-platform-admin.vercel.app/merchant.html';
       const {error} = await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo,queryParams:{prompt:'select_account'}}});
       
       if (error) {
@@ -328,7 +329,21 @@
       root.innerHTML = '<main class="center-state"><section class="denied-card"><h1>إعداد الاتصال غير مكتمل</h1><p>تعذر تحميل إعداد Supabase العام.</p></section></main>';
       return;
     }
-    sb = createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,flowType:'pkce'}});
+    // OAuth PKCE callback: exchange the returned authorization code explicitly before reading the session.
+    // Disable automatic URL detection to avoid a race with the manual exchange.
+    sb = createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,flowType:'pkce',detectSessionInUrl:false}});
+    const callbackUrl = new URL(window.location.href);
+    const authCode = callbackUrl.searchParams.get('code');
+    if (authCode) {
+      const {data:exchangeData,error:exchangeError} = await sb.auth.exchangeCodeForSession(authCode);
+      callbackUrl.searchParams.delete('code');
+      callbackUrl.searchParams.delete('state');
+      window.history.replaceState({},document.title,callbackUrl.pathname + callbackUrl.search + callbackUrl.hash);
+      if (exchangeError || !exchangeData?.session) {
+        renderLogin('تم الرجوع من Google لكن تعذر إكمال تبادل رمز تسجيل الدخول: ' + (exchangeError?.message || 'لم يتم إنشاء جلسة. حاول مرة أخرى.'));
+        return;
+      }
+    }
     const {data,error} = await sb.auth.getSession();
     if (error) { renderLogin('تعذر استعادة جلسة الدخول: ' + error.message); return; }
     currentUser = data.session?.user;
