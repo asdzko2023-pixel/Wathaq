@@ -62,8 +62,9 @@
 
     root.querySelector('#merchant-google').addEventListener('click', async event => {
       event.currentTarget.disabled = true;
-      // Keep the OAuth callback on the merchant route. The site-wide Site URL is the admin home.
-      const redirectTo = window.location.origin + '/merchant.html';
+      // Use the official merchant callback explicitly. A preview origin may not be on Supabase's redirect allowlist,
+      // in which case Supabase falls back to Site URL (admin root) and lands the merchant in the admin page.
+      const redirectTo = 'https://wathaq-platform-admin.vercel.app/merchant.html';
       const {error} = await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo,queryParams:{prompt:'select_account'}}});
       
       if (error) {
