@@ -1,0 +1,20 @@
+{
+  "name": "وِثاق | نسيج الولاء",
+  "short_name": "وِثاق",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1424",
+  "theme_color": "#0a1424",
+  "description": "منصة ولاء متعددة المتاجر",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

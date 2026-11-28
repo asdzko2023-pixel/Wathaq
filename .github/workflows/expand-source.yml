@@ -1,0 +1,18 @@
+name: Verify archived WATHAQ v0.6 reference (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify the preserved reference archive without expanding it
+        run: |
+          test -s WATHAQ_SOURCE_v0.6.zip
+          unzip -tq WATHAQ_SOURCE_v0.6.zip
+          echo "The v0.6 archive is intact and remains reference-only."

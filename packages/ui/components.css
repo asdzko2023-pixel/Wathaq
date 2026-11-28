@@ -1,0 +1,65 @@
+/* WATHAQ components. Uses only tokens from ../design-tokens/tokens.css. RTL-safe (logical properties). */
+.w-app{background:var(--color-bg);color:var(--color-text);font:var(--font-weight-regular) var(--font-size-body)/var(--line-height-body) var(--font-family-ui)}
+.w-app *,.w-app *::before,.w-app *::after{box-sizing:border-box}
+.w-num{font-family:var(--font-family-latin);font-variant-numeric:tabular-nums}
+.w-app :focus-visible{outline:3px solid var(--color-focus);outline-offset:2px}
+.w-ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* Buttons */
+.w-btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:var(--touch-min-target);padding-inline:var(--space-5);border:1px solid transparent;border-radius:var(--radius-md);font:inherit;font-weight:var(--font-weight-semibold);cursor:pointer;transition:transform var(--motion-press) var(--motion-ease-out),background-color var(--motion-small) var(--motion-ease-out),opacity var(--motion-small)}
+.w-btn:active{transform:scale(.98)}
+.w-btn--primary{background:var(--color-accent);color:var(--color-on-accent)}
+.w-btn--gold{background:var(--gradient-gold);color:var(--color-on-accent)}
+.w-btn--secondary{background:var(--color-surface-muted);color:var(--color-text);border-color:var(--color-border)}
+.w-btn--ghost{background:none;color:var(--color-accent-text)}
+.w-btn--block{display:flex;width:100%}
+.w-btn[disabled],.w-btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;transform:none}
+.w-btn[aria-busy="true"]{pointer-events:none}
+.w-btn[aria-busy="true"]::before{content:"";width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:w-spin .8s linear infinite}
+@keyframes w-spin{to{transform:rotate(360deg)}}
+/* Fields */
+.w-field{display:block;margin-block-end:var(--space-4)}
+.w-field>span{display:block;font-size:var(--font-size-small);font-weight:var(--font-weight-medium);color:var(--color-text-muted);margin-block-end:var(--space-1)}
+.w-input{width:100%;min-height:var(--touch-min-target);padding-inline:var(--space-4);background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-text-muted);border-radius:var(--radius-md);font:inherit;transition:border-color var(--motion-small),box-shadow var(--motion-small)}
+.w-input:focus{outline:0;border-color:var(--color-focus);box-shadow:0 0 0 3px var(--color-info-bg)}
+.w-input[aria-invalid="true"]{border-color:var(--color-danger)}
+.w-error-text{display:flex;gap:var(--space-1);align-items:center;margin-block-start:var(--space-1);font-size:var(--font-size-small);color:var(--color-danger)}
+/* Surfaces */
+.w-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-raised)}
+.w-appear{animation:w-in var(--motion-card) var(--motion-ease-out) both;animation-delay:calc(var(--i,0)*50ms)}
+@keyframes w-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* Badges: always icon + text, never color alone */
+.w-badge{display:inline-flex;align-items:center;gap:var(--space-1);padding:2px var(--space-3);border-radius:var(--radius-pill);font-size:var(--font-size-small);font-weight:var(--font-weight-semibold)}
+.w-badge .w-ico{width:16px;height:16px}
+.w-badge--success{background:var(--color-success-bg);color:var(--color-success)}
+.w-badge--warning{background:var(--color-warning-bg);color:var(--color-warning)}
+.w-badge--danger{background:var(--color-danger-bg);color:var(--color-danger)}
+.w-badge--info{background:var(--color-info-bg);color:var(--color-info)}
+/* Progress */
+.w-progress{height:8px;border-radius:var(--radius-pill);background:var(--color-surface-muted);overflow:hidden}
+.w-progress>i{display:block;height:100%;width:var(--p,0%);background:repeating-linear-gradient(135deg,var(--color-accent-strong) 0 6px,var(--color-accent) 6px 12px);border-radius:inherit;transition:width var(--motion-progress) var(--motion-ease-out)}
+/* Stamps: a chain of diamonds. Earned = filled, missing = outline, with numbers (no color-only state) */
+.w-stamps{display:grid;grid-template-columns:repeat(var(--cols,8),1fr);gap:var(--space-1);list-style:none;margin:0;padding:0}
+.w-stamps li{display:flex;flex-direction:column;align-items:center;font-size:var(--font-size-caption);color:var(--color-text-muted)}
+.w-stamps svg{width:100%;max-width:32px;aspect-ratio:3/4}
+.w-stamps .on svg{fill:var(--color-accent);stroke:var(--color-accent-strong)}
+.w-stamps .off svg{fill:none;stroke:var(--color-accent-strong);stroke-width:1.5}
+.w-stamps .just svg{animation:w-pop var(--motion-success) var(--motion-ease-out)}
+@keyframes w-pop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+/* Loyalty card: merchant color via --m, Wathaq identity kept by structure and type */
+.w-lcard{position:relative;display:block;width:100%;text-align:start;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);padding-block-start:calc(var(--space-4) + 4px);color:inherit;font:inherit;cursor:pointer;transition:transform var(--motion-small) var(--motion-ease-out)}
+.w-lcard::before{content:"";position:absolute;inset-block-start:-1px;inset-inline-start:22px;width:46px;height:8px;border-radius:0 0 10px 10px;background:var(--m,var(--color-accent))}
+.w-lcard:active{transform:scale(.99)}
+.w-lcard__head{display:flex;align-items:center;gap:var(--space-3)}
+.w-logo{width:44px;height:44px;border-radius:var(--radius-md);display:grid;place-items:center;background:var(--m,var(--color-surface-muted));color:#fff;font-weight:var(--font-weight-bold);flex:none}
+/* States */
+.w-skel{background:linear-gradient(90deg,var(--color-surface-muted) 25%,var(--color-border) 50%,var(--color-surface-muted) 75%);background-size:200% 100%;border-radius:var(--radius-sm);animation:w-sh 1.4s ease-in-out infinite}
+@keyframes w-sh{to{background-position:-200% 0}}
+.w-state{text-align:center;padding:var(--space-6) var(--space-4);color:var(--color-text-muted)}
+.w-state h3{margin:var(--space-2) 0;font-size:var(--font-size-card-title);color:var(--color-text)}
+.w-toast{display:flex;gap:var(--space-2);align-items:center;background:var(--color-hero);color:var(--color-on-hero);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);box-shadow:var(--shadow-raised);animation:w-in var(--motion-small) var(--motion-ease-out)}
+/* Bottom navigation (5 sections), safe-area aware */
+.w-nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--color-surface);border-top:1px solid var(--color-border);padding-bottom:env(safe-area-inset-bottom,0px)}
+.w-nav a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:60px;font-size:var(--font-size-caption);color:var(--color-text-muted);text-decoration:none}
+.w-nav a[aria-current="page"]{color:var(--color-accent-text);font-weight:var(--font-weight-bold)}
+.w-nav a[aria-current="page"]::before{content:"";position:absolute;inset-block-start:0;width:28px;height:3px;border-radius:2px;background:var(--color-accent)}
+@media (prefers-reduced-motion:reduce){.w-skel,.w-btn[aria-busy="true"]::before{animation:none}.w-appear,.w-stamps .just svg,.w-toast{animation:none}}

@@ -1,0 +1,21 @@
+# WATHAQ-CORE migration history
+
+The active database was initialized on the dedicated Supabase project `ncfromrlnlotrwkgjenk` with the following ordered migrations:
+
+1. 20261118004500 — wathaq_core_foundation
+2. 20261118004702 — atomic_loyalty_operations
+3. 20261118004842 — loyalty_permission_hardening
+4. 20261118005321 — rls_policy_and_index_tuning
+5. 20261118005623 — merchant_state_and_reward_integrity
+6. 20261118005644 — token_entropy_and_single_use_guards
+7. 20261118005714 — public_catalog_visibility_guards
+8. 20261118005851 — platform_merchant_review_controls
+9. 20261118005942 — merchant_staff_invitation_and_rbac
+10. 20261118010054 — staff_rbac_documentation_and_audit
+11. 20261118010138 — merchant_branding_and_reward_storage
+12. 20261118010918 — merchant_invite_foreign_key_indexes
+13. 20261118011202 — secure_default_privileges
+14. 20261118220542 — revoke_private_function_execute
+15. 20261118220645 — grant_authenticated_private_policy_helpers
+
+The v0.6 SQL migration files and tests were moved to `reference/v0.6/supabase/` so they cannot be accidentally applied to the clean WATHAQ-CORE project. A consolidated, live-schema bootstrap has now been exported to `supabase/bootstrap/wathaq-core.sql`. It is intended only for a brand-new Supabase project and does not recreate the individual migration-history rows. The live project's 15 migration entries remain authoritative. Do not run the v0.6 reference migrations against WATHAQ-CORE; split the consolidated bootstrap into ordered CLI migrations before using `supabase db push`.
